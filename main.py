@@ -148,7 +148,6 @@ async def dashboard(request: Request):
     conn = get_db()
     cur = conn.cursor()
 
-    # DBMS Requirement: Execute the 4 aggregate reporting queries 
     cur.execute("SELECT COUNT(*) AS total FROM orders")
     total_orders = cur.fetchone()['total']
 
@@ -167,10 +166,11 @@ async def dashboard(request: Request):
     
     conn.close()
 
+    # FIX: Use keyword arguments to ensure the dictionary is treated as context
     return templates.TemplateResponse(
-        "dashboard.html", 
-        {
-            "request": request, 
+        request=request, 
+        name="dashboard.html", 
+        context={
             "user": user,
             "total_orders": total_orders,
             "active_shipments": active_shipments,
@@ -183,3 +183,75 @@ async def dashboard(request: Request):
 async def logout(request: Request):
     request.session.clear() # Clear the session cookie [cite: 724, 734]
     return RedirectResponse('/login')
+
+# ─── Orders List (GET) ────────────────────────────────────────────────
+@app.get('/orders', response_class=HTMLResponse)
+async def orders_list(request: Request):
+    user = get_current_user(request)
+    if not user: return RedirectResponse('/login')
+
+    conn = get_db()
+    cur = conn.cursor()
+    # DBMS Showcase: LEFT JOIN to pull order, shipment, and carrier data in one query
+    cur.execute("""
+        SELECT o.order_id, o.customer_name, o.origin_city, o.destination_city, 
+               s.status, c.company_name AS carrier_name, s.shipment_id
+        FROM orders o
+        LEFT JOIN shipments s ON o.order_id = s.order_id
+        LEFT JOIN carriers c ON s.carrier_id = c.carrier_id
+        ORDER BY o.created_at DESC
+    """)
+    orders = cur.fetchall()
+    conn.close()
+    
+    return templates.TemplateResponse(
+        request=request, 
+        name="orders.html", 
+        context={"user": user, "orders": orders}
+    )
+
+# ─── New Order Form (GET) ──────────────────────────────────────────────
+@app.get('/orders/new', response_class=HTMLResponse)
+async def new_order_form(request: Request):
+    user = get_current_user(request)
+    # RBAC Security: Only Admin and Dispatcher can create orders
+    if not user or user['role'] not in ['Admin', 'Dispatcher']:
+        return RedirectResponse('/dashboard')
+        
+    return templates.TemplateResponse(
+        request=request, 
+        name="new_order.html", 
+        context={"user": user}
+    )
+
+# ─── Create Order (POST) ──────────────────────────────────────────────
+@app.post('/orders/new')
+async def create_order(
+    request: Request,
+    customer_name: str = Form(...),
+    cargo_description: str = Form(...),
+    origin_city: str = Form(...),
+    destination_city: str = Form(...)
+):
+    user = get_current_user(request)
+    if not user or user['role'] not in ['Admin', 'Dispatcher']:
+        return RedirectResponse('/login')
+
+    # Server-side Validation [cite: 820-823]
+    if origin_city.strip().lower() == destination_city.strip().lower():
+        return templates.TemplateResponse(
+            request=request, 
+            name="new_order.html", 
+            context={"user": user, "error": "Origin and destination must differ"}
+        )
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO orders (customer_name, cargo_description, origin_city, destination_city, created_by) VALUES (%s, %s, %s, %s, %s)",
+        (customer_name, cargo_description, origin_city, destination_city, user['user_id'])
+    )
+    conn.commit()
+    conn.close()
+    
+    return RedirectResponse('/orders', status_code=303)

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Freight Orders</h2>
+    {% if user.role in ['Admin', 'Dispatcher'] %}
+    <a href="/orders/new" class="btn btn-primary">+ New Order</a>
+    {% endif %}
+</div>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr><th>#</th><th>Customer</th><th>Route</th><th>Carrier</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>#{{ order.order_id }}</td>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.origin_city }} → {{ order.destination_city }}</td>
+                <td>{{ order.carrier_name or '-' }}</td>
+                <td><span class="badge badge-{{ (order.status or 'unassigned')|lower|replace(' ', '-') }}">{{ order.status or 'Unassigned' }}</span></td>
+                <td>
+                    {% if not order.shipment_id and user.role != 'Warehouse' %}
+                    <a href="/orders/{{ order.order_id }}/assign" class="btn btn-sm btn-ghost">Assign</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align: center; padding: 2rem;">No orders found. Create one!</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
