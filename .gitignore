@@ -1,0 +1,10 @@
+# Contents of .gitignore — paste this into the file:
+venv/
+__pycache__/
+*.pyc
+.env
+*.egg-info/
+.DS_Store
+Thumbs.db
+# .env contains your database password — NEVER commit it to GitHub.env
+*.env

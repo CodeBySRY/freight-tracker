@@ -1,0 +1,50 @@
+<!-- base.html — Master Template
+     Every other template extends this file.
+     The navbar, CSS link, and layout wrapper are defined ONCE here. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreightTrack — {% block title %}Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Google Fonts: IBM Plex Sans + IBM Plex Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ─── Navigation Bar ─────────────────────────────────────────── -->
+    {% if user %}
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/dashboard">FreightTrack</a>
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/orders">Orders</a>
+
+            {# Carriers: visible to Admin only #}
+            {% if user.role == 'Admin' %}
+            <a href="/carriers">Carriers</a>
+            {% endif %}
+
+            {# Reports: visible to Admin and Dispatcher #}
+            {% if user.role in ['Admin', 'Dispatcher'] %}
+            <a href="/reports">Reports</a>
+            {% endif %}
+
+            <span class="role-badge">{{ user.role }}</span>
+            <a href="/logout" class="nav-logout">Logout</a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- ─── Main Content Area ──────────────────────────────────────── -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>
