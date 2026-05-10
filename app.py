@@ -18,7 +18,7 @@ if 'user' not in st.session_state or st.session_state.user is None:
             .hero-title { text-align: center; font-size: 4rem; color: #00d4ff; font-weight: 800; padding-top: 2rem; margin-bottom: 0;}
             .hero-subtitle { text-align: center; font-size: 1.2rem; color: #94a3b8; margin-bottom: 3rem; font-family: monospace; letter-spacing: 1px;}
             
-            /* Premium Mouse Scroll Animation */
+          /* Premium Mouse Scroll Animation */
             .scroll-container {
                 display: flex;
                 flex-direction: column;
@@ -35,28 +35,28 @@ if 'user' not in st.session_state or st.session_state.user is None:
                 font-size: 0.75rem;
                 letter-spacing: 4px;
                 text-transform: uppercase;
-                color: #00d4ff;
+                color: #10b981; /* Emerald Green */
                 margin-bottom: 15px;
                 font-weight: 600;
             }
             .mouse {
                 width: 28px;
                 height: 48px;
-                border: 2px solid #64748b;
+                border: 2px solid #065f46; /* Dark Emerald Border */
                 border-radius: 20px;
                 position: relative;
             }
             .wheel {
                 width: 4px;
                 height: 8px;
-                background: #00d4ff;
+                background: #10b981; /* Emerald Green */
                 border-radius: 2px;
                 position: absolute;
                 top: 8px;
                 left: 50%;
                 transform: translateX(-50%);
                 animation: scrollWheel 2s infinite cubic-bezier(0.15, 0.41, 0.69, 0.94);
-                box-shadow: 0 0 10px #00d4ff;
+                box-shadow: 0 0 10px rgba(16, 185, 129, 0.8); /* Emerald Glow */
             }
             @keyframes scrollWheel {
                 0% { top: 8px; opacity: 1; height: 8px; }
@@ -66,9 +66,9 @@ if 'user' not in st.session_state or st.session_state.user is None:
 
             /* Problem Statement Section */
             .problem-section {
-                background: linear-gradient(145deg, #0a0e1a, #111827);
-                border: 1px solid #1e2d45;
-                border-left: 4px solid #00d4ff;
+                background: linear-gradient(145deg, #022c22, #04150f); /* Dark Forest Gradient */
+                border: 1px solid #065f46; /* Emerald Border */
+                border-left: 4px solid #10b981; /* Bright Emerald Left Accent */
                 padding: 2.5rem;
                 border-radius: 12px;
                 margin-bottom: 3rem;
@@ -76,23 +76,23 @@ if 'user' not in st.session_state or st.session_state.user is None:
                 box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             }
             .problem-title {
-                color: #e2e8f0;
+                color: #f8fafc; /* Crisp White */
                 font-size: 1.5rem;
                 font-weight: 600;
                 margin-bottom: 1rem;
             }
             .problem-text {
-                color: #94a3b8;
+                color: #a7f3d0; /* Sage Green */
                 font-size: 1.05rem;
                 line-height: 1.7;
                 max-width: 800px;
                 margin: 0 auto;
             }
-
-            /* Feature Cards */
+            
+/* Feature Cards - Fully Green Palette */
             .feature-card { 
-                background: #111827; 
-                border: 1px solid #1e2d45; 
+                background: #022c22; /* Deep forest green background */
+                border: 1px solid #065f46; /* Emerald border instead of slate blue */
                 padding: 1.5rem; 
                 border-radius: 12px; 
                 text-align: center;
@@ -100,24 +100,26 @@ if 'user' not in st.session_state or st.session_state.user is None:
             }
             .feature-card:hover { 
                 transform: translateY(-5px); 
-                border-color: #00d4ff; 
-                box-shadow: 0 10px 20px rgba(0, 212, 255, 0.1);
+                border-color: #34d399; /* Bright mint glow on hover */
+                box-shadow: 0 10px 25px rgba(16, 185, 129, 0.25);
             }
             .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+            .feature-card h3 { color: #f8fafc; margin-bottom: 0.5rem; }
+            .feature-card p { color: #a7f3d0 !important; font-size: 0.9rem; } /* Sage green subtext */
 
-            /* Corporate Footer */
+          /* Corporate Footer */
             .corporate-footer {
-                background: linear-gradient(145deg, #111827, #0a0e1a);
+                background: linear-gradient(145deg, #022c22, #04150f);
                 padding: 3rem 4rem;
                 margin-top: 5rem;
-                border-top: 1px solid #1e2d45;
+                border-top: 1px solid #065f46;
                 border-radius: 12px;
-                color: #94a3b8;
+                color: #a7f3d0;
                 text-align: left;
             }
             .footer-lang { 
                 font-size: 1.1rem; 
-                color: #e2e8f0; 
+                color: #f8fafc; 
                 font-weight: 600; 
                 display: flex; 
                 align-items: center; 
@@ -132,11 +134,11 @@ if 'user' not in st.session_state or st.session_state.user is None:
             }
             .footer-breadcrumbs {
                 font-size: 0.85rem;
-                border-top: 1px solid #1e2d45;
+                border-top: 1px solid #065f46;
                 padding-top: 1.5rem;
-                color: #64748b;
+                color: #34d399; 
             }
-            .footer-breadcrumbs span { color: #00d4ff; font-weight: 500; }
+            .footer-breadcrumbs span { color: #10b981; font-weight: 500; }
         </style>
         """,
         unsafe_allow_html=True,
