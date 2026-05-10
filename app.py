@@ -104,6 +104,39 @@ if 'user' not in st.session_state or st.session_state.user is None:
                 box-shadow: 0 10px 20px rgba(0, 212, 255, 0.1);
             }
             .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+
+            /* Corporate Footer */
+            .corporate-footer {
+                background: linear-gradient(145deg, #111827, #0a0e1a);
+                padding: 3rem 4rem;
+                margin-top: 5rem;
+                border-top: 1px solid #1e2d45;
+                border-radius: 12px;
+                color: #94a3b8;
+                text-align: left;
+            }
+            .footer-lang { 
+                font-size: 1.1rem; 
+                color: #e2e8f0; 
+                font-weight: 600; 
+                display: flex; 
+                align-items: center; 
+                gap: 0.5rem; 
+                margin-bottom: 1.5rem;
+            }
+            .footer-text {
+                font-size: 0.95rem;
+                line-height: 1.8;
+                margin-bottom: 2rem;
+                max-width: 1000px;
+            }
+            .footer-breadcrumbs {
+                font-size: 0.85rem;
+                border-top: 1px solid #1e2d45;
+                padding-top: 1.5rem;
+                color: #64748b;
+            }
+            .footer-breadcrumbs span { color: #00d4ff; font-weight: 500; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -199,6 +232,23 @@ def login_screen():
                 <p style="color: #64748b; font-size: 0.9rem;">Strict Role-Based Access Control partitioning Warehouse, Dispatch, and Administrative workflows.</p>
             </div>
             """, unsafe_allow_html=True)
+
+    # ─── CORPORATE FOOTER ───────────────────────────────────────────────
+    col_space_foot1, col_foot, col_space_foot2 = st.columns([0.5, 4, 0.5])
+    with col_foot:
+        st.markdown("""
+        <div class="corporate-footer">
+            <div class="footer-lang">
+                🌍 English (Global)
+            </div>
+            <div class="footer-text">
+                Founded in May 2026, LogiTrack PK is a trusted enterprise platform for managing freight operations across Pakistan. Engineered with precision by Shayan Rizwan, Anzar Mubashir, and Agha Salaat, our platform helps arrange complex logistics deliveries from localized LTL shipments to heavy cargo loads. Thanks to a relational PostgreSQL backend and bank-grade transactional security, LogiTrack PK is the most reliable way for dispatchers to track shipments, audit statuses, and securely manage fleet capacity.
+            </div>
+            <div class="footer-breadcrumbs">
+                <span>LogiTrack PK</span> &nbsp; / &nbsp; Enterprise Freight Management &nbsp; / &nbsp; © 2026 All Rights Reserved.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ─── ROUTING & AUTHENTICATED STATE ────────────────────────────────────
 if not st.session_state.user:
