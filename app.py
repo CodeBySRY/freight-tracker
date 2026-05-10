@@ -18,18 +18,50 @@ if 'user' not in st.session_state or st.session_state.user is None:
             .hero-title { text-align: center; font-size: 4rem; color: #00d4ff; font-weight: 800; padding-top: 2rem; margin-bottom: 0;}
             .hero-subtitle { text-align: center; font-size: 1.2rem; color: #94a3b8; margin-bottom: 3rem; font-family: monospace; letter-spacing: 1px;}
             
-            /* Scroll Indicator Animation */
-            .scroll-indicator {
-                text-align: center;
-                margin-top: 3rem;
+            /* Premium Mouse Scroll Animation */
+            .scroll-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-top: 4rem;
                 margin-bottom: 3rem;
-                color: #475569;
-                animation: bounce 2s infinite;
+                opacity: 0.85;
+                transition: opacity 0.3s ease;
             }
-            @keyframes bounce {
-                0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-                40% { transform: translateY(-15px); }
-                60% { transform: translateY(-7px); }
+            .scroll-container:hover {
+                opacity: 1;
+            }
+            .scroll-text {
+                font-size: 0.75rem;
+                letter-spacing: 4px;
+                text-transform: uppercase;
+                color: #00d4ff;
+                margin-bottom: 15px;
+                font-weight: 600;
+            }
+            .mouse {
+                width: 28px;
+                height: 48px;
+                border: 2px solid #64748b;
+                border-radius: 20px;
+                position: relative;
+            }
+            .wheel {
+                width: 4px;
+                height: 8px;
+                background: #00d4ff;
+                border-radius: 2px;
+                position: absolute;
+                top: 8px;
+                left: 50%;
+                transform: translateX(-50%);
+                animation: scrollWheel 2s infinite cubic-bezier(0.15, 0.41, 0.69, 0.94);
+                box-shadow: 0 0 10px #00d4ff;
+            }
+            @keyframes scrollWheel {
+                0% { top: 8px; opacity: 1; height: 8px; }
+                50% { top: 24px; opacity: 0; height: 12px; }
+                100% { top: 8px; opacity: 0; height: 8px; }
             }
 
             /* Problem Statement Section */
@@ -113,13 +145,13 @@ def login_screen():
             else:
                 st.error("Authentication failed: Invalid credentials or deactivated account.")
 
-    # ─── SCROLL INDICATOR ───────────────────────────────────────────────
+    # ─── SLEEK MOUSE SCROLL INDICATOR ───────────────────────────────────
     st.markdown("""
-        <div class="scroll-indicator">
-            <div style="font-size: 0.9rem; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase;">Discover More</div>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+        <div class="scroll-container">
+            <div class="scroll-text">Discover More</div>
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
         </div>
     """, unsafe_allow_html=True)
     
