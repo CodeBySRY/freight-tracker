@@ -255,3 +255,171 @@ async def create_order(
     conn.close()
     
     return RedirectResponse('/orders', status_code=303)
+
+# ─── Assign Carrier Form (GET) ─────────────────────────────────────────
+@app.get('/orders/{order_id}/assign', response_class=HTMLResponse)
+async def assign_carrier_form(request: Request, order_id: int):
+    user = get_current_user(request)
+    if not user or user['role'] == 'Warehouse':
+        return RedirectResponse('/orders')
+
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Fetch the order details
+    cur.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
+    order = cur.fetchone()
+    
+    # Fetch ONLY available carriers
+    cur.execute("SELECT * FROM carriers WHERE is_available = TRUE")
+    available_carriers = cur.fetchall()
+    
+    conn.close()
+    
+    if not order:
+        return RedirectResponse('/orders')
+        
+    return templates.TemplateResponse(
+        request=request, 
+        name="assign_carrier.html", 
+        context={"user": user, "order": order, "carriers": available_carriers}
+    )
+
+# ─── Process Assignment Transaction (POST) ────────────────────────────
+@app.post('/orders/{order_id}/assign')
+async def process_assignment(request: Request, order_id: int, carrier_id: int = Form(...)):
+    user = get_current_user(request)
+    if not user or user['role'] == 'Warehouse':
+        return RedirectResponse('/orders')
+
+    conn = get_db()
+    cur = conn.cursor()
+    
+    try:
+        # 1. BEGIN ACID TRANSACTION
+        cur.execute("BEGIN")
+        
+        # 2. Insert into Shipments (Assigning the carrier to the order)
+        cur.execute("""
+            INSERT INTO shipments (order_id, carrier_id, status, assigned_at) 
+            VALUES (%s, %s, 'Pending', CURRENT_TIMESTAMP) 
+            RETURNING shipment_id
+        """, (order_id, carrier_id))
+        shipment_id = cur.fetchone()['shipment_id']
+        
+        # NOTE: Removed the 'is_available = FALSE' update. 
+        # Carriers are now treated as fleets and can take infinite orders.
+        
+        # 3. Insert Audit Log (Crucial for DBMS History)
+        cur.execute("""
+            INSERT INTO status_log (shipment_id, old_status, new_status, changed_by) 
+            VALUES (%s, NULL, 'Pending', %s)
+        """, (shipment_id, user['user_id']))
+        
+        # 4. COMMIT (Save everything if no errors occurred)
+        cur.execute("COMMIT")
+        
+    except Exception as e:
+        # ROLLBACK (Undo everything if ANY step failed)
+        cur.execute("ROLLBACK")
+        print(f"Transaction Failed: {e}")
+    finally:
+        conn.close()
+
+    return RedirectResponse('/orders', status_code=303)
+
+# ─── Update Shipment Status (POST) ────────────────────────────────────
+@app.post('/shipments/{shipment_id}/status')
+async def update_status(request: Request, shipment_id: int, new_status: str = Form(...)):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse('/login')
+
+    # State Machine Validation 
+    valid_statuses = ['Pending', 'In Transit', 'Delivered', 'Cancelled']
+    if new_status not in valid_statuses:
+        return RedirectResponse('/orders')
+
+    conn = get_db()
+    cur = conn.cursor()
+    
+    try:
+        cur.execute("BEGIN")
+        
+        # Get current status to log the change
+        cur.execute("SELECT status FROM shipments WHERE shipment_id = %s", (shipment_id,))
+        shipment = cur.fetchone()
+        if not shipment:
+            raise Exception("Shipment not found")
+            
+        old_status = shipment['status']
+        
+        # Only update if the status is actually changing
+        if old_status != new_status:
+            # Update the shipment
+            cur.execute(
+                "UPDATE shipments SET status = %s WHERE shipment_id = %s", 
+                (new_status, shipment_id)
+            )
+            
+            # If delivered, record the timestamp
+            if new_status == 'Delivered':
+                cur.execute(
+                    "UPDATE shipments SET delivered_at = CURRENT_TIMESTAMP WHERE shipment_id = %s",
+                    (shipment_id,)
+                )
+                
+            # Insert into Audit Log
+            cur.execute("""
+                INSERT INTO status_log (shipment_id, old_status, new_status, changed_by) 
+                VALUES (%s, %s, %s, %s)
+            """, (shipment_id, old_status, new_status, user['user_id']))
+            
+        cur.execute("COMMIT")
+    except Exception as e:
+        cur.execute("ROLLBACK")
+        print(f"Status Update Failed: {e}")
+    finally:
+        conn.close()
+
+    return RedirectResponse('/orders', status_code=303)
+
+# ─── View Shipment Audit History (GET) ────────────────────────────────
+@app.get('/shipments/{shipment_id}/history', response_class=HTMLResponse)
+async def shipment_history(request: Request, shipment_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse('/login')
+
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # 1. Fetch Shipment Context
+    cur.execute("""
+        SELECT o.order_id, o.customer_name, s.status, c.company_name
+        FROM shipments s
+        JOIN orders o ON s.order_id = o.order_id
+        JOIN carriers c ON s.carrier_id = c.carrier_id
+        WHERE s.shipment_id = %s
+    """, (shipment_id,))
+    shipment_info = cur.fetchone()
+    
+    # 2. Fetch the Audit Log Timeline
+    cur.execute("""
+        SELECT sl.old_status, sl.new_status, sl.changed_at, u.full_name as changed_by
+        FROM status_log sl
+        JOIN users u ON sl.changed_by = u.user_id
+        WHERE sl.shipment_id = %s
+        ORDER BY sl.changed_at DESC
+    """, (shipment_id,))
+    logs = cur.fetchall()
+    conn.close()
+
+    if not shipment_info:
+        return RedirectResponse('/orders')
+
+    return templates.TemplateResponse(
+        request=request, 
+        name="history.html", 
+        context={"user": user, "shipment": shipment_info, "logs": logs}
+    )

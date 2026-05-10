@@ -10,7 +10,14 @@
 <div class="table-container">
     <table>
         <thead>
-            <tr><th>#</th><th>Customer</th><th>Route</th><th>Carrier</th><th>Status</th><th>Actions</th></tr>
+            <tr>
+                <th>#</th>
+                <th>Customer</th>
+                <th>Route</th>
+                <th>Carrier</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
         </thead>
         <tbody>
             {% for order in orders %}
@@ -21,8 +28,24 @@
                 <td>{{ order.carrier_name or '-' }}</td>
                 <td><span class="badge badge-{{ (order.status or 'unassigned')|lower|replace(' ', '-') }}">{{ order.status or 'Unassigned' }}</span></td>
                 <td>
-                    {% if not order.shipment_id and user.role != 'Warehouse' %}
-                    <a href="/orders/{{ order.order_id }}/assign" class="btn btn-sm btn-ghost">Assign</a>
+                    {% if not order.shipment_id %}
+                        {% if user.role != 'Warehouse' %}
+                            <a href="/orders/{{ order.order_id }}/assign" class="btn btn-sm btn-ghost">Assign Carrier</a>
+                        {% endif %}
+                    {% else %}
+                        {% if order.status != 'Delivered' %}
+                            <form method="post" action="/shipments/{{ order.shipment_id }}/status" style="display: inline-flex; gap: 0.5rem; align-items: center;">
+                                <select name="new_status" class="form-select" style="padding: 0.25rem; font-size: 0.8rem; width: auto;" required>
+                                    <option value="" disabled selected>Update...</option>
+                                    <option value="In Transit">In Transit</option>
+                                    <option value="Delivered">Delivered</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                            </form>
+                        {% endif %}
+                        
+                        <a href="/shipments/{{ order.shipment_id }}/history" class="btn btn-sm btn-ghost" style="margin-left: 0.5rem;">View History</a>
                     {% endif %}
                 </td>
             </tr>
