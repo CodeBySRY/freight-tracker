@@ -95,3 +95,68 @@ The foundation layer establishes two critical invariants for the entire applicat
 2. **All password operations flow through `auth.py`** — plaintext never touches the database, and the hashing algorithm (bcrypt) is industry-standard.
 
 These modules are now ready to be imported by `main.py` as routes are built in the next session.
+
+
+## Phase 6: Frontend Migration & Business Intelligence (Analytics)
+
+### 1. The "Why" (Architectural Strategy)
+The application's presentation layer was entirely migrated from a FastAPI/Jinja2 stack to **Streamlit**. 
+* **UI/UX Logic:** Streamlit, as a Python-native data framework, allows for the direct injection of PostgreSQL query results into interactive dataframes and native charts without HTML/CSS overhead. This transforms the platform from a basic web form into an enterprise-grade "Command Center."
+* **Analytics Logic:** Industry research (Logipulse) indicated that real-time analytics are essential for dispatchers. The Reports module was built to provide instant visibility into Carrier Performance, Overdue Deliveries, and Weekly Trends.
+
+### 2. The "How" (Technical Execution & Security)
+* **Session Management:** Replaced Starlette's `SessionMiddleware` with Streamlit's internal `st.session_state` to dictate UI rendering across the multi-page app architecture.
+* **Role-Based Access Control (RBAC):** Access control is strictly enforced at the script level. For example, `4_carriers.py` and `6_users.py` begin with a hard evaluation of `st.session_state.user['role']`. If a Dispatcher or Warehouse user attempts to access these pages, execution is instantly halted via `st.stop()`.
+* **ACID Transactions:** Order assignments and status updates are wrapped in `BEGIN`, `COMMIT`, and `ROLLBACK` blocks within Streamlit's `st.form_submit_button` event handlers to guarantee atomicity.
+
+### 3. DBMS Principles & Advanced SQL Implementation
+This phase heavily showcased advanced SQL querying to push computational workload to the PostgreSQL engine rather than the Python server.
+
+**A. Advanced Aggregation & Filtering (Carrier Performance)**:  
+Utilized `COUNT(*) FILTER` to calculate success rates within a single query pass, avoiding expensive sequential scans.
+```sql
+SELECT c.company_name, 
+       COUNT(s.shipment_id) AS total_jobs, 
+       COUNT(*) FILTER (WHERE s.status = 'Delivered') AS delivered, 
+       COUNT(*) FILTER (WHERE s.status = 'Cancelled') AS cancelled 
+FROM carriers c 
+LEFT JOIN shipments s ON c.carrier_id = s.carrier_id 
+GROUP BY c.company_name 
+ORDER BY delivered DESC;
+```
+
+**B. Time-Series Grouping (Weekly Deliveries)**:  
+Utilized PostgreSQL's DATE_TRUNC to group continuous timestamp data into discrete 7-day buckets for trend analysis.
+```sql
+SELECT DATE_TRUNC('week', delivered_at)::DATE AS week, 
+       COUNT(*) AS deliveries 
+FROM shipments 
+WHERE status = 'Delivered' AND delivered_at >= NOW() - INTERVAL '28 days' 
+GROUP BY DATE_TRUNC('week', delivered_at) 
+ORDER BY week;
+```
+
+**C. Computed Columns & Date Math (Overdue Orders)**:  
+Calculated days overdue dynamically (CURRENT_DATE - expected_delivery_date). A LEFT JOIN was critical here to identify orders that are overdue before they have even been assigned a carrier (s.status IS NULL).
+```sql
+SELECT o.order_id, o.customer_name, o.expected_delivery_date, 
+       CURRENT_DATE - o.expected_delivery_date AS days_overdue 
+FROM orders o 
+LEFT JOIN shipments s ON o.order_id = s.order_id 
+WHERE o.expected_delivery_date < CURRENT_DATE 
+  AND (s.status IS NULL OR s.status NOT IN ('Delivered','Cancelled')) 
+ORDER BY days_overdue DESC;
+```
+
+**D. Relational View (Active Shipments)**:  
+Concatenated origin and destination for UI display while filtering strictly for in-transit logistics.
+```sql
+SELECT o.customer_name, o.origin_city || ' → ' || o.destination_city AS route, 
+       c.company_name AS carrier, o.expected_delivery_date 
+FROM shipments s 
+JOIN orders o ON s.order_id = o.order_id 
+JOIN carriers c ON s.carrier_id = c.carrier_id 
+WHERE s.status = 'In Transit';
+```
+
+
