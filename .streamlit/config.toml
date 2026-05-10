@@ -1,10 +1,14 @@
-# .streamlit/config.toml
 [theme]
-primaryColor = "#00d4ff"
-backgroundColor = "#0a0e1a"
-secondaryBackgroundColor = "#111827"
-textColor = "#e2e8f0"
-font = "sans serif"
+# The main accent color (Buttons, active states, progress bars)
+primaryColor = "#10b981"
 
-[server]
-runOnSave = true
+# The main screen background (A very deep, almost-black greenish hue)
+backgroundColor = "#04150f"
+
+# The left sidebar background (A sleek, elegant dark forest green)
+secondaryBackgroundColor = "#022c22"
+
+# The text color (Crisp off-white for high contrast)
+textColor = "#e2e8f0"
+
+font = "sans serif"
