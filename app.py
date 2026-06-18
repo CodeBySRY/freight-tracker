@@ -1,6 +1,8 @@
 import streamlit as st
+import pandas as pd
 from database import get_db
 from auth import verify_password
+from streamlit_option_menu import option_menu
 
 # Must be the very first Streamlit command
 st.set_page_config(page_title="LogiTrack PK", page_icon="📦", layout="wide", initial_sidebar_state="collapsed")
@@ -15,7 +17,7 @@ if 'user' not in st.session_state or st.session_state.user is None:
             [data-testid="collapsedControl"] { display: none !important; }
             
             /* Custom Landing Page CSS */
-            .hero-title { text-align: center; font-size: 4rem; color: #00d4ff; font-weight: 800; padding-top: 2rem; margin-bottom: 0;}
+            .hero-title { text-align: center; font-size: 4rem; color: #10b981; font-weight: 800; padding-top: 2rem; margin-bottom: 0;}
             .hero-subtitle { text-align: center; font-size: 1.2rem; color: #94a3b8; margin-bottom: 3rem; font-family: monospace; letter-spacing: 1px;}
             
           /* Premium Mouse Scroll Animation */
@@ -89,7 +91,7 @@ if 'user' not in st.session_state or st.session_state.user is None:
                 margin: 0 auto;
             }
             
-/* Feature Cards - Fully Green Palette */
+            /* Feature Cards - Fully Green Palette */
             .feature-card { 
                 background: #022c22; /* Deep forest green background */
                 border: 1px solid #065f46; /* Emerald border instead of slate blue */
@@ -105,7 +107,7 @@ if 'user' not in st.session_state or st.session_state.user is None:
             }
             .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
             .feature-card h3 { color: #f8fafc; margin-bottom: 0.5rem; }
-            .feature-card p { color: #a7f3d0 !important; font-size: 0.9rem; } /* Sage green subtext */
+            .feature-card p { color: #a7f3d0 !important; font-size: 0.9rem; }
 
           /* Corporate Footer */
             .corporate-footer {
@@ -213,7 +215,7 @@ def login_screen():
             <div class="feature-card">
                 <div class="feature-icon">🛡️</div>
                 <h3>ACID Compliant</h3>
-                <p style="color: #64748b; font-size: 0.9rem;">Bank-grade transactional security ensuring database integrity during high-volume fleet assignments.</p>
+                <p>Bank-grade transactional security ensuring database integrity during high-volume fleet assignments.</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -222,7 +224,7 @@ def login_screen():
             <div class="feature-card">
                 <div class="feature-icon">📊</div>
                 <h3>Real-Time Analytics</h3>
-                <p style="color: #64748b; font-size: 0.9rem;">Live PostgreSQL aggregations delivering immediate business intelligence and KPI tracking.</p>
+                <p>Live PostgreSQL aggregations delivering immediate business intelligence and KPI tracking.</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -231,7 +233,7 @@ def login_screen():
             <div class="feature-card">
                 <div class="feature-icon">🔐</div>
                 <h3>RBAC Architecture</h3>
-                <p style="color: #64748b; font-size: 0.9rem;">Strict Role-Based Access Control partitioning Warehouse, Dispatch, and Administrative workflows.</p>
+                <p>Strict Role-Based Access Control partitioning Warehouse, Dispatch, and Administrative workflows.</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -244,7 +246,7 @@ def login_screen():
                 🌍 English (Global)
             </div>
             <div class="footer-text">
-                Founded in May 2026, LogiTrack PK is a trusted enterprise platform for managing freight operations across Pakistan. Engineered with precision by Shayan Rizwan, Anzar Mubashir, and Agha Salaat, our platform helps arrange complex logistics deliveries from localized LTL shipments to heavy cargo loads. Thanks to a relational PostgreSQL backend and bank-grade transactional security, LogiTrack PK is the most reliable way for dispatchers to track shipments, audit statuses, and securely manage fleet capacity.
+                Founded in May 2026, LogiTrack PK is a trusted enterprise platform for managing freight operations across Pakistan. Engineered with precision by Abdul Haadi Raza, Muhammad Ahmad, and Abdullah, our platform helps arrange complex logistics deliveries from localized LTL shipments to heavy cargo loads. Thanks to a relational PostgreSQL backend and bank-grade transactional security, LogiTrack PK is the most reliable way for dispatchers to track shipments, audit statuses, and securely manage fleet capacity.
             </div>
             <div class="footer-breadcrumbs">
                 <span>LogiTrack PK</span> &nbsp; / &nbsp; Enterprise Freight Management &nbsp; / &nbsp; © 2026 All Rights Reserved.
@@ -256,25 +258,248 @@ def login_screen():
 if not st.session_state.user:
     login_screen()
 else:
-    # If logged in, restore the sidebar visibility using CSS
+    # ─── INTERNAL DASHBOARD CSS & ANTI-FLUFF ─────────────────────────────
     st.markdown(
         """
         <style>
-            [data-testid="stSidebar"] { display: block !important; }
-            [data-testid="collapsedControl"] { display: block !important; }
+            /* Hide Streamlit default branding */
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            
+            /* Hide the default sidebar chevron toggle */
+            [data-testid="collapsedControl"] { display: none !important; }
+            
+            /* Force the sidebar to always show and style its border */
+            [data-testid="stSidebar"] { 
+                display: block !important; 
+            }
+            [data-testid="stSidebar"] > div:first-child {
+                border-right: 1px solid #065f46;
+                box-shadow: 2px 0px 15px rgba(16, 185, 129, 0.05);
+            }
+            
+            /* Style the logout button to match the premium theme */
+            .stButton>button {
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                border: 1px solid #065f46;
+                color: #f8fafc;
+                background-color: transparent;
+            }
+            .stButton>button:hover {
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+                border-color: #10b981;
+                color: #10b981;
+            }
         </style>
         """,
         unsafe_allow_html=True,
     )
     
-    st.sidebar.title("LogiTrack PK")
-    st.sidebar.write(f"**{st.session_state.user['full_name']}**")
-    st.sidebar.caption(f"Clearance Level: {st.session_state.user['role']}")
-    
-    st.sidebar.divider()
-    
-    if st.sidebar.button("Log Out", use_container_width=True):
-        st.session_state.user = None
-        st.rerun()
+    # ─── CUSTOM SIDEBAR NAVIGATION ────────────────────────────────────────
+    with st.sidebar:
+        # User Profile Header
+        st.markdown(f"<h3 style='color: #10b981; text-align: center; margin-bottom: 0;'>LogiTrack PK</h3>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #a7f3d0; text-align: center; font-size: 0.9rem;'>{st.session_state.user['full_name']} | {st.session_state.user['role']}</p>", unsafe_allow_html=True)
+        st.markdown("<hr style='border-color: #065f46;'>", unsafe_allow_html=True)
         
-    st.info("👈 Authentication successful. Please select a module from the sidebar navigation.")
+        # The Premium Menu
+        selected_module = option_menu(
+            menu_title=None,  # Hides the default title
+            options=["Command Center", "Active Shipments", "Carrier Fleet", "Audit Logs"],
+            icons=["grid", "truck", "shield-check", "clock-history"], # Bootstrap icons
+            default_index=0,
+            styles={
+                "container": {"padding": "0!important", "background-color": "transparent"},
+                "icon": {"color": "#10b981", "font-size": "1.1rem"}, 
+                "nav-link": {
+                    "font-size": "0.95rem", 
+                    "text-align": "left", 
+                    "margin": "4px 0", 
+                    "color": "#a7f3d0",
+                    "--hover-color": "#065f46"
+                },
+                "nav-link-selected": {
+                    "background-color": "#10b981", 
+                    "color": "#022c22", 
+                    "font-weight": "bold"
+                },
+            }
+        )
+        
+        st.markdown("<br><br><br>", unsafe_allow_html=True)
+        
+        # Logout Button
+        if st.button("Secure Logout", use_container_width=True):
+            st.session_state.user = None
+            st.rerun()
+
+    # ─── MODULE ROUTING LOGIC ─────────────────────────────────────────────
+    # This determines what screen is shown based on the menu selection
+    if selected_module == "Command Center":
+        st.title("Command Center Dashboard")
+        st.markdown("<p style='color: #a7f3d0;'>System is online and monitoring live logistics data.</p>", unsafe_allow_html=True)
+        
+        # Fetch Live KPIs using Aggregation Queries
+        conn = get_db()
+        cur = conn.cursor()
+        
+        try:
+            cur.execute("SELECT COUNT(*) AS total FROM orders")
+            total_orders = cur.fetchone()['total']
+            
+            cur.execute("SELECT COUNT(*) AS active FROM shipments WHERE status NOT IN ('Delivered', 'Cancelled')")
+            active_shipments = cur.fetchone()['active']
+            
+            cur.execute("SELECT COUNT(*) AS available FROM carriers WHERE is_available = TRUE")
+            available_carriers = cur.fetchone()['available']
+        except Exception as e:
+            st.error(f"Database Error: {e}")
+            total_orders, active_shipments, available_carriers = 0, 0, 0
+        finally:
+            conn.close()
+
+        # Render KPI Cards
+        st.markdown("<br>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(f"""
+            <div style="background-color: #022c22; border-left: 4px solid #10b981; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                <h4 style="color: #a7f3d0; margin: 0; font-size: 1rem;">Total Orders</h4>
+                <h1 style="color: #f8fafc; margin: 0; font-size: 2.5rem;">{total_orders}</h1>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col2:
+            st.markdown(f"""
+            <div style="background-color: #022c22; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                <h4 style="color: #a7f3d0; margin: 0; font-size: 1rem;">Active Shipments</h4>
+                <h1 style="color: #f8fafc; margin: 0; font-size: 2.5rem;">{active_shipments}</h1>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col3:
+            st.markdown(f"""
+            <div style="background-color: #022c22; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                <h4 style="color: #a7f3d0; margin: 0; font-size: 1rem;">Available Carriers</h4>
+                <h1 style="color: #f8fafc; margin: 0; font-size: 2.5rem;">{available_carriers}</h1>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        st.markdown("<br><hr style='border-color: #065f46;'><br>", unsafe_allow_html=True)
+        st.info("📌 To assign a new carrier to a pending order, please navigate to the Carrier Fleet module.")
+        
+    elif selected_module == "Active Shipments":
+        st.title("Active Shipments & Fleet Tracking")
+        st.write("Monitor live freight movement, filter by status, and export dispatcher reports.")
+        
+        # 1. The Control Panel (Search & Filter)
+        col_search, col_filter, col_export = st.columns([2, 1, 1])
+        
+        with col_search:
+            search_query = st.text_input("🔍 Search Origin, Destination, or Carrier", placeholder="e.g., Karachi or TCS")
+            
+        with col_filter:
+            status_filter = st.selectbox("Filter Status", ["All", "Pending", "Assigned", "In Transit", "Delivered"])
+            
+        # 2. Dynamic Database Fetching
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Base query joining the three critical tables
+        base_query = """
+            SELECT 
+                s.shipment_id AS "Shipment ID",
+                o.order_id AS "Order Ref",
+                o.origin_city AS "Origin",
+                o.destination_city AS "Destination",
+                c.company_name AS "Carrier",
+                s.status AS "Current Status",
+                TO_CHAR(s.assigned_at, 'YYYY-MM-DD HH24:MI') AS "Assigned Time"
+            FROM shipments s
+            JOIN orders o ON s.order_id = o.order_id
+            JOIN carriers c ON s.carrier_id = c.carrier_id
+            WHERE 1=1
+        """
+        
+        # Append filters based on user UI interaction
+        params = []
+        if status_filter != "All":
+            base_query += " AND s.status = %s"
+            params.append(status_filter)
+            
+        if search_query:
+            base_query += " AND (o.origin_city ILIKE %s OR o.destination_city ILIKE %s OR c.company_name ILIKE %s)"
+            search_term = f"%{search_query}%"
+            params.extend([search_term, search_term, search_term])
+            
+        base_query += " ORDER BY s.assigned_at DESC"
+        
+        cur.execute(base_query, tuple(params))
+        data = cur.fetchall()
+        conn.close()
+        
+        # 3. Data Rendering & 1-Click Export
+        if data:
+            # Convert dictionary data to a pandas DataFrame for elegant rendering
+            df = pd.DataFrame(data)
+            
+            # Display the interactive table
+            st.dataframe(df, use_container_width=True, hide_index=True)
+            
+            # The Export Button
+            with col_export:
+                st.markdown("<br>", unsafe_allow_html=True) # Alignment hack
+                csv = df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Export to CSV",
+                    data=csv,
+                    file_name="LogiTrack_Active_Shipments.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+        else:
+            st.info("No active shipments match your current search criteria.")
+            
+    elif selected_module == "Carrier Fleet":
+        st.title("Carrier Fleet Management")
+        st.write("Carrier assignment controls will go here.")
+        
+    elif selected_module == "Audit Logs":
+        st.title("System Audit Logs")
+        st.markdown("<p style='color: #a7f3d0;'>Immutable ledger of all shipment status transitions and authorization events.</p>", unsafe_allow_html=True)
+        
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Complex JOIN to reconstruct the audit trail
+        query = """
+            SELECT 
+                sl.log_id AS "Event ID",
+                sl.shipment_id AS "Shipment Ref",
+                sl.old_status AS "Previous State",
+                sl.new_status AS "New State",
+                u.full_name AS "Authorized By",
+                u.role AS "Clearance Level",
+                TO_CHAR(sl.changed_at, 'YYYY-MM-DD HH24:MI:SS') AS "Timestamp"
+            FROM status_log sl
+            JOIN users u ON sl.changed_by = u.user_id
+            ORDER BY sl.changed_at DESC
+            LIMIT 100
+        """
+        
+        try:
+            cur.execute(query)
+            logs = cur.fetchall()
+            
+            if logs:
+                df_logs = pd.DataFrame(logs)
+                st.dataframe(df_logs, use_container_width=True, hide_index=True)
+            else:
+                st.info("No status transitions have been recorded yet.")
+        except Exception as e:
+            st.error(f"Failed to fetch audit logs: {e}")
+        finally:
+            conn.close()
