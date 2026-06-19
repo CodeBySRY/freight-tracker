@@ -267,25 +267,17 @@ else:
             footer {visibility: hidden;}
             header {visibility: hidden;}
             
-            /* Hide the default sidebar chevron toggle */
+            /* Hide the default sidebar completely in authenticated state */
+            [data-testid="stSidebar"] { display: none !important; }
             [data-testid="collapsedControl"] { display: none !important; }
             
-            /* Force the sidebar to always show and style its border */
-            [data-testid="stSidebar"] { 
-                display: block !important; 
-            }
-            [data-testid="stSidebar"] > div:first-child {
-                border-right: 1px solid #065f46;
-                box-shadow: 2px 0px 15px rgba(16, 185, 129, 0.05);
-            }
-            
-            /* Style the logout button to match the premium theme */
+            /* Style buttons */
             .stButton>button {
                 border-radius: 8px;
                 transition: all 0.3s ease;
                 border: 1px solid #065f46;
                 color: #f8fafc;
-                background-color: transparent;
+                background-color: #022c22;
             }
             .stButton>button:hover {
                 box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
@@ -297,49 +289,49 @@ else:
         unsafe_allow_html=True,
     )
     
-    # ─── CUSTOM SIDEBAR NAVIGATION ────────────────────────────────────────
-    with st.sidebar:
-        # User Profile Header
-        st.markdown(f"<h3 style='color: #10b981; text-align: center; margin-bottom: 0;'>LogiTrack PK</h3>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: #a7f3d0; text-align: center; font-size: 0.9rem;'>{st.session_state.user['full_name']} | {st.session_state.user['role']}</p>", unsafe_allow_html=True)
-        st.markdown("<hr style='border-color: #065f46;'>", unsafe_allow_html=True)
+    # ─── TOP HEADER & LOGOUT ──────────────────────────────────────────────
+    header_col1, header_col2 = st.columns([8, 2])
+    with header_col1:
+        st.markdown(f"<h2 style='color: #10b981; margin-bottom: 0;'>LogiTrack PK Enterprise</h2>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #a7f3d0; font-size: 0.95rem; margin-top: 0;'>Logged in as: <b>{st.session_state.user['full_name']}</b> | Clearance: <i>{st.session_state.user['role']}</i></p>", unsafe_allow_html=True)
         
-        # The Premium Menu
-        selected_module = option_menu(
-            menu_title=None,  # Hides the default title
-            options=["Command Center", "Active Shipments", "Carrier Fleet", "Audit Logs"],
-            icons=["grid", "truck", "shield-check", "clock-history"], # Bootstrap icons
-            default_index=0,
-            styles={
-                "container": {"padding": "0!important", "background-color": "transparent"},
-                "icon": {"color": "#10b981", "font-size": "1.1rem"}, 
-                "nav-link": {
-                    "font-size": "0.95rem", 
-                    "text-align": "left", 
-                    "margin": "4px 0", 
-                    "color": "#a7f3d0",
-                    "--hover-color": "#065f46"
-                },
-                "nav-link-selected": {
-                    "background-color": "#10b981", 
-                    "color": "#022c22", 
-                    "font-weight": "bold"
-                },
-            }
-        )
-        
-        st.markdown("<br><br><br>", unsafe_allow_html=True)
-        
-        # Logout Button
-        if st.button("Secure Logout", use_container_width=True):
+    with header_col2:
+        st.markdown("<br>", unsafe_allow_html=True) # Spacing alignment
+        if st.button("🚪 Secure Logout", type="primary", use_container_width=True):
             st.session_state.user = None
             st.rerun()
 
+    st.markdown("<hr style='border-color: #065f46; margin-top: 0;'>", unsafe_allow_html=True)
+
+    # ─── HORIZONTAL TOP NAVIGATION BAR ────────────────────────────────────
+    selected_module = option_menu(
+        menu_title=None,
+        options=["Command Center", "Active Shipments", "Carrier Fleet", "Audit Logs"],
+        icons=["grid", "truck", "shield-check", "clock-history"],
+        default_index=0,
+        orientation="horizontal",
+        styles={
+            "container": {"padding": "0!important", "background-color": "#022c22", "border": "1px solid #065f46", "border-radius": "8px"},
+            "icon": {"color": "#10b981", "font-size": "1.2rem"}, 
+            "nav-link": {
+                "font-size": "0.95rem", 
+                "text-align": "center", 
+                "margin": "0px", 
+                "color": "#a7f3d0",
+                "--hover-color": "#04150f"
+            },
+            "nav-link-selected": {
+                "background-color": "#10b981", 
+                "color": "#04150f", 
+                "font-weight": "800"
+            },
+        }
+    )
+    st.markdown("<br>", unsafe_allow_html=True)
+
     # ─── MODULE ROUTING LOGIC ─────────────────────────────────────────────
-    # This determines what screen is shown based on the menu selection
     if selected_module == "Command Center":
-        st.title("Command Center Dashboard")
-        st.markdown("<p style='color: #a7f3d0;'>System is online and monitoring live logistics data.</p>", unsafe_allow_html=True)
+        st.markdown("### 🌐 Live Systems Overview")
         
         # Fetch Live KPIs using Aggregation Queries
         conn = get_db()
@@ -361,17 +353,14 @@ else:
             conn.close()
 
         # Render KPI Cards
-        st.markdown("<br>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
-        
         with col1:
             st.markdown(f"""
             <div style="background-color: #022c22; border-left: 4px solid #10b981; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                <h4 style="color: #a7f3d0; margin: 0; font-size: 1rem;">Total Orders</h4>
+                <h4 style="color: #a7f3d0; margin: 0; font-size: 1rem;">Total Freight Orders</h4>
                 <h1 style="color: #f8fafc; margin: 0; font-size: 2.5rem;">{total_orders}</h1>
             </div>
             """, unsafe_allow_html=True)
-            
         with col2:
             st.markdown(f"""
             <div style="background-color: #022c22; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
@@ -379,7 +368,6 @@ else:
                 <h1 style="color: #f8fafc; margin: 0; font-size: 2.5rem;">{active_shipments}</h1>
             </div>
             """, unsafe_allow_html=True)
-            
         with col3:
             st.markdown(f"""
             <div style="background-color: #022c22; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
@@ -389,26 +377,35 @@ else:
             """, unsafe_allow_html=True)
             
         st.markdown("<br><hr style='border-color: #065f46;'><br>", unsafe_allow_html=True)
-        st.info("📌 To assign a new carrier to a pending order, please navigate to the Carrier Fleet module.")
         
+        # ─── QUICK ACTIONS (Gives the dashboard life) ───
+        st.markdown("### ⚡ Quick Actions")
+        qa1, qa2, qa3, qa4 = st.columns(4)
+        with qa1:
+            st.button("📦 Draft New Order", use_container_width=True)
+        with qa2:
+            st.button("🚚 Dispatch Fleet", use_container_width=True)
+        with qa3:
+            st.button("🏢 Add Carrier", use_container_width=True)
+        with qa4:
+            st.button("📊 Generate Report", use_container_width=True)
+            
+        st.caption("Note: Quick actions route to their respective modules in the top navigation bar.")
+
     elif selected_module == "Active Shipments":
         st.title("Active Shipments & Fleet Tracking")
         st.write("Monitor live freight movement, filter by status, and export dispatcher reports.")
         
         # 1. The Control Panel (Search & Filter)
         col_search, col_filter, col_export = st.columns([2, 1, 1])
-        
         with col_search:
             search_query = st.text_input("🔍 Search Origin, Destination, or Carrier", placeholder="e.g., Karachi or TCS")
-            
         with col_filter:
             status_filter = st.selectbox("Filter Status", ["All", "Pending", "Assigned", "In Transit", "Delivered"])
             
         # 2. Dynamic Database Fetching
         conn = get_db()
         cur = conn.cursor()
-        
-        # Base query joining the three critical tables
         base_query = """
             SELECT 
                 s.shipment_id AS "Shipment ID",
@@ -423,43 +420,28 @@ else:
             JOIN carriers c ON s.carrier_id = c.carrier_id
             WHERE 1=1
         """
-        
-        # Append filters based on user UI interaction
         params = []
         if status_filter != "All":
             base_query += " AND s.status = %s"
             params.append(status_filter)
-            
         if search_query:
             base_query += " AND (o.origin_city ILIKE %s OR o.destination_city ILIKE %s OR c.company_name ILIKE %s)"
             search_term = f"%{search_query}%"
             params.extend([search_term, search_term, search_term])
             
         base_query += " ORDER BY s.assigned_at DESC"
-        
         cur.execute(base_query, tuple(params))
         data = cur.fetchall()
         conn.close()
         
-        # 3. Data Rendering & 1-Click Export
+        # 3. Data Rendering
         if data:
-            # Convert dictionary data to a pandas DataFrame for elegant rendering
             df = pd.DataFrame(data)
-            
-            # Display the interactive table
             st.dataframe(df, use_container_width=True, hide_index=True)
-            
-            # The Export Button
             with col_export:
-                st.markdown("<br>", unsafe_allow_html=True) # Alignment hack
+                st.markdown("<br>", unsafe_allow_html=True)
                 csv = df.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="📥 Export to CSV",
-                    data=csv,
-                    file_name="LogiTrack_Active_Shipments.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
+                st.download_button("📥 Export to CSV", data=csv, file_name="Active_Shipments.csv", mime="text/csv", use_container_width=True)
         else:
             st.info("No active shipments match your current search criteria.")
             
@@ -473,8 +455,6 @@ else:
         
         conn = get_db()
         cur = conn.cursor()
-        
-        # Complex JOIN to reconstruct the audit trail
         query = """
             SELECT 
                 sl.log_id AS "Event ID",
@@ -489,11 +469,9 @@ else:
             ORDER BY sl.changed_at DESC
             LIMIT 100
         """
-        
         try:
             cur.execute(query)
             logs = cur.fetchall()
-            
             if logs:
                 df_logs = pd.DataFrame(logs)
                 st.dataframe(df_logs, use_container_width=True, hide_index=True)
