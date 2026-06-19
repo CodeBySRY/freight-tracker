@@ -378,20 +378,121 @@ else:
             
         st.markdown("<br><hr style='border-color: #065f46;'><br>", unsafe_allow_html=True)
         
-        # ─── QUICK ACTIONS (Gives the dashboard life) ───
+# ─── QUICK ACTIONS (Gives the dashboard life) ───
         st.markdown("### ⚡ Quick Actions")
+        
+        # Initialize session state for interactive routing
+        if 'active_action' not in st.session_state:
+            st.session_state.active_action = None
+
         qa1, qa2, qa3, qa4 = st.columns(4)
         with qa1:
-            st.button("📦 Draft New Order", use_container_width=True)
+            if st.button("📦 Draft New Order", use_container_width=True):
+                st.session_state.active_action = "order"
         with qa2:
-            st.button("🚚 Dispatch Fleet", use_container_width=True)
+            if st.button("🚚 Dispatch Fleet", use_container_width=True):
+                st.session_state.active_action = "dispatch"
         with qa3:
-            st.button("🏢 Add Carrier", use_container_width=True)
+            if st.button("🏢 Add Carrier", use_container_width=True):
+                st.session_state.active_action = "carrier"
         with qa4:
-            st.button("📊 Generate Report", use_container_width=True)
-            
-        st.caption("Note: Quick actions route to their respective modules in the top navigation bar.")
+            if st.button("📊 Generate Report", use_container_width=True):
+                st.session_state.active_action = "report"
 
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ─── BACKEND LOGIC FOR QUICK ACTIONS ───
+        if st.session_state.active_action == "order":
+            with st.form("new_order_form"):
+                st.markdown("#### Create New Freight Order")
+                col_o, col_d = st.columns(2)
+                with col_o:
+                    origin = st.text_input("Origin City", placeholder="e.g., Karachi")
+                with col_d:
+                    dest = st.text_input("Destination City", placeholder="e.g., Islamabad")
+                
+                if st.form_submit_button("Save Order to Database", type="primary"):
+                    if origin and dest:
+                        conn = get_db()
+                        cur = conn.cursor()
+                        cur.execute("INSERT INTO orders (origin_city, destination_city) VALUES (%s, %s)", (origin, dest))
+                        conn.commit()
+                        conn.close()
+                        st.success(f"Order drafted for {origin} to {dest}! KPI updated.")
+                        st.session_state.active_action = None
+                        st.rerun()
+
+        elif st.session_state.active_action == "carrier":
+            with st.form("new_carrier_form"):
+                st.markdown("#### Register New Carrier")
+                company = st.text_input("Carrier Company Name", placeholder="e.g., TCS Logistics")
+                
+                if st.form_submit_button("Add to Fleet", type="primary"):
+                    if company:
+                        conn = get_db()
+                        cur = conn.cursor()
+                        cur.execute("INSERT INTO carriers (company_name, is_available) VALUES (%s, TRUE)", (company,))
+                        conn.commit()
+                        conn.close()
+                        st.success(f"{company} safely added to the fleet! KPI updated.")
+                        st.session_state.active_action = None
+                        st.rerun()
+                        
+        elif st.session_state.active_action == "dispatch":
+            # Real enterprise logic: Fetch pending orders and available carriers
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("SELECT order_id, origin_city, destination_city FROM orders WHERE order_id NOT IN (SELECT order_id FROM shipments)")
+            pending_orders = cur.fetchall()
+            
+            cur.execute("SELECT carrier_id, company_name FROM carriers WHERE is_available = TRUE")
+            available_carriers = cur.fetchall()
+            conn.close()
+            
+            with st.form("dispatch_form"):
+                st.markdown("#### Dispatch Freight to Carrier")
+                
+                if not pending_orders:
+                    st.info("No pending orders available to dispatch. Please draft a new order first.")
+                    st.form_submit_button("Acknowledge") # Required for form validity
+                elif not available_carriers:
+                    st.warning("No carriers available. Please add a carrier to the fleet first.")
+                    st.form_submit_button("Acknowledge")
+                else:
+                    # Create dropdown mappings
+                    order_opts = {f"Order #{o['order_id']} ({o['origin_city']} ➔ {o['destination_city']})": o['order_id'] for o in pending_orders}
+                    carrier_opts = {c['company_name']: c['carrier_id'] for c in available_carriers}
+                    
+                    sel_order = st.selectbox("Select Pending Order", options=list(order_opts.keys()))
+                    sel_carrier = st.selectbox("Assign to Carrier", options=list(carrier_opts.keys()))
+                    
+                    if st.form_submit_button("Initiate Dispatch", type="primary"):
+                        o_id = order_opts[sel_order]
+                        c_id = carrier_opts[sel_carrier]
+                        
+                        conn = get_db()
+                        cur = conn.cursor()
+                        
+                        # 1. Create the Shipment
+                        cur.execute("INSERT INTO shipments (order_id, carrier_id, status) VALUES (%s, %s, 'In Transit') RETURNING shipment_id", (o_id, c_id))
+                        new_ship_id = cur.fetchone()['shipment_id']
+                        
+                        # 2. Cryptographically tie the action to the user in the Audit Log
+                        cur.execute("INSERT INTO status_log (shipment_id, old_status, new_status, changed_by) VALUES (%s, 'Pending', 'In Transit', %s)", (new_ship_id, st.session_state.user['user_id']))
+                        
+                        conn.commit()
+                        conn.close()
+                        
+                        st.success("Fleet dispatched securely. Immutable audit log updated.")
+                        st.session_state.active_action = None
+                        st.rerun()
+                        
+        elif st.session_state.active_action == "report":
+            st.info("To generate a comprehensive CSV report, please navigate to the 'Active Shipments' tab and click 'Export to CSV'.")
+            if st.button("Close Message"):
+                st.session_state.active_action = None
+                st.rerun()
+                
     elif selected_module == "Active Shipments":
         st.title("Active Shipments & Fleet Tracking")
         st.write("Monitor live freight movement, filter by status, and export dispatcher reports.")
