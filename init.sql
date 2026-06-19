@@ -48,6 +48,6 @@ CREATE TABLE status_log (
 -- We inject these so you are not locked out of your own app upon deployment.
 
 INSERT INTO users (full_name, email, password_hash, role, is_active) VALUES 
-('System Admin', 'admin@logitrack.pk', '$2b$12$R.S4qM6P9.m4zF5v/gP/xeb/5Yq9LwQ2/U1/p5/wF8q.v.wQx/1mG', 'System Administrator', TRUE),
-('Muhammad Ahmad', 'ahmad@logitrack.pk', '$2b$12$R.S4qM6P9.m4zF5v/gP/xeb/5Yq9LwQ2/U1/p5/wF8q.v.wQx/1mG', 'Dispatcher', TRUE),
-('Abdullah', 'abdullah@logitrack.pk', '$2b$12$R.S4qM6P9.m4zF5v/gP/xeb/5Yq9LwQ2/U1/p5/wF8q.v.wQx/1mG', 'Warehouse Manager', TRUE);
+('System Admin', 'admin@logitrack.pk', '$2b$12$FhfcqwOVU4EgH/LuULoh7eNc/H8Unro5ArOpaIgHALLYfywE2FHnO', 'System Administrator', TRUE),
+('Muhammad Ahmad', 'ahmad@logitrack.pk', '$2b$12$jKNovhA/w2GVQvS6fRHKguX.craq1q0qGU2zxL/Q3lpBicHkhM8wi', 'Dispatcher', TRUE),
+('Abdullah', 'abdullah@logitrack.pk', '$2b$12$hTXospgUPF02BATCVDiQj.ZNAOrn7P7gy8vaXOsuQeWgeyHtfgs/S', 'Warehouse Manager', TRUE);
