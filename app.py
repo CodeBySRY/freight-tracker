@@ -246,7 +246,7 @@ def login_screen():
                 🌍 English (Global)
             </div>
             <div class="footer-text">
-                Founded in May 2026, LogiTrack PK is a trusted enterprise platform for managing freight operations across Pakistan. Engineered with precision by Abdul Haadi Raza, Muhammad Ahmad, and Abdullah, our platform helps arrange complex logistics deliveries from localized LTL shipments to heavy cargo loads. Thanks to a relational PostgreSQL backend and bank-grade transactional security, LogiTrack PK is the most reliable way for dispatchers to track shipments, audit statuses, and securely manage fleet capacity.
+                Founded in May 2026, LogiTrack PK is a trusted enterprise platform for managing freight operations across Pakistan. Engineered with precision by Shayan Rizwan, Anzar Mubashir, and Agha Salaat, our platform helps arrange complex logistics deliveries from localized LTL shipments to heavy cargo loads. Thanks to a relational PostgreSQL backend and bank-grade transactional security, LogiTrack PK is the most reliable way for dispatchers to track shipments, audit statuses, and securely manage fleet capacity.
             </div>
             <div class="footer-breadcrumbs">
                 <span>LogiTrack PK</span> &nbsp; / &nbsp; Enterprise Freight Management &nbsp; / &nbsp; © 2026 All Rights Reserved.
@@ -378,8 +378,8 @@ else:
             
         st.markdown("<br><hr style='border-color: #065f46;'><br>", unsafe_allow_html=True)
         
-# ─── QUICK ACTIONS (Gives the dashboard life) ───
-        st.markdown("### ⚡ Quick Actions")
+        # ─── QUICK ACTIONS (Gives the dashboard life) ───
+        st.markdown("### Quick Actions")
         
         # Initialize session state for interactive routing
         if 'active_action' not in st.session_state:
@@ -404,39 +404,76 @@ else:
         # ─── BACKEND LOGIC FOR QUICK ACTIONS ───
         if st.session_state.active_action == "order":
             with st.form("new_order_form"):
-                st.markdown("#### Create New Freight Order")
-                col_o, col_d = st.columns(2)
-                with col_o:
-                    origin = st.text_input("Origin City", placeholder="e.g., Karachi")
-                with col_d:
-                    dest = st.text_input("Destination City", placeholder="e.g., Islamabad")
+                st.markdown("#### 📦 Draft Comprehensive Freight Order")
+                
+                # Top Row: Client & Routing
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    customer = st.text_input("Customer Name *", placeholder="e.g., Giga Group")
+                with col2:
+                    origin = st.text_input("Origin City *", placeholder="e.g., Karachi")
+                with col3:
+                    dest = st.text_input("Destination City *", placeholder="e.g., Islamabad")
+                
+                # Middle Row: Cargo Details
+                col4, col5, col6 = st.columns([2, 1, 1])
+                with col4:
+                    desc = st.text_input("Cargo Description", placeholder="e.g., Electronics Pallets")
+                with col5:
+                    c_type = st.selectbox("Cargo Type", ["Standard", "Fragile", "Hazardous", "Refrigerated"])
+                with col6:
+                    weight = st.number_input("Weight (kg)", min_value=0.0, step=10.5)
+                
+                # Bottom Row: Logistics
+                col7, col8, col9 = st.columns(3)
+                with col7:
+                    priority = st.selectbox("Priority Level", ["Standard", "Expedited", "Overnight", "Critical"])
+                with col8:
+                    exp_date = st.date_input("Expected Delivery Date")
+                with col9:
+                    instructions = st.text_area("Special Instructions", height=68, placeholder="Gate codes, handling protocols...")
                 
                 if st.form_submit_button("Save Order to Database", type="primary"):
-                    if origin and dest:
+                    if customer and origin and dest:
                         conn = get_db()
                         cur = conn.cursor()
-                        cur.execute("INSERT INTO orders (origin_city, destination_city) VALUES (%s, %s)", (origin, dest))
+                        query = """
+                            INSERT INTO orders 
+                            (customer_name, origin_city, destination_city, cargo_description, cargo_type, cargo_weight_kg, priority, special_instructions, expected_delivery_date, created_by) 
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        """
+                        cur.execute(query, (customer, origin, dest, desc, c_type, weight, priority, instructions, exp_date, st.session_state.user['user_id']))
                         conn.commit()
                         conn.close()
-                        st.success(f"Order drafted for {origin} to {dest}! KPI updated.")
+                        st.success(f"Order strictly validated and saved for {customer}!")
                         st.session_state.active_action = None
                         st.rerun()
+                    else:
+                        st.error("Customer, Origin, and Destination are mandatory fields.")
 
         elif st.session_state.active_action == "carrier":
             with st.form("new_carrier_form"):
-                st.markdown("#### Register New Carrier")
-                company = st.text_input("Carrier Company Name", placeholder="e.g., TCS Logistics")
+                st.markdown("#### 🏢 Register Fleet Carrier")
+                col_c1, col_c2, col_c3 = st.columns(3)
+                with col_c1:
+                    company = st.text_input("Carrier Company Name *", placeholder="e.g., TCS Logistics")
+                with col_c2:
+                    phone = st.text_input("Dispatch Contact Phone", placeholder="+92 300 1234567")
+                with col_c3:
+                    v_type = st.selectbox("Vehicle Classification", ["Flatbed", "Box Truck", "Reefer (Refrigerated)", "LTL Van"])
                 
                 if st.form_submit_button("Add to Fleet", type="primary"):
                     if company:
                         conn = get_db()
                         cur = conn.cursor()
-                        cur.execute("INSERT INTO carriers (company_name, is_available) VALUES (%s, TRUE)", (company,))
+                        cur.execute("INSERT INTO carriers (company_name, contact_phone, vehicle_type, is_available) VALUES (%s, %s, %s, TRUE)", (company, phone, v_type))
                         conn.commit()
                         conn.close()
-                        st.success(f"{company} safely added to the fleet! KPI updated.")
+                        st.success(f"{company} safely integrated into the dispatch network.")
                         st.session_state.active_action = None
                         st.rerun()
+                    else:
+                        st.error("Company Name is a mandatory field.")
                         
         elif st.session_state.active_action == "dispatch":
             # Real enterprise logic: Fetch pending orders and available carriers
@@ -454,12 +491,11 @@ else:
                 
                 if not pending_orders:
                     st.info("No pending orders available to dispatch. Please draft a new order first.")
-                    st.form_submit_button("Acknowledge") # Required for form validity
+                    st.form_submit_button("Acknowledge") 
                 elif not available_carriers:
                     st.warning("No carriers available. Please add a carrier to the fleet first.")
                     st.form_submit_button("Acknowledge")
                 else:
-                    # Create dropdown mappings
                     order_opts = {f"Order #{o['order_id']} ({o['origin_city']} ➔ {o['destination_city']})": o['order_id'] for o in pending_orders}
                     carrier_opts = {c['company_name']: c['carrier_id'] for c in available_carriers}
                     
@@ -473,19 +509,26 @@ else:
                         conn = get_db()
                         cur = conn.cursor()
                         
-                        # 1. Create the Shipment
-                        cur.execute("INSERT INTO shipments (order_id, carrier_id, status) VALUES (%s, %s, 'In Transit') RETURNING shipment_id", (o_id, c_id))
-                        new_ship_id = cur.fetchone()['shipment_id']
-                        
-                        # 2. Cryptographically tie the action to the user in the Audit Log
-                        cur.execute("INSERT INTO status_log (shipment_id, old_status, new_status, changed_by) VALUES (%s, 'Pending', 'In Transit', %s)", (new_ship_id, st.session_state.user['user_id']))
-                        
-                        conn.commit()
-                        conn.close()
-                        
-                        st.success("Fleet dispatched securely. Immutable audit log updated.")
-                        st.session_state.active_action = None
-                        st.rerun()
+                        # ─── ACID COMPLIANT TRANSACTION BLOCK ───
+                        try:
+                            # 1. Create the Shipment
+                            cur.execute("INSERT INTO shipments (order_id, carrier_id, status) VALUES (%s, %s, 'In Transit') RETURNING shipment_id", (o_id, c_id))
+                            new_ship_id = cur.fetchone()['shipment_id']
+                            
+                            # 2. Cryptographically tie the action to the user in the Audit Log
+                            cur.execute("INSERT INTO status_log (shipment_id, old_status, new_status, changed_by) VALUES (%s, 'Pending', 'In Transit', %s)", (new_ship_id, st.session_state.user['user_id']))
+                            
+                            # Both succeeded, commit the transaction
+                            conn.commit()
+                            st.success("Fleet dispatched securely. Immutable audit log updated.")
+                            st.session_state.active_action = None
+                            st.rerun()
+                        except Exception as e:
+                            # If either fails, rollback entirely to protect data integrity
+                            conn.rollback()
+                            st.error(f"Transaction failed and rolled back. Error: {e}")
+                        finally:
+                            conn.close()
                         
         elif st.session_state.active_action == "report":
             st.info("To generate a comprehensive CSV report, please navigate to the 'Active Shipments' tab and click 'Export to CSV'.")
@@ -493,26 +536,28 @@ else:
                 st.session_state.active_action = None
                 st.rerun()
                 
+    # ─── CORRECTLY ALIGNED MODULE ROUTING ───
     elif selected_module == "Active Shipments":
         st.title("Active Shipments & Fleet Tracking")
         st.write("Monitor live freight movement, filter by status, and export dispatcher reports.")
         
-        # 1. The Control Panel (Search & Filter)
+        # The Control Panel (Search & Filter)
         col_search, col_filter, col_export = st.columns([2, 1, 1])
         with col_search:
             search_query = st.text_input("🔍 Search Origin, Destination, or Carrier", placeholder="e.g., Karachi or TCS")
         with col_filter:
             status_filter = st.selectbox("Filter Status", ["All", "Pending", "Assigned", "In Transit", "Delivered"])
             
-        # 2. Dynamic Database Fetching
+        # Dynamic Database Fetching mapping to the True Schema
         conn = get_db()
         cur = conn.cursor()
         base_query = """
             SELECT 
                 s.shipment_id AS "Shipment ID",
-                o.order_id AS "Order Ref",
+                o.customer_name AS "Client",
                 o.origin_city AS "Origin",
                 o.destination_city AS "Destination",
+                o.priority AS "Priority",
                 c.company_name AS "Carrier",
                 s.status AS "Current Status",
                 TO_CHAR(s.assigned_at, 'YYYY-MM-DD HH24:MI') AS "Assigned Time"
@@ -535,7 +580,7 @@ else:
         data = cur.fetchall()
         conn.close()
         
-        # 3. Data Rendering
+        # Data Rendering
         if data:
             df = pd.DataFrame(data)
             st.dataframe(df, use_container_width=True, hide_index=True)
@@ -548,7 +593,7 @@ else:
             
     elif selected_module == "Carrier Fleet":
         st.title("Carrier Fleet Management")
-        st.write("Carrier assignment controls will go here.")
+        st.info("To add a new carrier, navigate to the Command Center and click 'Add Carrier'.")
         
     elif selected_module == "Audit Logs":
         st.title("System Audit Logs")
@@ -562,6 +607,7 @@ else:
                 sl.shipment_id AS "Shipment Ref",
                 sl.old_status AS "Previous State",
                 sl.new_status AS "New State",
+                sl.notes AS "System Notes",
                 u.full_name AS "Authorized By",
                 u.role AS "Clearance Level",
                 TO_CHAR(sl.changed_at, 'YYYY-MM-DD HH24:MI:SS') AS "Timestamp"
