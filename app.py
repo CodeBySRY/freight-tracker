@@ -304,11 +304,27 @@ else:
 
     st.markdown("<hr style='border-color: #065f46; margin-top: 0;'>", unsafe_allow_html=True)
 
-    # ─── HORIZONTAL TOP NAVIGATION BAR ────────────────────────────────────
+    # ─── HORIZONTAL TOP NAVIGATION BAR (RBAC ENFORCED) ────────────────────
+    user_role = st.session_state.user['role']
+    
+    # Base modules accessible by everyone (Warehouse Manager baseline)
+    nav_options = ["Command Center", "Active Shipments"]
+    nav_icons = ["grid", "truck"]
+    
+    # Dispatcher & Admin extensions
+    if user_role in ["System Administrator", "Dispatcher"]:
+        nav_options.append("Carrier Fleet")
+        nav_icons.append("shield-check")
+        
+    # Admin exclusive extensions
+    if user_role == "System Administrator":
+        nav_options.append("Audit Logs")
+        nav_icons.append("clock-history")
+
     selected_module = option_menu(
         menu_title=None,
-        options=["Command Center", "Active Shipments", "Carrier Fleet", "Audit Logs"],
-        icons=["grid", "truck", "shield-check", "clock-history"],
+        options=nav_options,
+        icons=nav_icons,
         default_index=0,
         orientation="horizontal",
         styles={
@@ -379,26 +395,31 @@ else:
             
         st.markdown("<br><hr style='border-color: #065f46;'><br>", unsafe_allow_html=True)
         
-        # ─── QUICK ACTIONS (Gives the dashboard life) ───
+        # ─── QUICK ACTIONS (RBAC ENFORCED) ───
         st.markdown("### Quick Actions")
         
         # Initialize session state for interactive routing
         if 'active_action' not in st.session_state:
             st.session_state.active_action = None
 
-        qa1, qa2, qa3, qa4 = st.columns(4)
-        with qa1:
-            if st.button("📦 Draft New Order", use_container_width=True):
-                st.session_state.active_action = "order"
-        with qa2:
-            if st.button("🚚 Dispatch Fleet", use_container_width=True):
-                st.session_state.active_action = "dispatch"
-        with qa3:
-            if st.button("🏢 Add Carrier", use_container_width=True):
-                st.session_state.active_action = "carrier"
-        with qa4:
-            if st.button("📊 Generate Report", use_container_width=True):
-                st.session_state.active_action = "report"
+        # Build allowed actions based on clearance level
+        allowed_actions = []
+        allowed_actions.append(("📦 Draft New Order", "order"))
+        
+        if user_role in ["System Administrator", "Dispatcher"]:
+            allowed_actions.append(("🚚 Dispatch Fleet", "dispatch"))
+            
+        if user_role == "System Administrator":
+            allowed_actions.append(("🏢 Add Carrier", "carrier"))
+            
+        allowed_actions.append(("📊 Generate Report", "report"))
+
+        # Render only the columns authorized for this user
+        cols = st.columns(len(allowed_actions))
+        for idx, (btn_label, action_key) in enumerate(allowed_actions):
+            with cols[idx]:
+                if st.button(btn_label, use_container_width=True):
+                    st.session_state.active_action = action_key
 
         st.markdown("<br>", unsafe_allow_html=True)
 
