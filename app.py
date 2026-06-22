@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import re
 from database import get_db
 from auth import verify_password
 from streamlit_option_menu import option_menu
@@ -458,12 +459,22 @@ else:
                 with col_c1:
                     company = st.text_input("Carrier Company Name *", placeholder="e.g., TCS Logistics")
                 with col_c2:
-                    phone = st.text_input("Dispatch Contact Phone", placeholder="+92 300 1234567")
+                    phone = st.text_input("Dispatch Contact Phone *", placeholder="+92 300 1234567")
                 with col_c3:
-                    v_type = st.selectbox("Vehicle Classification", ["Flatbed", "Box Truck", "Reefer (Refrigerated)", "LTL Van"])
+                    v_type_options = ["Select...", "All Fleet Types", "Flatbed", "Box Truck", "Reefer (Refrigerated)", "LTL Van"]
+                    v_type = st.selectbox("Vehicle Classification *", v_type_options)
                 
                 if st.form_submit_button("Add to Fleet", type="primary"):
-                    if company:
+                    # Validation Logic
+                    if not company:
+                        st.error("Company Name is a mandatory field.")
+                    elif not phone:
+                        st.error("Dispatch Contact Phone is a mandatory field.")
+                    elif not re.match(r'^[\+\d\s\-]+$', phone):
+                        st.error("Invalid phone number format. Please use only numbers, spaces, dashes, or a leading '+'.")
+                    elif v_type == "Select...":
+                        st.error("Please select a valid Vehicle Classification.")
+                    else:
                         conn = get_db()
                         cur = conn.cursor()
                         cur.execute("INSERT INTO carriers (company_name, contact_phone, vehicle_type, is_available) VALUES (%s, %s, %s, TRUE)", (company, phone, v_type))
@@ -472,8 +483,6 @@ else:
                         st.success(f"{company} safely integrated into the dispatch network.")
                         st.session_state.active_action = None
                         st.rerun()
-                    else:
-                        st.error("Company Name is a mandatory field.")
                         
         elif st.session_state.active_action == "dispatch":
             # Real enterprise logic: Fetch pending orders and available carriers
