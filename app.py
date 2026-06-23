@@ -412,9 +412,12 @@ else:
         if user_role == "System Administrator":
             allowed_actions.append(("🏢 Add Carrier", "carrier"))
             
+        if user_role in ["System Administrator", "Warehouse Manager"]:
+            allowed_actions.append(("✅ Update Status", "update_status"))
+            
         allowed_actions.append(("📊 Generate Report", "report"))
 
-        # Render only the columns authorized for this user
+        # Render only the columns authorized for this user dynamically
         cols = st.columns(len(allowed_actions))
         for idx, (btn_label, action_key) in enumerate(allowed_actions):
             with cols[idx]:
@@ -517,13 +520,13 @@ else:
             conn.close()
             
             with st.form("dispatch_form"):
-                st.markdown("#### Dispatch Freight to Carrier")
+                st.markdown("#### 🚚 Dispatch Freight to Carrier")
                 
                 if not pending_orders:
                     st.info("No pending orders available to dispatch. Please draft a new order first.")
                     st.form_submit_button("Acknowledge") 
                 elif not available_carriers:
-                    st.warning("No carriers available. Please add a carrier to the fleet first.")
+                    st.warning("No carriers available. Please add a carrier to the fleet first, or wait for an active truck to complete its delivery.")
                     st.form_submit_button("Acknowledge")
                 else:
                     order_opts = {f"Order #{o['order_id']} ({o['origin_city']} ➔ {o['destination_city']})": o['order_id'] for o in pending_orders}
@@ -548,13 +551,79 @@ else:
                             # 2. Cryptographically tie the action to the user in the Audit Log
                             cur.execute("INSERT INTO status_log (shipment_id, old_status, new_status, changed_by) VALUES (%s, 'Pending', 'In Transit', %s)", (new_ship_id, st.session_state.user['user_id']))
                             
-                            # Both succeeded, commit the transaction
+                            # 3. LOCK THE CARRIER RESOURCE (Gap 2 Fix)
+                            cur.execute("UPDATE carriers SET is_available = FALSE WHERE carrier_id = %s", (c_id,))
+
+                            # All succeeded, commit the transaction
                             conn.commit()
-                            st.success("Fleet dispatched securely. Immutable audit log updated.")
+                            st.success("Fleet dispatched securely. Carrier locked. Audit log updated.")
                             st.session_state.active_action = None
                             st.rerun()
                         except Exception as e:
-                            # If either fails, rollback entirely to protect data integrity
+                            # If anything fails, rollback entirely to protect data integrity
+                            conn.rollback()
+                            st.error(f"Transaction failed and rolled back. Error: {e}")
+                        finally:
+                            conn.close()
+
+        elif st.session_state.active_action == "update_status":
+            # Real enterprise logic: Fetch only shipments that are currently moving
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT s.shipment_id, o.order_id, o.destination_city, c.company_name 
+                FROM shipments s
+                JOIN orders o ON s.order_id = o.order_id
+                JOIN carriers c ON s.carrier_id = c.carrier_id
+                WHERE s.status IN ('In Transit', 'Delayed')
+            """)
+            active_ships = cur.fetchall()
+            conn.close()
+
+            with st.form("update_status_form"):
+                st.markdown("#### ✅ Update Delivery Status")
+                
+                if not active_ships:
+                    st.info("No active shipments awaiting delivery updates.")
+                    st.form_submit_button("Acknowledge")
+                else:
+                    ship_opts = {f"Shipment #{s['shipment_id']} (Order #{s['order_id']} to {s['destination_city']} via {s['company_name']})": s['shipment_id'] for s in active_ships}
+                    
+                    sel_ship = st.selectbox("Select Active Shipment", options=list(ship_opts.keys()))
+                    new_status = st.selectbox("New Status", ["Delivered", "Delayed", "Cancelled"])
+                    notes = st.text_input("Receiving Notes", placeholder="e.g., Signed by receiver at Dock 4, Cargo intact.")
+                    
+                    if st.form_submit_button("Confirm Status Update", type="primary"):
+                        s_id = ship_opts[sel_ship]
+                        
+                        conn = get_db()
+                        cur = conn.cursor()
+                        
+                        try:
+                            # 1. Fetch current status and carrier ID before modifying
+                            cur.execute("SELECT status, carrier_id FROM shipments WHERE shipment_id = %s", (s_id,))
+                            ship_data = cur.fetchone()
+                            old_status = ship_data['status']
+                            c_id = ship_data['carrier_id']
+
+                            # 2. Update Shipment Status
+                            if new_status == 'Delivered':
+                                cur.execute("UPDATE shipments SET status = %s, actual_delivery_date = CURRENT_DATE, delivered_at = CURRENT_TIMESTAMP WHERE shipment_id = %s", (new_status, s_id))
+                            else:
+                                cur.execute("UPDATE shipments SET status = %s WHERE shipment_id = %s", (new_status, s_id))
+
+                            # 3. Cryptographically stamp the Audit Log
+                            cur.execute("INSERT INTO status_log (shipment_id, old_status, new_status, notes, changed_by) VALUES (%s, %s, %s, %s, %s)", (s_id, old_status, new_status, notes, st.session_state.user['user_id']))
+
+                            # 4. RELEASE THE CARRIER RESOURCE (Closing the loop)
+                            if new_status in ['Delivered', 'Cancelled']:
+                                cur.execute("UPDATE carriers SET is_available = TRUE WHERE carrier_id = %s", (c_id,))
+
+                            conn.commit()
+                            st.success(f"Shipment #{s_id} marked as {new_status}. Carrier fleet status updated.")
+                            st.session_state.active_action = None
+                            st.rerun()
+                        except Exception as e:
                             conn.rollback()
                             st.error(f"Transaction failed and rolled back. Error: {e}")
                         finally:
@@ -576,7 +645,7 @@ else:
         with col_search:
             search_query = st.text_input("🔍 Search Origin, Destination, or Carrier", placeholder="e.g., Karachi or TCS")
         with col_filter:
-            status_filter = st.selectbox("Filter Status", ["All", "Pending", "Assigned", "In Transit", "Delivered"])
+            status_filter = st.selectbox("Filter Status", ["All", "Pending", "Assigned", "In Transit", "Delayed", "Delivered", "Cancelled"])
             
         # Dynamic Database Fetching mapping to the True Schema
         conn = get_db()
