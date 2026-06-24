@@ -180,7 +180,7 @@ def render_page():
                 <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Assign pending orders to available carriers and deploy trucks.</p>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("Open Dispatch UI", key="btn_dispatch", use_container_width=True):
+            if st.button("Dispatch", key="btn_dispatch", use_container_width=True):
                 dispatch_fleet_dialog() # Triggers the modal
         else:
             st.markdown("""

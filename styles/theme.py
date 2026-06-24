@@ -14,9 +14,8 @@ def apply_enterprise_theme():
                 font-family: 'Inter', system-ui, sans-serif;
             }
 
-            /* Hide default Streamlit fluff */
+            /* Hide default Streamlit fluff (Header, Footer, Main Menu) */
             #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-            [data-testid="collapsedControl"] { display: none !important; }
 
             /* Smooth page load animation */
             @keyframes fadeUp {
@@ -49,6 +48,16 @@ def apply_enterprise_theme():
                 border-color: #10b981 !important; box-shadow: 0 0 0 2px rgba(16,185,129,0.2) !important; 
             }
             [data-testid="stDataFrame"] { border-radius: 12px; overflow: hidden; border: 1px solid #1e293b; }
+            
+            /* Subtly style the expand/collapse button to match the dark theme */
+            [data-testid="collapsedControl"] {
+                color: #94a3b8 !important;
+                background-color: transparent !important;
+                transition: color 0.2s ease;
+            }
+            [data-testid="collapsedControl"]:hover {
+                color: #10b981 !important;
+            }
         </style>
         """,
         unsafe_allow_html=True,

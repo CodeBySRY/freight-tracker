@@ -16,8 +16,8 @@ apply_enterprise_theme()
 
 # ─── 2. AUTHENTICATION GATEWAY ────────────────────────────────────────
 def login_screen():
-    # Hide sidebar during login
-    st.markdown('<style>[data-testid="stSidebar"] { display: none !important; }</style>', unsafe_allow_html=True)
+    # Hide sidebar AND the expand/collapse button during login
+    st.markdown('<style>[data-testid="stSidebar"] { display: none !important; } [data-testid="collapsedControl"] { display: none !important; }</style>', unsafe_allow_html=True)
     
     st.markdown("<h1 class='hero-title'>LogiTrack PK</h1>", unsafe_allow_html=True)
     st.markdown("<p class='hero-subtitle'>ENTERPRISE FREIGHT & LOGISTICS MANAGEMENT</p>", unsafe_allow_html=True)
