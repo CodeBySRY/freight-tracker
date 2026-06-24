@@ -158,7 +158,7 @@ def add_carrier_dialog():
     col_c1, col_c2 = st.columns(2)
     with col_c1: company = st.text_input("Carrier Company Name *", placeholder="e.g., TCS Logistics")
     with col_c2: phone = st.text_input("Dispatch Contact Phone *", placeholder="+92 300 1234567")
-    v_type = st.selectbox("Vehicle Classification *", ["Select...", "Flatbed", "Box Truck", "Reefer (Refrigerated)", "LTL Van"])
+    v_type = st.selectbox("Vehicle Classification *", ["Select...", "Flatbed", "Box Truck", "Reefer (Refrigerated)", "LTL Van", "All Vehicle Types"])
     
     if st.button("Add to Fleet", type="primary", use_container_width=True):
         if not company or not phone or v_type == "Select...":
