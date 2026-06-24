@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from database import get_db
 from components.ui_elements import render_status_badge
-from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode
+from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode, JsCode
 
 def render_page():
     st.markdown("<h2 style='font-weight: 800; color: #f8fafc; margin-bottom: 0.5rem;'>📦 Shipment Management</h2>", unsafe_allow_html=True)
@@ -44,31 +44,26 @@ def render_page():
     
     # Configure AG Grid Options
     gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_pagination(paginationAutoPageSize=True) # Add pagination
-    gb.configure_side_bar() # Add sidebar for advanced filtering
+    gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_side_bar()
     gb.configure_selection('single')
     
-    # Custom rendering for the Status column to use our Badges
-    gb.configure_column(
-        "Status",
-        cellRenderer=st.components.v1.html(
-            """
-            function(params) {
-                const statusMap = {
-                    'Delivered': 'badge-delivered',
-                    'In Transit': 'badge-transit',
-                    'Delayed': 'badge-delayed',
-                    'Cancelled': 'badge-cancelled',
-                    'Pending': 'badge-pending'
-                };
-                const cssClass = statusMap[params.value] || 'badge-pending';
-                return `<span class='badge ${cssClass}'>${params.value}</span>`;
-            }
-            """,
-            height=0
-        )
-    )
-
+    # Corrected JsCode implementation for Status Badges
+    status_jscode = JsCode("""
+    function(params) {
+        const statusMap = {
+            'Delivered': 'badge-delivered',
+            'In Transit': 'badge-transit',
+            'Delayed': 'badge-delayed',
+            'Cancelled': 'badge-cancelled',
+            'Pending': 'badge-pending'
+        };
+        const cssClass = statusMap[params.value] || 'badge-pending';
+        return `<span class='badge ${cssClass}'>${params.value}</span>`;
+    }
+    """)
+    
+    gb.configure_column("Status", cellRenderer=status_jscode)
     gridOptions = gb.build()
 
     # Render the Grid
@@ -78,9 +73,10 @@ def render_page():
         gridOptions=gridOptions,
         enable_enterprise_modules=False,
         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
-        theme='alpine', # A clean, modern theme
+        theme='alpine', 
         height=500,
-        fit_columns_on_grid_load=True
+        fit_columns_on_grid_load=True,
+        allow_unsafe_jscode=True # This enables the custom badge rendering
     )
     st.markdown("</div>", unsafe_allow_html=True)
     

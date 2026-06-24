@@ -52,22 +52,36 @@ def login_screen():
 if not st.session_state.user:
     login_screen()
 else:
-    # Permanently kill Streamlit's native sidebar and fluff
+    # ─── FLUSH LEFT OVERRIDE ───
     st.markdown(
         """
         <style>
+            /* Permanently kill Streamlit's native sidebar and fluff */
             [data-testid="stSidebar"] { display: none !important; }
             [data-testid="collapsedControl"] { display: none !important; }
+            
+            /* Eliminate the default Streamlit padding to make the nav flush left */
+            .block-container {
+                padding-left: 0rem !important;
+                padding-right: 2rem !important;
+                padding-top: 1.5rem !important;
+                max-width: 100% !important;
+            }
+            
+            /* Remove padding from the left-most column specifically */
+            [data-testid="column"]:nth-of-type(1) {
+                padding-left: 0 !important;
+            }
         </style>
         """, 
         unsafe_allow_html=True
     )
     
-    # TOP HEADER
-    header_col1, header_col2 = st.columns([8, 2])
-    with header_col1:
-        st.markdown("<h2 style='color: #10b981; margin-bottom: 0; font-weight: 800; letter-spacing: -1px;'>LogiTrack PK Enterprise</h2>", unsafe_allow_html=True)
+    # TOP HEADER (Padded slightly to not hit the absolute edge)
+    header_col1, header_col2, header_col3 = st.columns([0.2, 7.8, 2])
     with header_col2:
+        st.markdown("<h2 style='color: #10b981; margin-bottom: 0; font-weight: 800; letter-spacing: -1px;'>LogiTrack PK Enterprise</h2>", unsafe_allow_html=True)
+    with header_col3:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🚪 Secure Logout", use_container_width=True):
             st.session_state.user = None
@@ -83,7 +97,7 @@ else:
     # LEFT COLUMN: Permanent Navigation Rail
     with nav_col:
         st.markdown(f"""
-            <div style='background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 20px;'>
+            <div style='background: #0f172a; padding: 15px; border-radius: 0 12px 12px 0; border: 1px solid #1e293b; border-left: none; margin-bottom: 20px;'>
                 <p style='color: #94a3b8; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px;'>Operator</p>
                 <h4 style='color: #f8fafc; margin: 0;'>{st.session_state.user['full_name']}</h4>
                 <span style='background: #022c22; color: #34d399; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; border: 1px solid #065f46; display: inline-block; margin-top: 5px;'>{user_role}</span>
@@ -112,9 +126,9 @@ else:
             styles={
                 "container": {"padding": "0!important", "background-color": "transparent"},
                 "icon": {"color": "#10b981", "font-size": "1.2rem"}, 
-                "nav-link": {"font-size": "0.95rem", "text-align": "left", "margin": "4px 0", "color": "#94a3b8", "font-family": "'Inter', sans-serif", "font-weight": "500", "border-radius": "8px"},
+                "nav-link": {"font-size": "0.95rem", "text-align": "left", "margin": "4px 0", "color": "#94a3b8", "font-family": "'Inter', sans-serif", "font-weight": "500", "border-radius": "0 8px 8px 0"},
                 "nav-link-selected": {"background-color": "#065f46", "color": "#10b981", "font-weight": "700"},
-                "menu-title": {"color": "#f8fafc", "font-size": "0.85rem", "letter-spacing": "2px", "padding-left": "10px", "font-family": "'Inter', sans-serif", "font-weight": "800"}
+                "menu-title": {"color": "#f8fafc", "font-size": "0.85rem", "letter-spacing": "2px", "padding-left": "15px", "font-family": "'Inter', sans-serif", "font-weight": "800"}
             }
         )
 
