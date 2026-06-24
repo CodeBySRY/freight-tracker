@@ -52,10 +52,10 @@ def render_page():
     """, unsafe_allow_html=True)
 
     # ── Fetch all data ────────────────────────────────────────────────────────
-    df_status  = fetch_shipment_status_distribution()
-    df_trends  = fetch_orders_timeline()
+    df_status   = fetch_shipment_status_distribution()
+    df_trends   = fetch_orders_timeline()
     df_carriers = fetch_carrier_utilization()
-    df_perf    = fetch_delivery_performance()
+    df_perf     = fetch_delivery_performance()
 
     # ── ROW 1: Status donut + Delivery performance ────────────────────────────
     col1, col2 = st.columns(2, gap="medium")
@@ -63,11 +63,17 @@ def render_page():
     with col1:
         _chart_wrapper("Shipment Status Distribution", "Breakdown by current state across all shipments")
         if not df_status.empty:
+            # Convert 'count' column to numeric types to prevent string concatenation crashes
+            df_status['count'] = pd.to_numeric(df_status['count'], errors='coerce').fillna(0)
+            
             fig = px.pie(
                 df_status, values='count', names='status', hole=0.60,
                 color='status', color_discrete_map=STATUS_COLORS,
             )
+            
+            # Calculate total safely now that it is strictly numeric
             total = int(df_status['count'].sum())
+            
             fig.add_annotation(
                 text=f"<b>{total}</b><br><span style='font-size:10px'>TOTAL</span>",
                 x=0.5, y=0.5, showarrow=False,
