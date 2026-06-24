@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 from auth import verify_password
 from database import get_db
 from streamlit_option_menu import option_menu
@@ -8,17 +7,16 @@ import pages.dashboard as dashboard
 import pages.shipments as shipments
 
 # ─── 1. PAGE CONFIGURATION & THEME ────────────────────────────────────
-st.set_page_config(page_title="LogiTrack PK Enterprise", page_icon="📦", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="LogiTrack PK Enterprise", page_icon="📦", layout="wide", initial_sidebar_state="collapsed")
 
 if 'user' not in st.session_state:
     st.session_state.user = None
 
-# Inject Global Enterprise CSS and Unified Status Badges
 apply_enterprise_theme()
 
 # ─── 2. AUTHENTICATION GATEWAY ────────────────────────────────────────
 def login_screen():
-    # Hide sidebar AND the expand/collapse button during login
+    # Hide the native sidebar completely
     st.markdown('<style>[data-testid="stSidebar"] { display: none !important; } [data-testid="collapsedControl"] { display: none !important; }</style>', unsafe_allow_html=True)
     
     st.markdown("<h1 class='hero-title'>LogiTrack PK</h1>", unsafe_allow_html=True)
@@ -50,33 +48,16 @@ def login_screen():
             else:
                 st.error("Authentication failed: Invalid credentials or deactivated account.")
 
-# ─── 3. ENTERPRISE APPLICATION SHELL ──────────────────────────────────
+# ─── 3. ENTERPRISE APPLICATION SHELL (HARDCODED LAYOUT) ───────────────
 if not st.session_state.user:
     login_screen()
 else:
-    # 1. AUTO-RECOVERY JS: Force the sidebar open if localStorage bricked it
-    components.html(
-        """
-        <script>
-            // Look for the closed toggle button in the parent DOM
-            const expandBtn = window.parent.document.querySelector('[data-testid="collapsedControl"]');
-            if (expandBtn) {
-                expandBtn.click(); // Programmatically click it to unstick the browser
-            }
-        </script>
-        """,
-        height=0, width=0
-    )
-
-    # 2. PRD COMPLIANCE CSS: Lock the sidebar permanently open
+    # Permanently kill Streamlit's native sidebar and fluff
     st.markdown(
         """
         <style>
-            /* Hide Streamlit's default native page navigation */
-            [data-testid="stSidebarNav"] { display: none !important; }
-            
-            /* Permanently hide the collapse button INSIDE the open sidebar */
-            [data-testid="stSidebarCollapseButton"] { display: none !important; }
+            [data-testid="stSidebar"] { display: none !important; }
+            [data-testid="collapsedControl"] { display: none !important; }
         </style>
         """, 
         unsafe_allow_html=True
@@ -91,12 +72,16 @@ else:
         if st.button("🚪 Secure Logout", use_container_width=True):
             st.session_state.user = None
             st.rerun()
-    st.markdown("<hr style='border-color: #1e293b; margin-top: 0;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border-color: #1e293b; margin-top: 0; margin-bottom: 2rem;'>", unsafe_allow_html=True)
 
-    # PERSISTENT ENTERPRISE SIDEBAR (RBAC ENFORCED)
-    user_role = st.session_state.user['role']
+    # ─── THE HARDCODED GRID LAYOUT ───
+    # Split the screen: 20% for Navigation, 80% for the Main Workspace
+    nav_col, workspace_col = st.columns([2, 8], gap="large")
     
-    with st.sidebar:
+    user_role = st.session_state.user['role']
+
+    # LEFT COLUMN: Permanent Navigation Rail
+    with nav_col:
         st.markdown(f"""
             <div style='background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 20px;'>
                 <p style='color: #94a3b8; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px;'>Operator</p>
@@ -105,11 +90,9 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-        # Baseline modules
         nav_options = ["Dashboard", "Shipments"]
         nav_icons = ["grid", "truck"]
         
-        # RBAC Extensions
         if user_role in ["System Administrator", "Dispatcher"]:
             nav_options.append("Fleet")
             nav_icons.append("shield-check")
@@ -135,14 +118,15 @@ else:
             }
         )
 
-    # ─── 4. MODULE ROUTING ────────────────────────────────────────────────
-    if selected_module == "Dashboard":
-        dashboard.render_page()
-    elif selected_module == "Shipments":
-        shipments.render_page()
-    elif selected_module == "Fleet":
-        st.title("🏢 Fleet Operations")
-        st.info("Fleet Module decoupled and undergoing enterprise rendering...")
-    elif selected_module == "Audit Logs":
-        st.title("🔐 Immutable Ledger")
-        st.info("Audit Logs decoupled and undergoing enterprise rendering...")
+    # RIGHT COLUMN: The Dynamic Workspace
+    with workspace_col:
+        if selected_module == "Dashboard":
+            dashboard.render_page()
+        elif selected_module == "Shipments":
+            shipments.render_page()
+        elif selected_module == "Fleet":
+            st.title("🏢 Fleet Operations")
+            st.info("Fleet Module decoupled and undergoing enterprise rendering...")
+        elif selected_module == "Audit Logs":
+            st.title("🔐 Immutable Ledger")
+            st.info("Audit Logs decoupled and undergoing enterprise rendering...")
