@@ -99,12 +99,12 @@ else:
             options=nav_options,
             icons=nav_icons,
             default_index=0,
-            styles={
+    styles={
                 "container": {"padding": "0!important", "background-color": "transparent"},
-                "icon": {"color": "#10b981", "font-size": "1.1rem"}, 
-                "nav-link": {"font-size": "0.95rem", "text-align": "left", "margin": "4px 0", "color": "#94a3b8", "font-family": "Inter", "border-radius": "8px"},
-                "nav-link-selected": {"background-color": "#065f46", "color": "#10b981", "font-weight": "600"},
-                "menu-title": {"color": "#64748b", "font-size": "0.8rem", "letter-spacing": "2px", "padding-left": "10px"}
+                "icon": {"color": "#10b981", "font-size": "1.2rem"}, 
+                "nav-link": {"font-size": "0.95rem", "text-align": "left", "margin": "4px 0", "color": "#94a3b8", "font-family": "'Inter', sans-serif", "font-weight": "500", "border-radius": "8px"},
+                "nav-link-selected": {"background-color": "#065f46", "color": "#10b981", "font-weight": "700"},
+                "menu-title": {"color": "#f8fafc", "font-size": "0.85rem", "letter-spacing": "2px", "padding-left": "10px", "font-family": "'Inter', sans-serif", "font-weight": "800"}
             }
         )
 
