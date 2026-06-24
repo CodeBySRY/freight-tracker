@@ -4,6 +4,9 @@ from database import get_db
 from streamlit_option_menu import option_menu
 import pages.dashboard as dashboard
 import pages.shipments as shipments
+import pages.fleet as fleet
+import pages.reports as reports
+import pages.audit_logs as audit_logs
 
 # ─── 1. PAGE CONFIGURATION ────────────────────────────────────────────
 st.set_page_config(page_title="LogiTrack PK Enterprise", page_icon="📦", layout="wide", initial_sidebar_state="collapsed")
@@ -131,8 +134,8 @@ else:
         elif selected_module == "Shipments":
             shipments.render_page()
         elif selected_module == "Fleet":
-            st.title("🏢 Fleet Operations")
-            st.info("Fleet Module decoupled and undergoing enterprise rendering...")
+            fleet.render_page()
+        elif selected_module == "Reports":
+            reports.render_page()
         elif selected_module == "Audit Logs":
-            st.title("🔐 Immutable Ledger")
-            st.info("Audit Logs decoupled and undergoing enterprise rendering...")
+            audit_logs.render_page()

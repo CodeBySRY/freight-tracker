@@ -1,89 +1,52 @@
 import streamlit as st
 import pandas as pd
 from database import get_db
+from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode, JsCode
 
-# Security & RBAC: Redirect if not logged in OR if not an Admin
-if 'user' not in st.session_state or st.session_state.user is None:
-    st.switch_page("app.py")
-
-user = st.session_state.user
-if user['role'] != 'Admin':
-    st.error("Access Denied. Only Administrators can manage the carrier fleet.")
-    st.stop() # Halts execution of the rest of the page
-
-st.title("Fleet & Carrier Management")
-st.write("Register new logistics partners and manage fleet availability.")
-
-conn = get_db()
-cur = conn.cursor()
-
-# --- 1. Register New Carrier Form ---
-with st.expander("➕ Register New Carrier", expanded=False):
-    with st.form("new_carrier_form", clear_on_submit=True):
-        st.subheader("Carrier Details")
-        company_name = st.text_input("Company Name *")
-        vehicle_type = st.selectbox(
-            "Primary Vehicle Type", 
-            ["Heavy Truck", "Pickup Van", "Container Truck", "Air Cargo", "Train/Rail"]
-        )
-        contact_phone = st.text_input("Contact Phone")
-        
-        submit_carrier = st.form_submit_button("Register Carrier", type="primary")
-
-        if submit_carrier:
-            if company_name.strip():
-                try:
-                    cur.execute(
-                        "INSERT INTO carriers (company_name, vehicle_type, contact_phone, is_available) VALUES (%s, %s, %s, TRUE)",
-                        (company_name, vehicle_type, contact_phone)
-                    )
-                    conn.commit()
-                    st.success(f"{company_name} registered successfully!")
-                    st.rerun() # Refresh page to show the new data
-                except Exception as e:
-                    conn.rollback()
-                    st.error(f"Database error: {e}")
-            else:
-                st.error("Company name is required.")
-
-st.divider()
-
-# --- 2. Carrier Registry & Availability Toggle ---
-st.subheader("Registered Carriers")
-
-cur.execute("SELECT carrier_id, company_name, vehicle_type, contact_phone, is_available FROM carriers ORDER BY company_name")
-carriers = cur.fetchall()
-
-if carriers:
-    # Render the data elegantly using a Pandas DataFrame
-    df = pd.DataFrame(carriers)
-    # Rename columns for a clean UI presentation
-    df.columns = ['ID', 'Company Name', 'Vehicle Type', 'Contact Phone', 'Is Available']
-    st.dataframe(df, hide_index=True, use_container_width=True)
-
-    st.markdown("#### Quick Actions: Toggle Availability")
-    st.caption("Marking a carrier as 'Unavailable' removes them from the Dispatcher's assignment dropdown.")
+def render_page():
+    st.markdown("<h2 style='font-weight: 800; color: #f8fafc; margin-bottom: 0.5rem;'>🏢 Fleet Operations</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94a3b8; font-size: 0.95rem; margin-bottom: 1.5rem;'>Manage carrier capacity, vehicle types, and dispatch availability.</p>", unsafe_allow_html=True)
     
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        # A dropdown to select which carrier to modify
-        carrier_to_toggle = st.selectbox(
-            "Select a Carrier to update",
-            options=carriers,
-            format_func=lambda c: f"[{'✅ Active' if c['is_available'] else '❌ Inactive'}] {c['company_name']}"
-        )
-    with col2:
-        st.write("") # Vertical alignment spacing
-        st.write("")
-        if st.button("Toggle Status", use_container_width=True):
-            new_status = not carrier_to_toggle['is_available']
-            cur.execute(
-                "UPDATE carriers SET is_available = %s WHERE carrier_id = %s",
-                (new_status, carrier_to_toggle['carrier_id'])
-            )
-            conn.commit()
-            st.rerun() # Refresh to update the table and dropdown instantly
-else:
-    st.info("No carriers registered in the system.")
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT 
+                carrier_id AS "Carrier ID",
+                company_name AS "Company",
+                contact_phone AS "Dispatch Contact",
+                vehicle_type AS "Classification",
+                CASE WHEN is_available THEN 'Available' ELSE 'Dispatched' END AS "Status"
+            FROM carriers
+            ORDER BY is_available DESC, company_name ASC
+        """)
+        data = cur.fetchall()
+    except Exception as e:
+        st.error(f"Failed to fetch fleet data: {e}")
+        data = []
+    finally:
+        conn.close()
 
-conn.close()
+    if not data:
+        st.info("No carriers registered in the fleet.")
+        return
+
+    df = pd.DataFrame(data)
+    gb = GridOptionsBuilder.from_dataframe(df)
+    gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_selection('single')
+    
+    # Custom color logic for availability
+    availability_jscode = JsCode("""
+    function(params) {
+        if (params.value === 'Available') { return {'color': '#34d399', 'backgroundColor': '#022c22', 'borderRadius': '8px', 'textAlign': 'center', 'fontWeight': '600'}; }
+        return {'color': '#cbd5e1', 'backgroundColor': '#334155', 'borderRadius': '8px', 'textAlign': 'center', 'fontWeight': '600'};
+    }
+    """)
+    gb.configure_column("Status", cellStyle=availability_jscode)
+    
+    gridOptions = gb.build()
+
+    st.markdown("<div style='border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;'>", unsafe_allow_html=True)
+    AgGrid(df, gridOptions=gridOptions, enable_enterprise_modules=False, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS, theme='streamlit', allow_unsafe_jscode=True)
+    st.markdown("</div>", unsafe_allow_html=True)

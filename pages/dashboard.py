@@ -34,7 +34,7 @@ def draft_order_dialog():
                 cur.execute(query, (customer, origin, dest, desc, c_type, weight, priority, instructions, exp_date, st.session_state.user['user_id']))
                 conn.commit()
                 st.success(f"Order validated and saved for {customer}!")
-                st.rerun() # Refresh dashboard behind the modal
+                st.rerun() 
             except Exception as e:
                 conn.rollback()
                 st.error(f"Database error: {e}")
@@ -45,6 +45,11 @@ def draft_order_dialog():
 
 @st.dialog("🚚 Dispatch Fleet")
 def dispatch_fleet_dialog():
+    # ─── ZERO TRUST SECURITY CHECK ───
+    if st.session_state.user['role'] not in ["System Administrator", "Dispatcher"]:
+        st.error("SECURITY VIOLATION: Unauthorized clearance level.")
+        st.stop()
+
     st.markdown("<p style='color: #94a3b8; font-size: 0.9rem; margin-top: -10px;'>Assign a pending order to an available carrier.</p>", unsafe_allow_html=True)
     
     conn = get_db()
@@ -58,7 +63,7 @@ def dispatch_fleet_dialog():
     if not pending_orders:
         st.info("No pending orders available to dispatch.")
     elif not available_carriers:
-        st.warning("No carriers available. Please wait for an active delivery to complete.")
+        st.warning("No carriers available. Please wait for an active delivery to complete, or register a new carrier.")
     else:
         order_opts = {f"Order #{o['order_id']} ({o['origin_city']} ➔ {o['destination_city']})": o['order_id'] for o in pending_orders}
         carrier_opts = {c['company_name']: c['carrier_id'] for c in available_carriers}
@@ -88,6 +93,11 @@ def dispatch_fleet_dialog():
 
 @st.dialog("✅ Update Delivery Status")
 def update_status_dialog():
+    # ─── ZERO TRUST SECURITY CHECK ───
+    if st.session_state.user['role'] not in ["System Administrator", "Warehouse Manager"]:
+        st.error("SECURITY VIOLATION: Unauthorized clearance level.")
+        st.stop()
+
     st.markdown("<p style='color: #94a3b8; font-size: 0.9rem; margin-top: -10px;'>Record delivery progress or mark delays.</p>", unsafe_allow_html=True)
     
     conn = get_db()
@@ -137,6 +147,37 @@ def update_status_dialog():
             finally:
                 conn.close()
 
+@st.dialog("🏢 Register Fleet Carrier")
+def add_carrier_dialog():
+    # ─── ZERO TRUST SECURITY CHECK ───
+    if st.session_state.user['role'] != "System Administrator":
+        st.error("SECURITY VIOLATION: Unauthorized clearance level.")
+        st.stop()
+
+    st.markdown("<p style='color: #94a3b8; font-size: 0.9rem; margin-top: -10px;'>Add a new vehicle to the logistics network.</p>", unsafe_allow_html=True)
+    col_c1, col_c2 = st.columns(2)
+    with col_c1: company = st.text_input("Carrier Company Name *", placeholder="e.g., TCS Logistics")
+    with col_c2: phone = st.text_input("Dispatch Contact Phone *", placeholder="+92 300 1234567")
+    v_type = st.selectbox("Vehicle Classification *", ["Select...", "Flatbed", "Box Truck", "Reefer (Refrigerated)", "LTL Van"])
+    
+    if st.button("Add to Fleet", type="primary", use_container_width=True):
+        if not company or not phone or v_type == "Select...":
+            st.error("Please fill all mandatory fields.")
+        else:
+            conn = get_db()
+            cur = conn.cursor()
+            try:
+                cur.execute("INSERT INTO carriers (company_name, contact_phone, vehicle_type, is_available) VALUES (%s, %s, %s, TRUE)", (company, phone, v_type))
+                conn.commit()
+                st.success(f"{company} registered safely into the dispatch network.")
+                st.rerun()
+            except Exception as e:
+                conn.rollback()
+                st.error(f"Transaction failed. Error: {e}")
+            finally:
+                conn.close()
+
+
 # ─── MAIN DASHBOARD RENDERING ──────────────────────────────────────────
 def render_page():
     st.markdown("<h2 style='font-weight: 800; color: #f8fafc; margin-bottom: 1.5rem;'>🌐 Command Center</h2>", unsafe_allow_html=True)
@@ -156,37 +197,37 @@ def render_page():
         
     st.markdown("<br><br>", unsafe_allow_html=True)
 
-    # 2. ACTION CARDS (Contextual Workflows)
+    # 2. ACTION CARDS (Contextual Workflows) - Now with 4 Columns
     st.markdown("<h3 style='font-weight: 700; color: #f8fafc; margin-bottom: 1rem;'>⚡ Operational Workflows</h3>", unsafe_allow_html=True)
     
-    ac1, ac2, ac3 = st.columns(3)
+    ac1, ac2, ac3, ac4 = st.columns(4)
     user_role = st.session_state.user['role']
     
     with ac1:
         st.markdown("""
         <div class="feature-card" style="padding: 1.5rem;">
-            <h4 style="color: #f8fafc; margin-top: 0;">📦 Draft New Order</h4>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Create and validate a new freight contract into the pending queue.</p>
+            <h4 style="color: #f8fafc; margin-top: 0; font-size: 1.1rem;">📦 Draft Order</h4>
+            <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem;">Create and validate a new freight contract into the pending queue.</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("Initiate Draft", key="btn_draft", use_container_width=True):
-            draft_order_dialog() # Triggers the modal
+            draft_order_dialog() 
             
     with ac2:
         if user_role in ["System Administrator", "Dispatcher"]:
             st.markdown("""
             <div class="feature-card" style="padding: 1.5rem;">
-                <h4 style="color: #f8fafc; margin-top: 0;">🚚 Dispatch Fleet</h4>
-                <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Assign pending orders to available carriers and deploy trucks.</p>
+                <h4 style="color: #f8fafc; margin-top: 0; font-size: 1.1rem;">🚚 Dispatch</h4>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem;">Assign pending orders to available carriers and deploy trucks.</p>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("Dispatch", key="btn_dispatch", use_container_width=True):
-                dispatch_fleet_dialog() # Triggers the modal
+            if st.button("Open Dispatch UI", key="btn_dispatch", use_container_width=True):
+                dispatch_fleet_dialog()
         else:
             st.markdown("""
             <div class="feature-card" style="padding: 1.5rem; opacity: 0.5;">
-                <h4 style="color: #f8fafc; margin-top: 0;">🚚 Dispatch Fleet</h4>
-                <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Clearance Level Insufficient. Please contact Dispatch.</p>
+                <h4 style="color: #f8fafc; margin-top: 0; font-size: 1.1rem;">🚚 Dispatch</h4>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem;">Clearance Level Insufficient. Please contact Dispatch.</p>
             </div>
             """, unsafe_allow_html=True)
             st.button("Restricted", key="btn_dispatch_locked", disabled=True, use_container_width=True)
@@ -195,17 +236,36 @@ def render_page():
         if user_role in ["System Administrator", "Warehouse Manager"]:
             st.markdown("""
             <div class="feature-card" style="padding: 1.5rem;">
-                <h4 style="color: #f8fafc; margin-top: 0;">✅ Update Status</h4>
-                <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Record delivery progress, mark delays, or close out shipments.</p>
+                <h4 style="color: #f8fafc; margin-top: 0; font-size: 1.1rem;">✅ Update Log</h4>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem;">Record delivery progress, mark delays, or close out shipments.</p>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("Update Log", key="btn_update", use_container_width=True):
-                update_status_dialog() # Triggers the modal
+            if st.button("Update Status", key="btn_update", use_container_width=True):
+                update_status_dialog()
         else:
             st.markdown("""
             <div class="feature-card" style="padding: 1.5rem; opacity: 0.5;">
-                <h4 style="color: #f8fafc; margin-top: 0;">✅ Update Status</h4>
-                <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Clearance Level Insufficient. Please contact Warehouse.</p>
+                <h4 style="color: #f8fafc; margin-top: 0; font-size: 1.1rem;">✅ Update Log</h4>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem;">Clearance Level Insufficient. Please contact Warehouse.</p>
             </div>
             """, unsafe_allow_html=True)
             st.button("Restricted", key="btn_update_locked", disabled=True, use_container_width=True)
+            
+    with ac4:
+        if user_role == "System Administrator":
+            st.markdown("""
+            <div class="feature-card" style="padding: 1.5rem;">
+                <h4 style="color: #f8fafc; margin-top: 0; font-size: 1.1rem;">🏢 Add Carrier</h4>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem;">Register new fleet assets to expand network capacity.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("Register Asset", key="btn_carrier", use_container_width=True):
+                add_carrier_dialog()
+        else:
+            st.markdown("""
+            <div class="feature-card" style="padding: 1.5rem; opacity: 0.5;">
+                <h4 style="color: #f8fafc; margin-top: 0; font-size: 1.1rem;">🏢 Add Carrier</h4>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem;">Clearance Level Insufficient. Admin access required.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.button("Restricted", key="btn_carrier_locked", disabled=True, use_container_width=True)
