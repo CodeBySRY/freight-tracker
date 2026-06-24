@@ -4,6 +4,7 @@ from database import get_db
 from streamlit_option_menu import option_menu
 from styles.theme import apply_enterprise_theme
 import pages.dashboard as dashboard
+import pages.shipments as shipments
 
 # ─── 1. PAGE CONFIGURATION & THEME ────────────────────────────────────
 st.set_page_config(page_title="LogiTrack PK Enterprise", page_icon="📦", layout="wide", initial_sidebar_state="expanded")
@@ -112,8 +113,7 @@ else:
     if selected_module == "Dashboard":
         dashboard.render_page()
     elif selected_module == "Shipments":
-        st.title("📦 Shipment Management")
-        st.info("Shipment Module decoupled and undergoing enterprise rendering...")
+        shipments.render_page()
     elif selected_module == "Fleet":
         st.title("🏢 Fleet Operations")
         st.info("Fleet Module decoupled and undergoing enterprise rendering...")
