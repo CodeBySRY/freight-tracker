@@ -53,8 +53,20 @@ def login_screen():
 if not st.session_state.user:
     login_screen()
 else:
-    # Hide Streamlit's default native page navigation, keep custom sidebar
-    st.markdown('<style>[data-testid="stSidebarNav"] { display: none !important; }</style>', unsafe_allow_html=True)
+    # Force-restore the sidebar and toggle button, overriding any lingering login CSS
+    st.markdown(
+        """
+        <style>
+            /* Force the sidebar container to be visible */
+            [data-testid="stSidebar"] { display: block !important; }
+            /* Force the expand/collapse button to be visible */
+            [data-testid="collapsedControl"] { display: flex !important; }
+            /* Hide ONLY Streamlit's default native page list so we can use our custom one */
+            [data-testid="stSidebarNav"] { display: none !important; }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
     
     # TOP HEADER
     header_col1, header_col2 = st.columns([8, 2])
@@ -100,7 +112,7 @@ else:
             options=nav_options,
             icons=nav_icons,
             default_index=0,
-    styles={
+            styles={
                 "container": {"padding": "0!important", "background-color": "transparent"},
                 "icon": {"color": "#10b981", "font-size": "1.2rem"}, 
                 "nav-link": {"font-size": "0.95rem", "text-align": "left", "margin": "4px 0", "color": "#94a3b8", "font-family": "'Inter', sans-serif", "font-weight": "500", "border-radius": "8px"},
