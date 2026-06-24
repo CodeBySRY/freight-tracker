@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from auth import verify_password
 from database import get_db
 from streamlit_option_menu import option_menu
@@ -53,16 +54,29 @@ def login_screen():
 if not st.session_state.user:
     login_screen()
 else:
-    # Force-restore the sidebar and toggle button, overriding any lingering login CSS
+    # 1. AUTO-RECOVERY JS: Force the sidebar open if localStorage bricked it
+    components.html(
+        """
+        <script>
+            // Look for the closed toggle button in the parent DOM
+            const expandBtn = window.parent.document.querySelector('[data-testid="collapsedControl"]');
+            if (expandBtn) {
+                expandBtn.click(); // Programmatically click it to unstick the browser
+            }
+        </script>
+        """,
+        height=0, width=0
+    )
+
+    # 2. PRD COMPLIANCE CSS: Lock the sidebar permanently open
     st.markdown(
         """
         <style>
-            /* Force the sidebar container to be visible */
-            [data-testid="stSidebar"] { display: block !important; }
-            /* Force the expand/collapse button to be visible */
-            [data-testid="collapsedControl"] { display: flex !important; }
-            /* Hide ONLY Streamlit's default native page list so we can use our custom one */
+            /* Hide Streamlit's default native page navigation */
             [data-testid="stSidebarNav"] { display: none !important; }
+            
+            /* Permanently hide the collapse button INSIDE the open sidebar */
+            [data-testid="stSidebarCollapseButton"] { display: none !important; }
         </style>
         """, 
         unsafe_allow_html=True
