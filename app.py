@@ -117,6 +117,10 @@ def get_cached_login_css(theme: str) -> str:
     .lp-tag:hover {{ transform: translateY(-2px) scale(1.02); background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 5px 15px -5px rgba(16,185,129,0.15); }}
     .lp-footer {{ background: var(--footer-bg); padding: 4rem 10%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; }}
     .footer-text {{ color: var(--text-muted); font-size: 0.85rem; }}
+    [data-testid="stButton"]:has(button[data-testid="hidden_theme_btn"]),
+    [data-testid="stButton"]:has(button[data-testid="hidden_egg_btn"]) {{ display: none !important; }}
+    [data-testid="stButton"]:has(#hidden_theme_btn),
+    [data-testid="stButton"]:has(#hidden_egg_btn) {{ display: none !important; }}
     </style>
     """
 
@@ -142,7 +146,20 @@ def get_cached_navbar_html(theme: str) -> str:
             <a href="#auth-portal" class="nav-cta">Enterprise Access</a>
         </div>
     </nav>
-    <img src="dummy" style="display:none;" onerror="if(!window.lLoaded){window.lLoaded=true;setInterval(function(){var b=document.querySelectorAll('button');for(var i=0;i<b.length;i++){if(b[i].innerText.includes('HiddenThemeBtn')||b[i].innerText.includes('HiddenEggBtn')){var c=b[i].closest('div[data-testid=stButton]');if(c)c.style.display='none';}}},50);window.toggleTheme=function(){var bs=document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenThemeBtn')){bs[j].click();break;}}};window.triggerEgg=function(){var bs=document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenEggBtn')){bs[j].click();break;}}};}">
+    <script>
+    window.toggleTheme = function() {
+        var bs = document.querySelectorAll('button');
+        for (var j = 0; j < bs.length; j++) {
+            if (bs[j].innerText.includes('HiddenThemeBtn')) { bs[j].click(); break; }
+        }
+    };
+    window.triggerEgg = function() {
+        var bs = document.querySelectorAll('button');
+        for (var j = 0; j < bs.length; j++) {
+            if (bs[j].innerText.includes('HiddenEggBtn')) { bs[j].click(); break; }
+        }
+    };
+    </script>
     """
     return html.replace('TOGGLE_ICON_PLACEHOLDER', toggle_icon)
 
@@ -277,8 +294,8 @@ def login_screen():
         st.session_state.show_truck = False
 
     # ── THE HIDDEN STREAMLIT BRIDGE ──
-    st.button("HiddenThemeBtn", on_click=toggle_theme)
-    st.button("HiddenEggBtn", on_click=handle_logo_click)
+    st.button("HiddenThemeBtn", on_click=toggle_theme, key="hidden_theme_btn")
+    st.button("HiddenEggBtn", on_click=handle_logo_click, key="hidden_egg_btn")
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
     col_brand, col_auth = st.columns([1.2, 1], gap="large")
