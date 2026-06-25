@@ -8,35 +8,11 @@ from services.reporting_service import (
     fetch_shipment_status_distribution,
 )
 
-# ─── PLOTLY SHARED LAYOUT ────────────────────────────────────────────────────
-_PLOTLY_BASE = dict(
-    paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='rgba(0,0,0,0)',
-    font=dict(color='#94a3b8', family='Plus Jakarta Sans', size=12),
-    margin=dict(t=10, b=10, l=0, r=0),
-)
-
-# ─── STATUS COLOR MAP ────────────────────────────────────────────────────────
-STATUS_COLORS = {
-    'Delivered': '#10b981',
-    'In Transit': '#3b82f6',
-    'Delayed': '#f59e0b',
-    'Cancelled': '#ef4444',
-    'Pending': '#64748b',
-}
-
-# ─── ACTIVITY FEED DOT COLORS ───────────────────────────────────────────────
-_DOT_COLOR = {
-    'In Transit': '#3b82f6',
-    'Delivered': '#10b981',
-    'Delayed': '#f59e0b',
-    'Cancelled': '#ef4444',
-    'Pending': '#64748b',
-}
-
+_PLOTLY_BASE = dict(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#94a3b8', family='Plus Jakarta Sans', size=12), margin=dict(t=10, b=10, l=0, r=0))
+STATUS_COLORS = {'Delivered': '#10b981', 'In Transit': '#3b82f6', 'Delayed': '#f59e0b', 'Cancelled': '#ef4444', 'Pending': '#64748b'}
+_DOT_COLOR = {'In Transit': '#3b82f6', 'Delivered': '#10b981', 'Delayed': '#f59e0b', 'Cancelled': '#ef4444', 'Pending': '#64748b'}
 
 # ─── CONTEXTUAL WORKFLOW DIALOGS ─────────────────────────────────────────────
-
 @st.dialog("📦 Draft Comprehensive Freight Order")
 def draft_order_dialog():
     st.markdown("<p style='color:#94a3b8;font-size:0.9rem;margin-top:-10px;'>Create a new contract. All fields marked * are required.</p>", unsafe_allow_html=True)
@@ -58,10 +34,7 @@ def draft_order_dialog():
             conn = get_db()
             cur  = conn.cursor()
             try:
-                cur.execute(
-                    "INSERT INTO orders (customer_name,origin_city,destination_city,cargo_description,cargo_type,cargo_weight_kg,priority,special_instructions,expected_delivery_date,created_by) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                    (customer, origin, dest, desc, c_type, weight, priority, instructions, exp_date, st.session_state.user['user_id'])
-                )
+                cur.execute("INSERT INTO orders (customer_name,origin_city,destination_city,cargo_description,cargo_type,cargo_weight_kg,priority,special_instructions,expected_delivery_date,created_by) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", (customer, origin, dest, desc, c_type, weight, priority, instructions, exp_date, st.session_state.user['user_id']))
                 conn.commit()
                 st.success(f"Order validated and saved for {customer}!")
                 st.rerun()
@@ -73,15 +46,13 @@ def draft_order_dialog():
         else:
             st.error("Customer, Origin, and Destination are mandatory fields.")
 
-
 @st.dialog("🚚 Dispatch Fleet")
 def dispatch_fleet_dialog():
     if st.session_state.user['role'] not in ["System Administrator", "Dispatcher"]:
         st.error("SECURITY VIOLATION: Unauthorized clearance level.")
         st.stop()
     st.markdown("<p style='color:#94a3b8;font-size:0.9rem;margin-top:-10px;'>Assign a pending order to an available carrier.</p>", unsafe_allow_html=True)
-    conn = get_db()
-    cur  = conn.cursor()
+    conn = get_db(); cur = conn.cursor()
     cur.execute("SELECT order_id,origin_city,destination_city FROM orders WHERE order_id NOT IN (SELECT order_id FROM shipments)")
     pending_orders = cur.fetchall()
     cur.execute("SELECT carrier_id,company_name FROM carriers WHERE is_available=TRUE")
@@ -114,7 +85,6 @@ def dispatch_fleet_dialog():
             finally:
                 conn.close()
 
-
 @st.dialog("✅ Update Delivery Status")
 def update_status_dialog():
     if st.session_state.user['role'] not in ["System Administrator", "Warehouse Manager"]:
@@ -122,13 +92,7 @@ def update_status_dialog():
         st.stop()
     st.markdown("<p style='color:#94a3b8;font-size:0.9rem;margin-top:-10px;'>Record delivery progress or mark delays.</p>", unsafe_allow_html=True)
     conn = get_db(); cur = conn.cursor()
-    cur.execute("""
-        SELECT s.shipment_id, o.order_id, o.destination_city, c.company_name
-        FROM shipments s
-        JOIN orders o ON s.order_id=o.order_id
-        JOIN carriers c ON s.carrier_id=c.carrier_id
-        WHERE s.status IN ('In Transit','Delayed')
-    """)
+    cur.execute("SELECT s.shipment_id, o.order_id, o.destination_city, c.company_name FROM shipments s JOIN orders o ON s.order_id=o.order_id JOIN carriers c ON s.carrier_id=c.carrier_id WHERE s.status IN ('In Transit','Delayed')")
     active_ships = cur.fetchall()
     conn.close()
     if not active_ships:
@@ -161,7 +125,6 @@ def update_status_dialog():
             finally:
                 conn.close()
 
-
 @st.dialog("🏢 Register Fleet Carrier")
 def add_carrier_dialog():
     if st.session_state.user['role'] != "System Administrator":
@@ -188,189 +151,118 @@ def add_carrier_dialog():
             finally:
                 conn.close()
 
-
 # ─── HELPERS ─────────────────────────────────────────────────────────────────
-
 def _kpi(icon, title, value, sub, accent):
     return f"""
-    <div class="kpi-card" style="--kpi-accent:{accent};">
-        <span class="kpi-icon">{icon}</span>
-        <div class="kpi-title">{title}</div>
-        <div class="kpi-value">{value}</div>
-        <div class="kpi-sub">{sub}</div>
+    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:1.5rem; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 15px 30px -10px rgba(0,0,0,0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+        <div style="width:40px;height:40px;border-radius:12px;background:{accent}22;color:{accent};display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:1rem;">{icon}</div>
+        <div style="color:#64748b;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.25rem;">{title}</div>
+        <div style="color:#f8fafc;font-size:2rem;font-weight:800;line-height:1;">{value}</div>
+        <div style="color:#475569;font-size:0.75rem;margin-top:0.5rem;font-weight:600;">{sub}</div>
     </div>
     """
-
 
 def _action_card(icon, title, desc, locked=False):
     opacity = "opacity:0.45;" if locked else ""
     return f"""
-    <div class="feature-card" style="padding:1.4rem;{opacity}">
-        <span class="feature-card-icon">{icon}</span>
-        <h4 style="color:#f8fafc;margin:0 0 0.4rem 0;font-size:1rem;font-weight:700;">{title}</h4>
-        <p style="color:#64748b;font-size:0.8rem;margin:0;line-height:1.5;">{desc}</p>
+    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:1.5rem; {opacity} transition:transform 0.2s;" onmouseover="if(!{str(locked).lower()}) this.style.transform='translateY(-4px)';" onmouseout="this.style.transform='translateY(0)';">
+        <span style="font-size:1.8rem;display:block;margin-bottom:0.5rem;">{icon}</span>
+        <h4 style="color:#f8fafc;margin:0 0 0.4rem 0;font-size:1.1rem;font-weight:800;">{title}</h4>
+        <p style="color:#94a3b8;font-size:0.85rem;margin:0;line-height:1.5;">{desc}</p>
     </div>
     """
 
-
 def _render_activity_feed(events):
     if not events:
-        st.markdown(
-            "<div class='activity-feed'><p style='color:#475569;text-align:center;padding:2rem 0;font-size:0.85rem;'>No activity recorded yet.</p></div>",
-            unsafe_allow_html=True
-        )
+        st.markdown("<p style='color:#475569;text-align:center;padding:2rem 0;font-size:0.85rem;'>No activity recorded yet.</p>", unsafe_allow_html=True)
         return
 
     items_html = ""
+    # Single-line HTML construction to absolutely prevent Markdown Preformatted Text blocks
     for e in events:
         dot_color  = _DOT_COLOR.get(e['new_status'], '#64748b')
         ts         = e['changed_at'].strftime("%b %d, %H:%M") if e['changed_at'] else ""
         route      = f"{e['origin_city']} → {e['destination_city']}"
-        desc       = f"<strong style='color:#e2e8f0;'>Ship #{e['shipment_id']}</strong> · {e['customer_name']} · {route}"
-        status_txt = f"<span style='color:{dot_color};font-weight:700;'>{e['new_status']}</span>"
-        operator   = f"by {e['operator']}"
-        items_html += f"""
-        <div class="activity-item">
-            <div class="activity-dot" style="background:{dot_color};box-shadow:0 0 6px {dot_color}55;"></div>
-            <div>
-                <div class="activity-text">{desc} → {status_txt}</div>
-                <div class="activity-time">{ts} &nbsp;·&nbsp; {operator}</div>
-            </div>
-        </div>
-        """
-    st.markdown(f"<div class='activity-feed'>{items_html}</div>", unsafe_allow_html=True)
-
+        desc       = f"<strong style='color:#f8fafc;font-size:0.95rem;'>Ship #{e['shipment_id']}</strong> <span style='color:#475569;'>·</span> {e['customer_name']} <span style='color:#475569;'>·</span> {route}"
+        status_txt = f"<span style='color:{dot_color};font-weight:800;background:{dot_color}22;padding:2px 8px;border-radius:12px;font-size:0.75rem;text-transform:uppercase;'>{e['new_status']}</span>"
+        items_html += f"<div style='display:flex;gap:1.25rem;align-items:flex-start;padding:1rem 1.25rem;margin-bottom:0.75rem;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;transition:background 0.2s;' onmouseover='this.style.background=\"rgba(255,255,255,0.04)\"' onmouseout='this.style.background=\"rgba(255,255,255,0.02)\"'>"
+        items_html += f"<div style='width:12px;height:12px;border-radius:50%;background:{dot_color};margin-top:5px;box-shadow:0 0 12px {dot_color}88;flex-shrink:0;'></div>"
+        items_html += f"<div style='flex:1;'><div style='color:#cbd5e1;margin-bottom:0.4rem;line-height:1.4;'>{desc} <span style='margin:0 0.5rem;'>→</span> {status_txt}</div>"
+        items_html += f"<div style='font-size:0.75rem;color:#64748b;font-weight:600;'>{ts} &nbsp;·&nbsp; Authorized by {e['operator']}</div></div></div>"
+    
+    st.markdown(f"<div>{items_html}</div>", unsafe_allow_html=True)
 
 # ─── MAIN RENDER ─────────────────────────────────────────────────────────────
-
 def render_page():
-    # ── Page header ──────────────────────────────────────────────────────────
     st.markdown("""
-        <div style='margin-bottom:1.75rem;'>
-            <div style='color:#475569;font-size:0.7rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;'>OPERATIONS</div>
-            <h2 style='color:#f8fafc;font-weight:800;font-size:1.75rem;margin:0;letter-spacing:-0.5px;'>Command Center</h2>
-            <p style='color:#64748b;font-size:0.88rem;margin:4px 0 0 0;'>Live operational overview across your freight network.</p>
+        <div style='margin-bottom:2rem;'>
+            <div style='color:#10b981;font-size:0.75rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;'>Operations</div>
+            <h2 style='color:#f8fafc;font-weight:800;font-size:2.2rem;margin:0;letter-spacing:-0.5px;'>Command Center</h2>
+            <p style='color:#94a3b8;font-size:0.95rem;margin:4px 0 0 0;'>Live operational overview across your enterprise freight network.</p>
         </div>
     """, unsafe_allow_html=True)
 
-    # ── Data ─────────────────────────────────────────────────────────────────
     metrics  = fetch_executive_overview()
     events   = fetch_activity_feed(limit=12)
     df_status = fetch_shipment_status_distribution()
-
     user_role = st.session_state.user['role']
 
-    # ── 1. EXECUTIVE KPI STRIP ────────────────────────────────────────────────
-    st.markdown("<div class='section-label'>Executive Overview</div>", unsafe_allow_html=True)
+    # ── 1. EXECUTIVE KPI STRIP
     k1, k2, k3, k4, k5, k6 = st.columns(6)
+    fleet_pct = (round(metrics['available_carriers'] / metrics['total_carriers'] * 100) if metrics['total_carriers'] > 0 else 0)
 
-    fleet_pct = (
-        round(metrics['available_carriers'] / metrics['total_carriers'] * 100)
-        if metrics['total_carriers'] > 0 else 0
-    )
+    with k1: st.markdown(_kpi("📋", "Total Orders", metrics['total_orders'], "All time", "#3b82f6"), unsafe_allow_html=True)
+    with k2: st.markdown(_kpi("🚚", "In Transit", metrics['active_shipments'], "Currently active", "#10b981"), unsafe_allow_html=True)
+    with k3: st.markdown(_kpi("⚠️", "Delayed", metrics['delayed_shipments'], "Needs attention", "#f59e0b"), unsafe_allow_html=True)
+    with k4: st.markdown(_kpi("🏢", "Fleet Ready", metrics['available_carriers'], f"{fleet_pct}% availability", "#8b5cf6"), unsafe_allow_html=True)
+    with k5: st.markdown(_kpi("📅", "Due Today", metrics['orders_today'], "Expected deliveries", "#06b6d4"), unsafe_allow_html=True)
+    with k6: st.markdown(_kpi("✅", "Delivered", metrics['delivered_today'], "Completed runs", "#34d399"), unsafe_allow_html=True)
 
-    with k1:
-        st.markdown(_kpi("📋", "Total Orders", metrics['total_orders'], "All time", "#3b82f6"), unsafe_allow_html=True)
-    with k2:
-        st.markdown(_kpi("🚚", "In Transit", metrics['active_shipments'], "Currently active", "#10b981"), unsafe_allow_html=True)
-    with k3:
-        st.markdown(_kpi("⚠️", "Delayed", metrics['delayed_shipments'], "Needs attention", "#f59e0b"), unsafe_allow_html=True)
-    with k4:
-        st.markdown(_kpi("🏢", "Fleet Ready", metrics['available_carriers'], f"{fleet_pct}% availability", "#8b5cf6"), unsafe_allow_html=True)
-    with k5:
-        st.markdown(_kpi("📅", "Due Today", metrics['orders_today'], "Expected deliveries", "#06b6d4"), unsafe_allow_html=True)
-    with k6:
-        st.markdown(_kpi("✅", "Delivered Today", metrics['delivered_today'], "Completed runs", "#34d399"), unsafe_allow_html=True)
+    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.05);margin:2.5rem 0;'>", unsafe_allow_html=True)
 
-    st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
-
-    # ── 2. OPERATIONAL WORKFLOWS ──────────────────────────────────────────────
-    st.markdown("<div class='section-label'>Operational Workflows</div>", unsafe_allow_html=True)
-
+    # ── 2. OPERATIONAL WORKFLOWS
+    st.markdown("<h3 style='color:#f8fafc;font-size:1.2rem;font-weight:800;margin-bottom:1rem;'>Operational Workflows</h3>", unsafe_allow_html=True)
     ac1, ac2, ac3, ac4 = st.columns(4)
 
     with ac1:
         st.markdown(_action_card("📦", "Draft Order", "Create and validate a new freight contract into the pending queue."), unsafe_allow_html=True)
-        if st.button("Initiate Draft", key="btn_draft", use_container_width=True):
-            draft_order_dialog()
-
+        if st.button("Initiate Draft", key="btn_draft", use_container_width=True): draft_order_dialog()
     with ac2:
         can_dispatch = user_role in ["System Administrator", "Dispatcher"]
         st.markdown(_action_card("🚚", "Dispatch Fleet", "Assign pending orders to available carriers and deploy trucks.", locked=not can_dispatch), unsafe_allow_html=True)
         if can_dispatch:
-            if st.button("Open Dispatch UI", key="btn_dispatch", use_container_width=True):
-                dispatch_fleet_dialog()
-        else:
-            st.button("Restricted", key="btn_dispatch_locked", disabled=True, use_container_width=True)
-
+            if st.button("Open Dispatch UI", key="btn_dispatch", use_container_width=True): dispatch_fleet_dialog()
+        else: st.button("Restricted", key="btn_dispatch_locked", disabled=True, use_container_width=True)
     with ac3:
         can_update = user_role in ["System Administrator", "Warehouse Manager"]
         st.markdown(_action_card("✅", "Update Log", "Record delivery progress, mark delays, or close out shipments.", locked=not can_update), unsafe_allow_html=True)
         if can_update:
-            if st.button("Update Status", key="btn_update", use_container_width=True):
-                update_status_dialog()
-        else:
-            st.button("Restricted", key="btn_update_locked", disabled=True, use_container_width=True)
-
+            if st.button("Update Status", key="btn_update", use_container_width=True): update_status_dialog()
+        else: st.button("Restricted", key="btn_update_locked", disabled=True, use_container_width=True)
     with ac4:
         can_add = user_role == "System Administrator"
         st.markdown(_action_card("🏢", "Add Carrier", "Register new fleet assets to expand network capacity.", locked=not can_add), unsafe_allow_html=True)
         if can_add:
-            if st.button("Register Asset", key="btn_carrier", use_container_width=True):
-                add_carrier_dialog()
-        else:
-            st.button("Restricted", key="btn_carrier_locked", disabled=True, use_container_width=True)
+            if st.button("Register Asset", key="btn_carrier", use_container_width=True): add_carrier_dialog()
+        else: st.button("Restricted", key="btn_carrier_locked", disabled=True, use_container_width=True)
 
-    st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.05);margin:2.5rem 0;'>", unsafe_allow_html=True)
 
-    # ── 3. ANALYTICS + ACTIVITY FEED ─────────────────────────────────────────
-    chart_col, feed_col = st.columns([1.4, 1], gap="large")
+    # ── 3. ANALYTICS + ACTIVITY FEED
+    chart_col, feed_col = st.columns([1.2, 1], gap="large")
 
     with chart_col:
-        st.markdown("<div class='section-label'>Shipment Status Distribution</div>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:#f8fafc;font-size:1.2rem;font-weight:800;margin-bottom:1rem;'>Shipment Status Distribution</h3>", unsafe_allow_html=True)
         if not df_status.empty:
-            color_map = STATUS_COLORS
-            fig = px.pie(
-                df_status,
-                values='n',
-                names='status',
-                hole=0.62,
-                color='status',
-                color_discrete_map=color_map,
-            )
-            fig.update_layout(
-                **_PLOTLY_BASE,
-                showlegend=True,
-                legend=dict(
-                    orientation="h",
-                    x=0.5, xanchor="center",
-                    y=-0.08,
-                    font=dict(color='#94a3b8', size=11),
-                ),
-                height=280,
-            )
-            fig.update_traces(
-                textposition='outside',
-                textinfo='percent+label',
-                textfont=dict(color='#cbd5e1', size=11),
-                marker=dict(line=dict(color='#020617', width=2)),
-                hovertemplate='<b>%{label}</b><br>Count: %{value}<br>Share: %{percent}<extra></extra>',
-            )
-            # Center annotation
+            fig = px.pie(df_status, values='n', names='status', hole=0.65, color='status', color_discrete_map=STATUS_COLORS)
+            fig.update_layout(**_PLOTLY_BASE, showlegend=True, legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.1, font=dict(color='#94a3b8', size=11)), height=350)
+            fig.update_traces(textposition='outside', textinfo='percent+label', textfont=dict(color='#cbd5e1', size=11), marker=dict(line=dict(color='#040914', width=3)), hovertemplate='<b>%{label}</b><br>Count: %{value}<br>Share: %{percent}<extra></extra>')
             total_shipments = int(df_status['n'].sum())
-            fig.add_annotation(
-                text=f"<b>{total_shipments}</b><br><span style='font-size:10px'>TOTAL</span>",
-                x=0.5, y=0.5, showarrow=False,
-                font=dict(size=18, color='#f8fafc', family='Plus Jakarta Sans'),
-                align='center',
-            )
+            fig.add_annotation(text=f"<b>{total_shipments}</b><br><span style='font-size:10px'>TOTAL</span>", x=0.5, y=0.5, showarrow=False, font=dict(size=22, color='#f8fafc', family='Plus Jakarta Sans'))
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.markdown(
-                "<div style='background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:3rem;text-align:center;color:#475569;font-size:0.85rem;'>No shipment data available yet.</div>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<div style='background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:3rem;text-align:center;color:#64748b;font-weight:600;'>No shipment data available yet.</div>", unsafe_allow_html=True)
 
     with feed_col:
-        st.markdown("<div class='section-label'>Live Activity Feed</div>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:#f8fafc;font-size:1.2rem;font-weight:800;margin-bottom:1rem;'>Live Activity Feed</h3>", unsafe_allow_html=True)
         _render_activity_feed(events)
