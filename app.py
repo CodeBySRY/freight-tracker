@@ -233,6 +233,7 @@ html, body, .stApp {{
         st.session_state.show_truck = False
 
     # ── PART 2: STATIC HTML NAVBAR & JAVASCRIPT BRIDGE ──
+    # Note: We construct this as a standard string to avoid any f-string bracket issues.
     toggle_icon = "🌞" if st.session_state.theme == 'light' else "🌓"
     
     html_navbar = """
@@ -256,35 +257,16 @@ html, body, .stApp {{
     </div>
 </nav>
 
-<img src="dummy" style="display:none;" onerror="
-    /* 1. Hide the Streamlit buttons instantly */
-    var btns = document.querySelectorAll('button');
-    for(var i=0; i<btns.length; i++) {
-        if(btns[i].innerText.includes('HiddenThemeBtn') || btns[i].innerText.includes('HiddenEggBtn')) {
-            var container = btns[i].closest('div[data-testid=\\'stButton\\']');
-            if(container) container.style.display = 'none';
-        }
-    }
-    
-    /* 2. Bind the HTML clicks to the hidden Python buttons */
-    window.toggleTheme = function() {
-        var bs = document.querySelectorAll('button');
-        for(var j=0; j<bs.length; j++){
-            if(bs[j].innerText.includes('HiddenThemeBtn')) { bs[j].click(); break; }
-        }
-    };
-    
-    window.triggerEgg = function() {
-        var bs = document.querySelectorAll('button');
-        for(var j=0; j<bs.length; j++){
-            if(bs[j].innerText.includes('HiddenEggBtn')) { bs[j].click(); break; }
-        }
-    };
-">
+<img src="dummy" style="display:none;" onerror="if(!window.lLoaded){window.lLoaded=true;var b=document.querySelectorAll('button');for(var i=0;i<b.length;i++){if(b[i].innerText.includes('HiddenThemeBtn')||b[i].innerText.includes('HiddenEggBtn')){var c=b[i].closest('div[data-testid=stButton]');if(c)c.style.display='none';}}window.toggleTheme=function(){var bs=document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenThemeBtn')){bs[j].click();break;}}};window.triggerEgg=function(){var bs=document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenEggBtn')){bs[j].click();break;}}};}">
 """
-    # Safely inject the icon to avoid Python f-string bracket collisions with CSS
+    # Safely inject the dynamic icon
     html_navbar = html_navbar.replace('TOGGLE_ICON_PLACEHOLDER', toggle_icon)
     st.markdown(html_navbar, unsafe_allow_html=True)
+
+    # ── THE HIDDEN STREAMLIT BRIDGE ──
+    # These native Python buttons are clicked by Javascript to manage state safely
+    st.button("HiddenThemeBtn", on_click=toggle_theme)
+    st.button("HiddenEggBtn", on_click=handle_logo_click)
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
     col_brand, col_auth = st.columns([1.2, 1], gap="large")
@@ -433,10 +415,6 @@ Version 2.4.0 (Enterprise Build)<br><br>
 </footer>
 """, unsafe_allow_html=True)
 
-    # ── THE HIDDEN STREAMLIT BRIDGE ──
-    # These native Python buttons are clicked by Javascript to manage state safely
-    st.button("HiddenThemeBtn", on_click=toggle_theme)
-    st.button("HiddenEggBtn", on_click=handle_logo_click)
 
 # ─── 3. ENTERPRISE APP SHELL (AUTHENTICATED) ──────────────────────────────────
 if not st.session_state.user:
