@@ -332,7 +332,7 @@ def render_page():
             color_map = STATUS_COLORS
             fig = px.pie(
                 df_status,
-                values='count',
+                values='n',
                 names='status',
                 hole=0.62,
                 color='status',
@@ -357,7 +357,7 @@ def render_page():
                 hovertemplate='<b>%{label}</b><br>Count: %{value}<br>Share: %{percent}<extra></extra>',
             )
             # Center annotation
-            total_shipments = int(df_status['count'].sum())
+            total_shipments = int(df_status['n'].sum())
             fig.add_annotation(
                 text=f"<b>{total_shipments}</b><br><span style='font-size:10px'>TOTAL</span>",
                 x=0.5, y=0.5, showarrow=False,

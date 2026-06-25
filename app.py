@@ -24,80 +24,67 @@ if 'user' not in st.session_state:
 def login_screen():
     st.markdown("""
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-            .stApp { background-color: #020617; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+            html, body, .stApp { background-color: #070d1a !important; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
             [data-testid="stSidebar"], [data-testid="collapsedControl"],
             #MainMenu, footer, header { display: none !important; }
 
             .login-wordmark {
                 text-align: center;
-                font-size: 3.5rem;
+                font-size: 3.2rem;
                 font-weight: 800;
                 letter-spacing: -2px;
-                padding-top: 3.5rem;
+                padding-top: 4rem;
                 margin-bottom: 0;
-                background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+                background: linear-gradient(135deg, #10b981 0%, #34d399 60%, #6ee7b7 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
+                font-family: 'Inter', sans-serif;
             }
             .login-tagline {
                 text-align: center;
-                font-size: 0.72rem;
-                color: #475569;
-                letter-spacing: 3px;
+                font-size: 0.65rem;
+                color: #364a65;
+                letter-spacing: 3.5px;
                 font-weight: 700;
                 text-transform: uppercase;
-                margin-bottom: 2.5rem;
+                margin-bottom: 2.75rem;
+                font-family: 'Inter', sans-serif;
             }
             [data-testid="stForm"] {
-                background: #0f172a !important;
-                border: 1px solid #1e293b !important;
-                border-radius: 18px !important;
+                background: #0d1526 !important;
+                border: 1px solid #1a2744 !important;
+                border-radius: 16px !important;
                 padding: 2.25rem !important;
-                box-shadow: 0 25px 50px -10px rgba(0,0,0,0.6) !important;
+                box-shadow: 0 30px 60px -12px rgba(0,0,0,0.7) !important;
             }
             .stTextInput input {
                 border-radius: 8px !important;
-                border: 1px solid #1e293b !important;
-                background-color: #020617 !important;
-                color: #f8fafc !important;
-                font-family: 'Plus Jakarta Sans', sans-serif !important;
+                border: 1px solid #1a2744 !important;
+                background-color: #070d1a !important;
+                color: #e2e8f0 !important;
+                font-family: 'Inter', sans-serif !important;
+                font-size: 0.875rem !important;
             }
             .stTextInput input:focus {
                 border-color: #10b981 !important;
-                box-shadow: 0 0 0 2px rgba(16,185,129,0.2) !important;
+                box-shadow: 0 0 0 3px rgba(16,185,129,0.12) !important;
             }
+            .stTextInput label { color: #4a6080 !important; font-size: 0.78rem !important; font-weight: 600 !important; font-family: 'Inter', sans-serif !important; }
             .stButton > button {
-                border-radius: 10px !important;
+                border-radius: 8px !important;
                 background: linear-gradient(135deg, #059669, #10b981) !important;
                 color: white !important;
                 border: none !important;
                 font-weight: 700 !important;
-                font-family: 'Plus Jakarta Sans', sans-serif !important;
-                letter-spacing: 0.3px;
-                transition: all 0.2s;
+                font-family: 'Inter', sans-serif !important;
+                font-size: 0.875rem !important;
+                transition: all 0.15s ease !important;
             }
             .stButton > button:hover {
-                transform: translateY(-2px) !important;
-                box-shadow: 0 10px 20px -4px rgba(16,185,129,0.4) !important;
-            }
-            .login-divider {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                margin: 1.25rem 0;
-            }
-            .login-divider-line {
-                flex: 1;
-                height: 1px;
-                background: #1e293b;
-            }
-            .login-divider-text {
-                color: #334155;
-                font-size: 0.72rem;
-                font-weight: 700;
-                letter-spacing: 1px;
+                transform: translateY(-1px) !important;
+                box-shadow: 0 8px 20px -4px rgba(16,185,129,0.4) !important;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -153,44 +140,38 @@ else:
                 max-width: 100% !important;
             }
 
-            /* Primary action buttons */
             .stButton > button[kind="primary"] {
                 border-radius: 8px !important;
                 background: linear-gradient(135deg, #059669, #10b981) !important;
                 color: white !important;
                 border: none !important;
                 font-weight: 700 !important;
-                transition: all 0.2s !important;
+                font-family: 'Inter', sans-serif !important;
+                transition: all 0.15s !important;
             }
             .stButton > button[kind="primary"]:hover {
                 transform: translateY(-1px) !important;
                 box-shadow: 0 6px 16px -4px rgba(16,185,129,0.4) !important;
             }
-
-            /* Secondary / default buttons */
             .stButton > button:not([kind="primary"]) {
                 border-radius: 8px !important;
-                border: 1px solid #1e293b !important;
-                color: #94a3b8 !important;
-                background-color: #0f172a !important;
+                border: 1px solid #1a2744 !important;
+                color: #4a6080 !important;
+                background: #0d1526 !important;
                 font-weight: 600 !important;
-                transition: all 0.2s !important;
+                font-family: 'Inter', sans-serif !important;
+                transition: all 0.15s !important;
             }
             .stButton > button:not([kind="primary"]):hover {
                 border-color: #10b981 !important;
                 color: #10b981 !important;
                 transform: translateY(-1px) !important;
             }
-
-            /* Disabled buttons */
             .stButton > button:disabled {
-                opacity: 0.35 !important;
+                opacity: 0.3 !important;
                 cursor: not-allowed !important;
                 transform: none !important;
             }
-
-            /* Option menu override */
-            .nav-link { font-size: 0.9rem !important; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -199,9 +180,9 @@ else:
     with hdr_left:
         st.markdown("""
             <div style='display:flex;align-items:center;gap:0.75rem;'>
-                <span style='font-size:1.5rem;'>📦</span>
-                <span style='color:#10b981;font-weight:800;font-size:1.4rem;letter-spacing:-0.5px;'>LogiTrack PK</span>
-                <span style='color:#334155;font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:2px 10px;border:1px solid #1e293b;border-radius:20px;'>Enterprise</span>
+                <span style='font-size:1.4rem;'>📦</span>
+                <span style='color:#10b981;font-weight:800;font-size:1.35rem;letter-spacing:-0.5px;font-family:Inter,sans-serif;'>LogiTrack PK</span>
+                <span style='color:#253355;font-size:0.62rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:2px 10px;border:1px solid #1a2744;border-radius:20px;font-family:Inter,sans-serif;'>Enterprise</span>
             </div>
         """, unsafe_allow_html=True)
     with hdr_right:
@@ -209,7 +190,7 @@ else:
             st.session_state.user = None
             st.rerun()
 
-    st.markdown("<hr style='border:none;border-top:1px solid #1e293b;margin:0.75rem 0 1.5rem 0;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border:none;border-top:1px solid #111d33;margin:0.75rem 0 1.5rem 0;'>", unsafe_allow_html=True)
 
     # ── Two-column layout: nav + workspace ────────────────────────────────
     nav_col, workspace_col = st.columns([2, 8], gap="large")
@@ -223,11 +204,11 @@ else:
             "Dispatcher":           ("#60a5fa", "#172554", "#1d4ed8"),
             "Warehouse Manager":    ("#fb923c", "#431407", "#9a3412"),
         }
-        accent, bg_c, border_c = role_colors.get(user_role, ("#94a3b8", "#1e293b", "#334155"))
+        accent, bg_c, border_c = role_colors.get(user_role, ("#64748b", "#1a2744", "#253355"))
         initials = "".join([n[0].upper() for n in st.session_state.user['full_name'].split()[:2]])
 
         st.markdown(f"""
-            <div style='background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:1.25rem;'>
+            <div style='background:#0d1526;border:1px solid #1a2744;border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:1.25rem;'>
                 <div style='display:flex;align-items:center;gap:0.75rem;'>
                     <div style='width:36px;height:36px;border-radius:50%;background:{bg_c};border:2px solid {accent};display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;color:{accent};flex-shrink:0;'>
                         {initials}
@@ -261,13 +242,13 @@ else:
                 "container":        {"padding": "0 !important", "background-color": "transparent"},
                 "icon":             {"color": "#10b981", "font-size": "1rem"},
                 "nav-link":         {
-                    "font-size": "0.88rem",
+                    "font-size": "0.875rem",
                     "text-align": "left",
-                    "margin": "4px 0",
-                    "color": "#64748b",
-                    "font-family": "'Plus Jakarta Sans', sans-serif",
+                    "margin": "3px 0",
+                    "color": "#4a6080",
+                    "font-family": "'Inter', system-ui, sans-serif",
                     "font-weight": "600",
-                    "border-radius": "10px",
+                    "border-radius": "8px",
                     "transition": "all 0.15s",
                     "padding": "10px 14px",
                 },
@@ -275,15 +256,15 @@ else:
                     "background-color": "#022c22",
                     "color": "#10b981",
                     "font-weight": "700",
-                    "border": "1px solid #065f46",
+                    "border": "1px solid #065f4666",
                 },
                 "menu-title": {
-                    "color": "#334155",
-                    "font-size": "0.65rem",
-                    "letter-spacing": "1.5px",
+                    "color": "#253355",
+                    "font-size": "0.62rem",
+                    "letter-spacing": "1.8px",
                     "padding-left": "14px",
-                    "font-family": "'Plus Jakarta Sans', sans-serif",
-                    "font-weight": "800",
+                    "font-family": "'Inter', system-ui, sans-serif",
+                    "font-weight": "700",
                     "padding-bottom": "8px",
                     "text-transform": "uppercase",
                 },

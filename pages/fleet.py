@@ -3,38 +3,89 @@ import pandas as pd
 from database import get_db
 from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode, JsCode
 
-# ─── PREMIUM AG-GRID CSS ─────────────────────────────────────────────────────
-enterprise_css = {
-    ".ag-root-wrapper":     {"border-radius": "16px !important", "border": "1px solid #1e293b !important", "background-color": "#0f172a !important", "overflow": "hidden !important"},
-    ".ag-header":           {"background-color": "#020617 !important", "border-bottom": "1px solid #1e293b !important"},
-    ".ag-header-cell-text": {"color": "#64748b !important", "font-family": "'Plus Jakarta Sans', sans-serif !important", "font-weight": "700 !important", "text-transform": "uppercase", "letter-spacing": "0.8px", "font-size": "0.72rem !important"},
-    ".ag-row":              {"background-color": "#0f172a !important", "border-bottom": "1px solid #0f1a2e !important", "color": "#e2e8f0 !important", "font-family": "'Plus Jakarta Sans', sans-serif !important", "transition": "background-color 0.15s ease"},
-    ".ag-row:hover":        {"background-color": "#1a2744 !important"},
-    ".ag-row-selected":     {"background-color": "#172554 !important"},
-    ".ag-cell":             {"border-right": "none !important", "display": "flex", "align-items": "center", "font-size": "0.85rem !important"},
-    ".ag-paging-panel":     {"background-color": "#020617 !important", "border-top": "1px solid #1e293b !important", "color": "#64748b !important", "font-family": "'Plus Jakarta Sans', sans-serif !important", "font-size": "0.8rem !important"},
+_CSS = {
+    ".ag-root-wrapper": {
+        "border-radius": "12px !important",
+        "border": "1px solid #1a2744 !important",
+        "background-color": "#0d1526 !important",
+        "overflow": "hidden !important",
+        "font-family": "'Inter', system-ui, sans-serif !important",
+    },
+    ".ag-header": {
+        "background-color": "#070d1a !important",
+        "border-bottom": "1px solid #1a2744 !important",
+    },
+    ".ag-header-cell": {"padding": "0 16px !important"},
+    ".ag-header-cell-text": {
+        "color": "#364a65 !important",
+        "font-family": "'Inter', sans-serif !important",
+        "font-weight": "700 !important",
+        "font-size": "0.65rem !important",
+        "text-transform": "uppercase !important",
+        "letter-spacing": "1.2px !important",
+    },
+    ".ag-row": {
+        "background-color": "#0d1526 !important",
+        "border-bottom": "1px solid #0f1a2e !important",
+        "color": "#cbd5e1 !important",
+        "font-family": "'Inter', sans-serif !important",
+        "font-size": "0.84rem !important",
+        "transition": "background-color 0.12s ease !important",
+    },
+    ".ag-row:hover": {"background-color": "#111d33 !important", "color": "#f1f5f9 !important"},
+    ".ag-row-selected": {"background-color": "#172554 !important"},
+    ".ag-cell": {
+        "border-right": "none !important",
+        "display": "flex !important",
+        "align-items": "center !important",
+        "padding": "0 16px !important",
+    },
+    ".ag-paging-panel": {
+        "background-color": "#070d1a !important",
+        "border-top": "1px solid #1a2744 !important",
+        "color": "#364a65 !important",
+        "font-family": "'Inter', sans-serif !important",
+        "font-size": "0.78rem !important",
+    },
+    ".ag-icon": {"color": "#364a65 !important"},
 }
 
-AVAILABILITY_JSCODE = JsCode("""
+_STATUS_JS = JsCode("""
 function(params) {
-    if (params.value === 'Available') return {color:'#34d399', backgroundColor:'#022c22', borderRadius:'20px', textAlign:'center', fontWeight:'700', padding:'3px 10px', fontSize:'0.75rem'};
-    return {color:'#fb923c', backgroundColor:'#431407', borderRadius:'20px', textAlign:'center', fontWeight:'700', padding:'3px 10px', fontSize:'0.75rem'};
+    const v = params.value;
+    if (v === 'Available') return {
+        color:'#34d399', backgroundColor:'#022c22', border:'1px solid #065f46',
+        borderRadius:'20px', textAlign:'center', fontWeight:'700',
+        fontSize:'0.7rem', padding:'2px 10px', display:'inline-block'
+    };
+    return {
+        color:'#fb923c', backgroundColor:'#431407', border:'1px solid #9a3412',
+        borderRadius:'20px', textAlign:'center', fontWeight:'700',
+        fontSize:'0.7rem', padding:'2px 10px', display:'inline-block'
+    };
 }
 """)
 
-VTYPE_JSCODE = JsCode("""
-function(params) {
-    return {color:'#94a3b8', fontStyle:'italic'};
-}
+_ID_JS = JsCode("""
+function(p){ return {color:'#4a6080',fontFamily:'JetBrains Mono,monospace',fontSize:'0.78rem',fontWeight:'500'}; }
+""")
+
+_VTYPE_JS = JsCode("""
+function(p){ return {color:'#64748b',fontStyle:'italic',fontSize:'0.82rem'}; }
+""")
+
+_PHONE_JS = JsCode("""
+function(p){ return {color:'#4a6080',fontFamily:'JetBrains Mono,monospace',fontSize:'0.78rem'}; }
 """)
 
 
 def render_page():
     st.markdown("""
+        <style>@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');</style>
         <div style='margin-bottom:1.75rem;'>
-            <div style='color:#475569;font-size:0.7rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;'>FLEET</div>
-            <h2 style='color:#f8fafc;font-weight:800;font-size:1.75rem;margin:0;letter-spacing:-0.5px;'>Fleet Operations</h2>
-            <p style='color:#64748b;font-size:0.88rem;margin:4px 0 0 0;'>Manage carrier capacity, vehicle classifications, and dispatch availability.</p>
+            <div style='color:#364a65;font-size:0.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;'>FLEET</div>
+            <h2 style='color:#f1f5f9;font-weight:800;font-size:1.65rem;margin:0;letter-spacing:-0.5px;font-family:Inter,sans-serif;'>Fleet Operations</h2>
+            <p style='color:#364a65;font-size:0.85rem;margin:4px 0 0 0;'>Carrier capacity, vehicle classifications, and dispatch availability.</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -44,7 +95,7 @@ def render_page():
         cur.execute("""
             SELECT
                 carrier_id                                                    AS "ID",
-                company_name                                                  AS "Company",
+                company_name                                                  AS "Carrier",
                 contact_phone                                                 AS "Contact",
                 vehicle_type                                                  AS "Vehicle Type",
                 CASE WHEN is_available THEN 'Available' ELSE 'Dispatched' END AS "Status"
@@ -59,38 +110,45 @@ def render_page():
         conn.close()
 
     if not data:
-        st.info("No carriers registered in the fleet.")
+        st.markdown("""
+            <div style='background:#0d1526;border:1px solid #1a2744;border-radius:12px;padding:3rem;text-align:center;'>
+                <div style='font-size:2rem;margin-bottom:0.75rem;'>🚛</div>
+                <div style='color:#4a6080;font-size:0.9rem;font-weight:600;'>No carriers registered yet.</div>
+                <div style='color:#253355;font-size:0.8rem;margin-top:0.3rem;'>Register a carrier from the Command Center to begin dispatching.</div>
+            </div>
+        """, unsafe_allow_html=True)
         return
 
     df = pd.DataFrame(data)
-
-    # Summary pills
-    total     = len(df)
-    available = len(df[df['Status'] == 'Available'])
+    total      = len(df)
+    available  = len(df[df['Status'] == 'Available'])
     dispatched = total - available
 
+    # Summary strip
     st.markdown(f"""
-        <div style='display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;'>
-            <span style='background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:20px;padding:4px 14px;font-size:0.78rem;font-weight:700;'>🚛 {total} Total Carriers</span>
-            <span style='background:#022c22;color:#34d399;border:1px solid #065f4633;border-radius:20px;padding:4px 14px;font-size:0.78rem;font-weight:700;'>✅ {available} Available</span>
-            <span style='background:#431407;color:#fb923c;border:1px solid #9a341233;border-radius:20px;padding:4px 14px;font-size:0.78rem;font-weight:700;'>🚚 {dispatched} Dispatched</span>
+        <div style='display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;'>
+            <span style='background:#1a2744;color:#64748b;border:1px solid #253355;border-radius:20px;padding:4px 14px;font-size:0.75rem;font-weight:700;'>🚛 {total} Carriers</span>
+            <span style='background:#022c22;color:#34d399;border:1px solid #065f4633;border-radius:20px;padding:4px 14px;font-size:0.75rem;font-weight:700;'>✅ {available} Available</span>
+            <span style='background:#431407;color:#fb923c;border:1px solid #9a341233;border-radius:20px;padding:4px 14px;font-size:0.75rem;font-weight:700;'>🚚 {dispatched} Dispatched</span>
         </div>
     """, unsafe_allow_html=True)
 
     gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=15)
     gb.configure_selection('single')
-    gb.configure_grid_options(rowHeight=52, headerHeight=48, animateRows=True)
-    gb.configure_column("Status",       cellStyle=AVAILABILITY_JSCODE)
-    gb.configure_column("Vehicle Type", cellStyle=VTYPE_JSCODE)
-    gridOptions = gb.build()
+    gb.configure_grid_options(rowHeight=46, headerHeight=44, animateRows=True, suppressCellFocus=True)
+    gb.configure_column("ID",           cellStyle=_ID_JS,     maxWidth=70, pinned='left')
+    gb.configure_column("Status",       cellStyle=_STATUS_JS, maxWidth=130)
+    gb.configure_column("Vehicle Type", cellStyle=_VTYPE_JS)
+    gb.configure_column("Contact",      cellStyle=_PHONE_JS)
 
     AgGrid(
         df,
-        gridOptions=gridOptions,
+        gridOptions=gb.build(),
         enable_enterprise_modules=False,
         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
         theme='streamlit',
         allow_unsafe_jscode=True,
-        custom_css=enterprise_css,
+        custom_css=_CSS,
+        height=460,
     )
