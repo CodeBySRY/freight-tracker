@@ -22,154 +22,160 @@ if 'user' not in st.session_state:
 
 # ─── 2. ENTERPRISE SAAS LANDING & AUTH PORTAL ─────────────────────────────────
 def login_screen():
-    # ─── GLOBAL LANDING PAGE CSS & NAVBAR ───
+    # ─── GLOBAL LANDING PAGE CSS & DYNAMIC THEME ENGINE ───
     st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* Core Resets & Premium Typography */
+/* Dynamic Theme Variables */
+body {
+    --bg-main: #030712;
+    --text-main: #f8fafc;
+    --text-sub: #94a3b8;
+    --text-muted: #64748b;
+    --border-light: rgba(255,255,255,0.03);
+    --border-mid: rgba(255,255,255,0.05);
+    --border-heavy: rgba(255,255,255,0.1);
+    --nav-bg: rgba(3, 7, 18, 0.75);
+    --card-bg: rgba(255,255,255,0.015);
+    --card-hover: rgba(255,255,255,0.03);
+    --btn-bg: #f8fafc;
+    --btn-text: #030712;
+    --footer-bg: #010206;
+    --title-grad: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+}
+
+body.light-theme {
+    --bg-main: #f8fafc;
+    --text-main: #0f172a;
+    --text-sub: #475569;
+    --text-muted: #64748b;
+    --border-light: rgba(0,0,0,0.05);
+    --border-mid: rgba(0,0,0,0.1);
+    --border-heavy: rgba(0,0,0,0.2);
+    --nav-bg: rgba(248, 250, 252, 0.85);
+    --card-bg: #ffffff;
+    --card-hover: #f1f5f9;
+    --btn-bg: #0f172a;
+    --btn-text: #ffffff;
+    --footer-bg: #f1f5f9;
+    --title-grad: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+}
+
+/* Core Resets & Application Override */
 html, body, .stApp { 
-    background-color: #030712 !important; 
-    color: #f8fafc; 
+    background-color: var(--bg-main) !important; 
+    color: var(--text-main) !important; 
     font-family: 'Plus Jakarta Sans', sans-serif; 
     overflow-x: hidden;
     scroll-behavior: smooth;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 [data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header { display: none !important; }
-
-/* Remove default padding, establish Hero spacing */
 .block-container { padding: 0 !important; max-width: 100% !important; }
 
-/* ── PREMIUM FLOATING NAVBAR (Linear/Vercel Aesthetic) ── */
+/* ── PREMIUM FLOATING NAVBAR ── */
 .floating-nav {
-    position: fixed;
-    top: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 1200px;
-    height: 64px;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 100px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 1.5rem 0 2rem;
-    z-index: 1000;
-    box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
+    width: 90%; max-width: 1200px; height: 64px;
+    background: var(--nav-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border-heavy); border-radius: 100px;
+    display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem 0 2rem;
+    z-index: 1000; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
 }
-
-/* Navbar Shrink on Scroll Simulation */
 @media (max-width: 1024px) { .floating-nav { width: 95%; border-radius: 24px; } .nav-links { display: none !important; } }
 
 .nav-brand-group { display: flex; align-items: center; gap: 1rem; }
-.nav-logo { font-size: 1.25rem; font-weight: 800; color: #f8fafc; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.5px; }
-.nav-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.15); }
-.nav-subtitle { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; }
+.nav-logo { font-size: 1.25rem; font-weight: 800; color: var(--text-main) !important; text-decoration: none !important; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.5px; }
+.nav-divider { width: 1px; height: 24px; background: var(--border-heavy); }
+.nav-subtitle { font-size: 0.75rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1.5px; }
 
 .nav-links { display: flex; gap: 2rem; align-items: center; }
-.nav-link { color: #cbd5e1; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; position: relative; }
-.nav-link:hover { color: #10b981; }
+.nav-link { color: var(--text-sub) !important; text-decoration: none !important; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; position: relative; }
+.nav-link:hover { color: #10b981 !important; }
 .nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 0; background: #10b981; transition: width 0.2s ease; border-radius: 2px; }
 .nav-link:hover::after { width: 100%; }
 
+.nav-controls { display: flex; align-items: center; gap: 1rem; }
+.theme-toggle { cursor: pointer; font-size: 1.2rem; user-select: none; transition: transform 0.2s; }
+.theme-toggle:hover { transform: scale(1.15) rotate(15deg); }
 .nav-cta { 
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc;
-    padding: 0.5rem 1.25rem; border-radius: 100px; font-size: 0.85rem; font-weight: 700; 
-    text-decoration: none; transition: all 0.3s ease;
+    background: var(--card-bg); border: 1px solid var(--border-heavy); color: var(--text-main) !important; text-decoration: none !important;
+    padding: 0.5rem 1.25rem; border-radius: 100px; font-size: 0.85rem; font-weight: 700; transition: all 0.3s ease;
 }
-.nav-cta:hover { background: #f8fafc; color: #030712; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+.nav-cta:hover { background: var(--text-main); color: var(--bg-main) !important; box-shadow: 0 0 20px rgba(16,185,129,0.2); }
 
 /* ── HERO SECTION & BRAND HIERARCHY ── */
 [data-testid="stHorizontalBlock"]:first-of-type {
-    min-height: 100vh;
-    padding: 120px 8% 40px 8%;
-    align-items: center;
-    background-image: 
-        radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.05), transparent 40%),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 60px 60px, 60px 60px;
-    background-position: center center;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+    min-height: 100vh; padding: 120px 8% 40px 8%; align-items: center;
+    background-image: radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.05), transparent 40%), linear-gradient(var(--border-light) 1px, transparent 1px), linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
+    background-size: 100% 100%, 60px 60px, 60px 60px; background-position: center center;
+    border-bottom: 1px solid var(--border-light);
 }
 
-/* Brand Dominance (Left Column) */
 [data-testid="column"]:nth-of-type(1) { padding-right: 4rem !important; }
-
 .hero-super { color: #10b981; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; display: block; }
-.brand-title { font-size: 5rem; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 1.5rem; color: #f8fafc; }
-.brand-desc { font-size: 1.15rem; color: #94a3b8; line-height: 1.6; max-width: 90%; font-weight: 500; margin-bottom: 3rem; }
+.brand-title { font-size: 5rem; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 1.5rem; background: var(--title-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.brand-desc { font-size: 1.15rem; color: var(--text-sub); line-height: 1.6; max-width: 90%; font-weight: 500; margin-bottom: 3rem; }
 
-/* Logistics Corridor Visualization */
+/* Corridor Visualization */
 .corridor-map { position: relative; height: 60px; display: flex; align-items: center; margin-top: 2rem; width: 90%; }
-.corridor-line { position: absolute; width: 100%; height: 2px; background: rgba(255,255,255,0.1); top: 50%; transform: translateY(-50%); }
+.corridor-line { position: absolute; width: 100%; height: 2px; background: var(--border-heavy); top: 50%; transform: translateY(-50%); }
 .corridor-flow { position: absolute; width: 30%; height: 2px; background: linear-gradient(90deg, transparent, #10b981, transparent); top: 50%; transform: translateY(-50%); animation: freightFlow 3s infinite linear; }
 .corridor-node { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 8px; top: 50%; transform: translate(-50%, -15px); }
-.node-dot { width: 12px; height: 12px; background: #030712; border: 2px solid #3b82f6; border-radius: 50%; z-index: 2; transition: all 0.3s; }
+.node-dot { width: 12px; height: 12px; background: var(--bg-main); border: 2px solid #3b82f6; border-radius: 50%; z-index: 2; transition: all 0.3s; }
 .corridor-node:hover .node-dot { background: #10b981; border-color: #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.5); transform: scale(1.2); }
-.node-label { font-size: 0.7rem; font-weight: 700; color: #64748b; letter-spacing: 1px; transition: color 0.3s; }
-.corridor-node:hover .node-label { color: #f8fafc; }
-
+.node-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; transition: color 0.3s; }
+.corridor-node:hover .node-label { color: var(--text-main); }
 @keyframes freightFlow { 0% { left: -30%; } 100% { left: 100%; } }
 
-/* ── AUTH PORTAL (Right Column) ── */
+/* ── AUTH PORTAL ── */
 [data-testid="column"]:nth-of-type(2) {
-    background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 3.5rem 3rem !important;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-    position: relative;
-    overflow: hidden;
+    background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-heavy); border-radius: 24px; padding: 3.5rem 3rem !important;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); position: relative; overflow: hidden;
 }
 [data-testid="column"]:nth-of-type(2)::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #3b82f6); }
 
-.auth-heading { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: #f8fafc; }
-.auth-sub { color: #64748b; font-size: 0.9rem; margin-bottom: 2rem; font-weight: 500; }
+.auth-heading { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: var(--text-main); }
+.auth-sub { color: var(--text-sub); font-size: 0.9rem; margin-bottom: 2rem; font-weight: 500; }
 [data-testid="stForm"] { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
-.stTextInput label { color: #94a3b8 !important; font-size: 0.75rem !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem !important; }
-.stTextInput input { border-radius: 10px !important; border: 1px solid rgba(255,255,255,0.08) !important; background: rgba(0,0,0,0.2) !important; color: white !important; padding: 0.8rem 1rem !important; font-size: 0.95rem !important; transition: all 0.2s; }
-.stTextInput input:focus { border-color: #10b981 !important; background: rgba(16,185,129,0.02) !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }
-.stButton > button { border-radius: 10px !important; background: #f8fafc !important; color: #030712 !important; font-weight: 800 !important; font-size: 0.95rem !important; padding: 0.8rem !important; margin-top: 1.5rem !important; border: none !important; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; }
-.stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 15px 30px -10px rgba(255,255,255,0.4) !important; background: #ffffff !important; }
+.stTextInput label { color: var(--text-sub) !important; font-size: 0.75rem !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem !important; }
+.stTextInput input { border-radius: 10px !important; border: 1px solid var(--border-heavy) !important; background: var(--bg-main) !important; color: var(--text-main) !important; padding: 0.8rem 1rem !important; font-size: 0.95rem !important; transition: all 0.2s; }
+.stTextInput input:focus { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }
+.stButton > button { border-radius: 10px !important; background: var(--btn-bg) !important; color: var(--btn-text) !important; font-weight: 800 !important; font-size: 0.95rem !important; padding: 0.8rem !important; margin-top: 1.5rem !important; border: none !important; transition: all 0.3s !important; }
+.stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 15px 30px -10px rgba(16,185,129,0.4) !important; }
 
 /* ── DOCUMENTATION SECTIONS ── */
-.lp-section { padding: 8rem 10%; border-bottom: 1px solid rgba(255,255,255,0.03); scroll-margin-top: 80px; }
-.lp-header { font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 1rem; color: #f8fafc; text-align: center; }
-.lp-sub { font-size: 1.1rem; color: #94a3b8; text-align: center; max-width: 700px; margin: 0 auto 4rem auto; line-height: 1.6; }
+.lp-section { padding: 8rem 10%; border-bottom: 1px solid var(--border-light); scroll-margin-top: 80px; }
+.lp-header { font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 1rem; color: var(--text-main); text-align: center; }
+.lp-sub { font-size: 1.1rem; color: var(--text-sub); text-align: center; max-width: 700px; margin: 0 auto 4rem auto; line-height: 1.6; }
 
-/* Grids */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
 
-/* Cards & Micro-Interactions */
-.lp-card { background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 2.5rem 2rem; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-.lp-card:hover { background: rgba(255,255,255,0.03); transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); }
-.card-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.05); }
-.card-title { font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.75rem; letter-spacing: -0.5px; }
-.card-desc { font-size: 0.95rem; color: #94a3b8; line-height: 1.6; }
+.lp-card { background: var(--card-bg); border: 1px solid var(--border-mid); border-radius: 20px; padding: 2.5rem 2rem; transition: all 0.3s; }
+.lp-card:hover { background: var(--card-hover); transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); border-color: var(--border-heavy); }
+.card-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--border-mid); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-heavy); }
+.card-title { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.5px; }
+.card-desc { font-size: 0.95rem; color: var(--text-sub); line-height: 1.6; }
 
-/* Ecosystem Tags */
 .tag-wrap { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-.lp-tag { padding: 0.6rem 1.25rem; border-radius: 24px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); font-size: 0.9rem; color: #cbd5e1; font-weight: 600; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: default; }
+.lp-tag { padding: 0.6rem 1.25rem; border-radius: 24px; background: var(--card-bg); border: 1px solid var(--border-heavy); font-size: 0.9rem; color: var(--text-sub); font-weight: 600; transition: all 0.3s; cursor: default; }
 .lp-tag:hover { transform: translateY(-3px) scale(1.02); background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 10px 20px -5px rgba(16,185,129,0.2); }
 
-/* Footer */
-.lp-footer { background: #010206; padding: 4rem 10%; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-.footer-text { color: #64748b; font-size: 0.85rem; }
+.lp-footer { background: var(--footer-bg); padding: 4rem 10%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; }
+.footer-text { color: var(--text-muted); font-size: 0.85rem; }
 </style>
 
 <nav class="floating-nav">
     <div class="nav-brand-group">
-        <a href="#" class="nav-logo">📦 LogiTrack</a>
+        <a href="#auth-portal" class="nav-logo">
+            <span onclick="let t=document.createElement('div');t.innerHTML='🚚💨';t.style.cssText='position:fixed;top:80px;left:-100px;font-size:40px;z-index:9999;transition:left 2.5s cubic-bezier(0.25, 1, 0.5, 1);';document.body.appendChild(t);setTimeout(()=>t.style.left='120vw',50);setTimeout(()=>t.remove(),2600);" style="cursor:pointer;" title="Honk!">📦</span>
+            LogiTrack
+        </a>
         <div class="nav-divider"></div>
         <span class="nav-subtitle">Enterprise OS</span>
     </div>
@@ -179,8 +185,13 @@ html, body, .stApp {
         <a href="#capabilities" class="nav-link">Platform Capabilities</a>
         <a href="#team" class="nav-link">Engineering</a>
     </div>
-    <a href="#" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" class="nav-cta">System Access</a>
+    <div class="nav-controls">
+        <div class="theme-toggle" onclick="document.body.classList.toggle('light-theme')" title="Toggle Light/Dark Mode">🌓</div>
+        <a href="#auth-portal" class="nav-cta">System Access</a>
+    </div>
 </nav>
+
+<div id="auth-portal" style="position: absolute; top: 0;"></div>
 """, unsafe_allow_html=True)
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
@@ -247,7 +258,7 @@ html, body, .stApp {
 </div>
 </section>
 
-<section id='ecosystem' class='lp-section' style='background: rgba(255,255,255,0.01);'>
+<section id='ecosystem' class='lp-section' style='background: var(--card-bg);'>
 <div class='grid-2'>
 <div>
 <div class='lp-header' style='text-align: left;'>Architected for <span style="color:#10b981; font-family:'Plus Jakarta Sans', sans-serif; font-weight:800; text-shadow: 0 0 20px rgba(16,185,129,0.2);">Pakistan's</span> Ecosystem</div>
@@ -287,22 +298,22 @@ Designed exclusively for the operational realities of the domestic supply chain.
 </div>
 </section>
 
-<section id='team' class='lp-section' style='background: rgba(255,255,255,0.01);'>
+<section id='team' class='lp-section' style='background: var(--card-bg);'>
 <div class='lp-header'>Platform Engineering</div>
 <div class='lp-sub'>Designed, architected, and developed by software engineers committed to modernizing industrial logistics infrastructure.</div>
 <div class='grid-3'>
 <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
-<div style='width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.03); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 700;'>SR</div>
+<div style='width: 56px; height: 56px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>SR</div>
 <div class='card-title' style='font-size:1.1rem;'>Shayan Rizwan</div>
 <div class='card-desc' style='font-size:0.85rem;'>Platform Architecture</div>
 </div>
 <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
-<div style='width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.03); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 700;'>AS</div>
+<div style='width: 56px; height: 56px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>AS</div>
 <div class='card-title' style='font-size:1.1rem;'>Agha Salaat</div>
 <div class='card-desc' style='font-size:0.85rem;'>Systems Engineering</div>
 </div>
 <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
-<div style='width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.03); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 700;'>AM</div>
+<div style='width: 56px; height: 56px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>AM</div>
 <div class='card-title' style='font-size:1.1rem;'>Anzar Mubashir</div>
 <div class='card-desc' style='font-size:0.85rem;'>Backend Infrastructure</div>
 </div>
@@ -313,13 +324,13 @@ Designed exclusively for the operational realities of the domestic supply chain.
 <div class='card-icon' style='margin: 0 auto 1.5rem auto; width: 64px; height: 64px; font-size: 1.5rem;'>💬</div>
 <div class='lp-header'>Operational Support</div>
 <div class='lp-sub'>We value user feedback and continuously improve operational reliability. For issue reporting, technical assistance, or feature requests, contact our engineering team.</div>
-<a href='mailto:u2024585@giki.edu.pk' style='display: inline-block; background: #f8fafc; color: #030712; padding: 0.9rem 2.5rem; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.95rem; transition: all 0.3s; box-shadow: 0 10px 25px rgba(255,255,255,0.1);'>u2024585@giki.edu.pk</a>
-<div style='margin-top: 1.5rem; color: #64748b; font-size: 0.85rem; font-weight: 600;'>Expected Response SLA: Under 24 Hours</div>
+<a href='mailto:u2024585@giki.edu.pk' style='display: inline-block; background: var(--btn-bg); color: var(--btn-text); padding: 0.9rem 2.5rem; border-radius: 8px; font-weight: 700; text-decoration: none !important; font-size: 0.95rem; transition: all 0.3s; box-shadow: 0 10px 25px var(--border-heavy);'>u2024585@giki.edu.pk</a>
+<div style='margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;'>Expected Response SLA: Under 24 Hours</div>
 </section>
 
 <footer class='lp-footer'>
 <div class='footer-text'>
-<strong style='color:#f8fafc; font-size: 1rem;'>📦 LogiTrack PK</strong><br><br>
+<strong style='color:var(--text-main); font-size: 1rem;'>📦 LogiTrack PK</strong><br><br>
 © 2026 LogiTrack Systems. All rights reserved.
 </div>
 <div class='footer-text' style='text-align: right;'>
@@ -330,11 +341,12 @@ Version 2.4.0 (Enterprise Build)<br><br>
 """, unsafe_allow_html=True)
 
 
-# ─── 3. ENTERPRISE APP SHELL ──────────────────────────────────────────────────
+# ─── 3. ENTERPRISE APP SHELL (AUTHENTICATED) ──────────────────────────────────
 if not st.session_state.user:
     login_screen()
 else:
-    # Apply the global enterprise theme
+    # SAFETY SCRIPT: Force removing light-theme class to protect Dashboard Dark Mode UI
+    st.markdown("<img src=x onerror=\"document.body.classList.remove('light-theme');\" style='display:none;'>", unsafe_allow_html=True)
     apply_enterprise_theme()
 
     # ── Top bar CSS + layout ───────────────────────────────────────────────
