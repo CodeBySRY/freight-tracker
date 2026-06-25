@@ -96,88 +96,71 @@ html, body, .stApp {{
     scroll-behavior: smooth;
     transition: background-color 0.3s ease, color 0.3s ease;
 }}
+
+/* Global Background Pattern */
+.stApp {{
+    background-image: radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.04), transparent 45%), 
+                      linear-gradient(var(--border-light) 1px, transparent 1px), 
+                      linear-gradient(90deg, var(--border-light) 1px, transparent 1px) !important;
+    background-size: 100% 100%, 80px 80px, 80px 80px !important;
+    background-position: center center !important;
+    background-attachment: fixed !important;
+}}
+
 [data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header {{ display: none !important; }}
-.block-container {{ padding: 0 !important; max-width: 100% !important; }}
 
-/* ── PREMIUM FIXED TOP NAVBAR (Structural Overhaul) ── */
-/* 1. Target the specific container and lock it */
-[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) {{
-    position: fixed !important;
-    top: 1.5rem !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: 92% !important;
-    max-width: 1250px !important;
-    height: 68px !important;
-    background: var(--nav-bg) !important;
-    backdrop-filter: blur(24px) !important;
-    -webkit-backdrop-filter: blur(24px) !important;
-    border: 1px solid var(--border-heavy) !important;
-    border-radius: 100px !important;
-    z-index: 999999 !important;
-    padding: 0 1.5rem 0 0.5rem !important;
-    align-items: center !important;
-    margin: 0 !important;
-    box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+/* Push the Streamlit content down to clear the fixed navbar */
+.block-container {{ 
+    padding-top: 140px !important; 
+    padding-bottom: 0 !important;
+    max-width: 1400px !important; 
 }}
 
-/* 2. Format the interior layout to mimic CSS Flexbox 'space-between' */
-[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"] {{
+/* ── PURE HTML FIXED NAVBAR ── */
+.floating-nav-container {{
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: 1250px;
+    height: 68px;
+    background: var(--nav-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border-heavy);
+    border-radius: 100px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    padding: 0 1.5rem 0 2rem;
+    z-index: 999999;
+    box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: all 0.4s ease;
 }}
-[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-child(1) {{ justify-content: flex-start; }}
-[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-child(2) {{ justify-content: center; }}
-[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-child(3) {{ justify-content: flex-end; gap: 1.5rem; }}
 
-/* Navbar Native Button Restyling */
-/* Logo Button */
-[data-testid="column"]:nth-child(1) .stButton > button {{
-    background: transparent !important; border: none !important; box-shadow: none !important;
-    color: var(--text-main) !important; font-size: 1.15rem !important; font-weight: 800 !important;
-    padding: 0 0.5rem !important; display: flex; align-items: center; gap: 0.4rem; letter-spacing: -0.5px;
-}}
-[data-testid="column"]:nth-child(1) .stButton > button:hover {{ color: #10b981 !important; transform: none !important; }}
-
-/* Subtitle Branding Injection */
-.nav-brand-group {{ display: flex; align-items: center; gap: 0.8rem; margin-left: -5px; }}
+.nav-brand-group {{ display: flex; align-items: center; gap: 0.8rem; text-decoration: none; }}
+.nav-logo {{ font-size: 1.15rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem; letter-spacing: -0.5px; transition: color 0.2s; cursor: pointer; user-select: none; }}
+.nav-logo:hover {{ color: #10b981; }}
 .nav-divider {{ width: 1px; height: 24px; background: var(--border-heavy); }}
 .nav-subtitle {{ font-size: 0.7rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }}
 
-/* Theme Toggle Button */
-[data-testid="column"]:nth-child(3) .stButton > button {{
-    background: transparent !important; border: none !important; box-shadow: none !important;
-    font-size: 1.25rem !important; padding: 0 !important; margin: 0 !important; width: 32px !important; height: 32px !important;
-}}
-[data-testid="column"]:nth-child(3) .stButton > button:hover {{ transform: scale(1.1) rotate(15deg) !important; background: transparent !important; }}
-
-/* Navbar Text Links */
 .nav-links {{ display: flex; gap: 2.5rem; align-items: center; height: 100%; }}
-.nav-link {{ color: var(--text-sub) !important; text-decoration: none !important; font-size: 0.9rem; font-weight: 600; transition: all 0.2s ease; position: relative; }}
-.nav-link:hover {{ color: #10b981 !important; }}
+.nav-link {{ color: var(--text-sub); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: all 0.2s ease; position: relative; }}
+.nav-link:hover {{ color: #10b981; }}
 .nav-link::after {{ content: ''; position: absolute; width: 0; height: 2px; bottom: -6px; left: 0; background: #10b981; transition: width 0.2s ease; border-radius: 2px; }}
 .nav-link:hover::after {{ width: 100%; }}
 
-/* Navbar CTA Link */
+.nav-controls {{ display: flex; align-items: center; gap: 1.5rem; }}
+.theme-toggle-btn {{ cursor: pointer; font-size: 1.25rem; user-select: none; transition: transform 0.2s; }}
+.theme-toggle-btn:hover {{ transform: scale(1.1) rotate(15deg); }}
 .nav-cta {{ 
-    display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border-heavy); color: var(--text-main) !important; 
-    text-decoration: none !important; padding: 0.5rem 1.4rem; border-radius: 100px; font-size: 0.85rem; font-weight: 700; transition: all 0.3s ease; white-space: nowrap;
+    display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border-heavy); color: var(--text-main); 
+    text-decoration: none; padding: 0.5rem 1.4rem; border-radius: 100px; font-size: 0.85rem; font-weight: 700; transition: all 0.3s ease; white-space: nowrap;
 }}
-.nav-cta:hover {{ background: var(--text-main); color: var(--bg-main) !important; box-shadow: 0 5px 20px rgba(16,185,129,0.2); transform: translateY(-1px); }}
+.nav-cta:hover {{ background: var(--text-main); color: var(--bg-main); box-shadow: 0 5px 20px rgba(16,185,129,0.2); transform: translateY(-1px); }}
 
-/* ── HERO SECTION ── */
-/* Push the hero section down so it sits perfectly below the fixed navbar */
-[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(2) {{
-    margin-top: 80px !important;
-    min-height: calc(100vh - 80px) !important;
-    padding: 60px 8% 40px 8%; align-items: center;
-    background-image: radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.04), transparent 45%), linear-gradient(var(--border-light) 1px, transparent 1px), linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
-    background-size: 100% 100%, 80px 80px, 80px 80px; background-position: center center;
-    border-bottom: 1px solid var(--border-light);
-}}
-
-[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(2) > [data-testid="column"]:nth-of-type(1) {{ padding-right: 5rem !important; }}
+/* ── HERO SECTION TYPOGRAPHY ── */
 .hero-super {{ color: #10b981; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; display: block; }}
 .brand-title {{ font-size: 3.8rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1.15; margin-bottom: 1.75rem; background: var(--title-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
 .brand-desc {{ font-size: 1.1rem; color: var(--text-sub); line-height: 1.7; max-width: 95%; font-weight: 400; margin-bottom: 3.5rem; }}
@@ -194,27 +177,30 @@ html, body, .stApp {{
 @keyframes freightFlow {{ 0% {{ left: -30%; }} 100% {{ left: 100%; }} }}
 
 /* ── AUTH PORTAL ── */
-[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(2) > [data-testid="column"]:nth-of-type(2) {{
-    background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border-heavy); border-radius: 20px; padding: 3.5rem 3rem !important;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); position: relative; overflow: hidden;
+[data-testid="stForm"] {{
+    background: var(--card-bg) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--border-heavy) !important; border-radius: 20px !important; padding: 3.5rem 3rem !important;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3) !important; position: relative !important; overflow: hidden !important;
 }}
-[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(2) > [data-testid="column"]:nth-of-type(2)::before {{ content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #3b82f6); }}
+[data-testid="stForm"]::before {{ content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #3b82f6); }}
 
 .auth-heading {{ font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: var(--text-main); }}
 .auth-sub {{ color: var(--text-sub); font-size: 0.9rem; margin-bottom: 2rem; font-weight: 500; line-height: 1.5; }}
-[data-testid="stForm"] {{ background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }}
 .stTextInput label {{ color: var(--text-sub) !important; font-size: 0.75rem !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem !important; }}
 .stTextInput input {{ border-radius: 8px !important; border: 1px solid var(--border-heavy) !important; background: var(--bg-main) !important; color: var(--text-main) !important; padding: 0.8rem 1rem !important; font-size: 0.95rem !important; transition: all 0.2s; }}
 .stTextInput input:focus {{ border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }}
 
 /* Force Light/Dark text color inside the Submit Button */
-[data-testid="stFormSubmitButton"] > button {{ border-radius: 8px !important; background: var(--btn-bg) !important; font-weight: 700 !important; font-size: 0.95rem !important; padding: 0.8rem !important; margin-top: 1.5rem !important; border: none !important; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; }}
+[data-testid="stFormSubmitButton"] > button {{ 
+    border-radius: 8px !important; background: var(--btn-bg) !important; border: none !important; 
+    padding: 0.8rem !important; margin-top: 1.5rem !important; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; 
+}}
 [data-testid="stFormSubmitButton"] > button:hover {{ transform: translateY(-2px) !important; box-shadow: 0 10px 20px -5px rgba(16,185,129,0.3) !important; }}
-[data-testid="stFormSubmitButton"] > button *, [data-testid="stFormSubmitButton"] > button p {{ color: var(--btn-text) !important; font-weight: 700 !important; }}
+[data-testid="stFormSubmitButton"] > button p {{ color: var(--btn-text) !important; font-weight: 800 !important; font-size: 0.95rem !important; }}
 
 /* ── DOCUMENTATION SECTIONS ── */
-.lp-section {{ padding: 8rem 10%; border-bottom: 1px solid var(--border-light); scroll-margin-top: 80px; }}
+.lp-section {{ padding: 8rem 10%; border-top: 1px solid var(--border-light); scroll-margin-top: 80px; margin-top: 4rem; }}
 .lp-header {{ font-size: 2.2rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 1rem; color: var(--text-main); text-align: center; }}
 .lp-sub {{ font-size: 1.05rem; color: var(--text-sub); text-align: center; max-width: 700px; margin: 0 auto 4rem auto; line-height: 1.6; font-weight: 400; }}
 
@@ -232,49 +218,51 @@ html, body, .stApp {{
 .lp-tag {{ padding: 0.5rem 1.25rem; border-radius: 100px; background: var(--card-bg); border: 1px solid var(--border-heavy); font-size: 0.85rem; color: var(--text-sub); font-weight: 600; transition: all 0.3s; cursor: default; }}
 .lp-tag:hover {{ transform: translateY(-2px) scale(1.02); background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 5px 15px -5px rgba(16,185,129,0.15); }}
 
-.lp-footer {{ background: var(--footer-bg); padding: 4rem 10%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; }}
+.lp-footer {{ background: var(--footer-bg); padding: 4rem 10%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; }}
 .footer-text {{ color: var(--text-muted); font-size: 0.85rem; }}
-
-/* Streamlit Container Overrides for Navbar Layout */
-[data-testid="column"] {{ padding: 0 !important; }}
 </style>
+
 <div id="auth-portal" style="position: absolute; top: 0;"></div>
+
+<nav class="floating-nav-container">
+    <div class="nav-brand-group" onclick="window.dispatchEvent(new Event('trigger-easter-egg'));" style="cursor:pointer;" title="Honk!">
+        <div class="nav-logo">📦 LogiTrack PK</div>
+        <div class="nav-divider"></div>
+        <span class="nav-subtitle">Freight OS</span>
+    </div>
+    <div class="nav-links">
+        <a href="#network" class="nav-link">Operations</a>
+        <a href="#ecosystem" class="nav-link">Freight Network</a>
+        <a href="#capabilities" class="nav-link">Platform Modules</a>
+        <a href="#team" class="nav-link">Engineering</a>
+    </div>
+    <div class="nav-controls">
+        <div class="theme-toggle-btn" onclick="document.body.classList.toggle('light-theme')">🌓</div>
+        <a href="#auth-portal" class="nav-cta">Enterprise Access</a>
+    </div>
+</nav>
+
+<img src="dummy" style="display:none;" onerror="
+    if(!window.navScriptLoaded) {
+        window.navScriptLoaded = true;
+        var clicks = 0;
+        window.addEventListener('trigger-easter-egg', function() {
+            clicks++;
+            if(clicks === 3) {
+                clicks = 0;
+                var truck = document.createElement('div');
+                truck.innerHTML = '🚚💨';
+                truck.style.cssText = 'position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999999;transition:left 2.5s cubic-bezier(0.25, 1, 0.5, 1);';
+                document.body.appendChild(truck);
+                setTimeout(function() { truck.style.left = '120vw'; }, 50);
+                setTimeout(function() { truck.remove(); }, 2600);
+            }
+        });
+    }
+">
 """, unsafe_allow_html=True)
 
-    # ── THE EASTER EGG (Rendered conditionally based on Streamlit State) ──
-    if st.session_state.show_truck:
-        st.markdown("""
-        <div style="position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999999;animation: drive 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;">🚚💨</div>
-        <style>@keyframes drive { 0% { left: -100px; } 100% { left: 120vw; } }</style>
-        """, unsafe_allow_html=True)
-        # Reset state immediately so it doesn't loop forever
-        st.session_state.show_truck = False
-
-    # ─── 2.1 FIXED NAVBAR (Streamlit Native Structure) ───
-    nav_logo, nav_links, nav_controls = st.columns([2.5, 5, 2.5], vertical_alignment="center")
-    
-    with nav_logo:
-        st.markdown("<div class='nav-brand-group'>", unsafe_allow_html=True)
-        st.button("📦 LogiTrack PK", key="btn_logo", on_click=handle_logo_click)
-        st.markdown("<div class='nav-divider'></div><span class='nav-subtitle'>Freight OS</span></div>", unsafe_allow_html=True)
-        
-    with nav_links:
-        st.markdown("""
-        <div class='nav-links' style='justify-content:center;'>
-            <a href='#network' class='nav-link'>Operations</a>
-            <a href='#ecosystem' class='nav-link'>Freight Network</a>
-            <a href='#capabilities' class='nav-link'>Platform Modules</a>
-            <a href='#team' class='nav-link'>Engineering</a>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with nav_controls:
-        st.markdown("<div style='display:flex; justify-content:flex-end; align-items:center;'>", unsafe_allow_html=True)
-        toggle_icon = "🌞" if st.session_state.theme == 'light' else "🌓"
-        st.button(toggle_icon, key="btn_theme", on_click=toggle_theme)
-        st.markdown("<a href='#auth-portal' class='nav-cta'>Enterprise Access</a></div>", unsafe_allow_html=True)
-
-    # ─── 2.2 HERO SECTION (Streamlit Columns) ───
+    # ─── 2.1 HERO SECTION (Streamlit Columns) ───
     col_brand, col_auth = st.columns([1.2, 1], gap="large")
     
     with col_brand:
@@ -315,7 +303,7 @@ html, body, .stApp {{
             else:
                 st.error("Authentication failed. Invalid credentials or deactivated account.")
 
-    # ─── 2.3 MARKETING & DOCUMENTATION SECTIONS (Flush HTML) ───
+    # ─── 2.2 MARKETING & DOCUMENTATION SECTIONS (Flush HTML) ───
     st.markdown("""
 <section id='network' class='lp-section'>
 <div class='lp-header'>Centralized Operations</div>
