@@ -77,7 +77,7 @@ def login_screen():
         --title-grad: linear-gradient(135deg, #0f172a 0%, #475569 100%);
         """
 
-    # ── GLOBAL LANDING PAGE CSS ──
+    # ── PART 1: GLOBAL LANDING PAGE CSS (f-string for variables) ──
     st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -221,7 +221,10 @@ html, body, .stApp {{
 .lp-footer {{ background: var(--footer-bg); padding: 4rem 10%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; }}
 .footer-text {{ color: var(--text-muted); font-size: 0.85rem; }}
 </style>
+""", unsafe_allow_html=True)
 
+    # ── PART 2: STATIC HTML & JAVASCRIPT (Standard String) ──
+    st.markdown("""
 <div id="auth-portal" style="position: absolute; top: 0;"></div>
 
 <nav class="floating-nav-container">
