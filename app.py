@@ -223,12 +223,23 @@ html, body, .stApp {{
 </style>
 """, unsafe_allow_html=True)
 
-    # ── PART 2: STATIC HTML & JAVASCRIPT (Standard String) ──
-    st.markdown("""
+    # ── THE EASTER EGG (Rendered conditionally based on Streamlit State) ──
+    if st.session_state.show_truck:
+        st.markdown("""
+        <div style="position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999999;animation: drive 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;">🚚💨</div>
+        <style>@keyframes drive { 0% { left: -100px; } 100% { left: 120vw; } }</style>
+        """, unsafe_allow_html=True)
+        # Reset state immediately so it doesn't loop forever
+        st.session_state.show_truck = False
+
+    # ── PART 2: STATIC HTML NAVBAR & JAVASCRIPT BRIDGE ──
+    toggle_icon = "🌞" if st.session_state.theme == 'light' else "🌓"
+    
+    html_navbar = """
 <div id="auth-portal" style="position: absolute; top: 0;"></div>
 
 <nav class="floating-nav-container">
-    <div class="nav-brand-group" onclick="window.dispatchEvent(new Event('trigger-easter-egg'));" style="cursor:pointer;" title="Honk!">
+    <div class="nav-brand-group" onclick="window.triggerEgg && window.triggerEgg();" style="cursor:pointer;" title="Honk!">
         <div class="nav-logo">📦 LogiTrack PK</div>
         <div class="nav-divider"></div>
         <span class="nav-subtitle">Freight OS</span>
@@ -240,30 +251,40 @@ html, body, .stApp {{
         <a href="#team" class="nav-link">Engineering</a>
     </div>
     <div class="nav-controls">
-        <div class="theme-toggle-btn" onclick="document.body.classList.toggle('light-theme')">🌓</div>
+        <div class="theme-toggle-btn" onclick="window.toggleTheme && window.toggleTheme();">TOGGLE_ICON_PLACEHOLDER</div>
         <a href="#auth-portal" class="nav-cta">Enterprise Access</a>
     </div>
 </nav>
 
 <img src="dummy" style="display:none;" onerror="
-    if(!window.navScriptLoaded) {
-        window.navScriptLoaded = true;
-        var clicks = 0;
-        window.addEventListener('trigger-easter-egg', function() {
-            clicks++;
-            if(clicks === 3) {
-                clicks = 0;
-                var truck = document.createElement('div');
-                truck.innerHTML = '🚚💨';
-                truck.style.cssText = 'position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999999;transition:left 2.5s cubic-bezier(0.25, 1, 0.5, 1);';
-                document.body.appendChild(truck);
-                setTimeout(function() { truck.style.left = '120vw'; }, 50);
-                setTimeout(function() { truck.remove(); }, 2600);
-            }
-        });
+    /* 1. Hide the Streamlit buttons instantly */
+    var btns = document.querySelectorAll('button');
+    for(var i=0; i<btns.length; i++) {
+        if(btns[i].innerText.includes('HiddenThemeBtn') || btns[i].innerText.includes('HiddenEggBtn')) {
+            var container = btns[i].closest('div[data-testid=\\'stButton\\']');
+            if(container) container.style.display = 'none';
+        }
     }
+    
+    /* 2. Bind the HTML clicks to the hidden Python buttons */
+    window.toggleTheme = function() {
+        var bs = document.querySelectorAll('button');
+        for(var j=0; j<bs.length; j++){
+            if(bs[j].innerText.includes('HiddenThemeBtn')) { bs[j].click(); break; }
+        }
+    };
+    
+    window.triggerEgg = function() {
+        var bs = document.querySelectorAll('button');
+        for(var j=0; j<bs.length; j++){
+            if(bs[j].innerText.includes('HiddenEggBtn')) { bs[j].click(); break; }
+        }
+    };
 ">
-""", unsafe_allow_html=True)
+"""
+    # Safely inject the icon to avoid Python f-string bracket collisions with CSS
+    html_navbar = html_navbar.replace('TOGGLE_ICON_PLACEHOLDER', toggle_icon)
+    st.markdown(html_navbar, unsafe_allow_html=True)
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
     col_brand, col_auth = st.columns([1.2, 1], gap="large")
@@ -412,6 +433,10 @@ Version 2.4.0 (Enterprise Build)<br><br>
 </footer>
 """, unsafe_allow_html=True)
 
+    # ── THE HIDDEN STREAMLIT BRIDGE ──
+    # These native Python buttons are clicked by Javascript to manage state safely
+    st.button("HiddenThemeBtn", on_click=toggle_theme)
+    st.button("HiddenEggBtn", on_click=handle_logo_click)
 
 # ─── 3. ENTERPRISE APP SHELL (AUTHENTICATED) ──────────────────────────────────
 if not st.session_state.user:
