@@ -27,22 +27,15 @@ if 'egg_clicks' not in st.session_state:
 if 'show_truck' not in st.session_state:
     st.session_state.show_truck = False
 
-# ─── QUERY PARAM ACTION HANDLER ───────────────────────────────────────────────
-# JS in the navbar writes ?action=toggle_theme or ?action=egg_click to the URL,
-# which triggers a Streamlit rerun. We handle the action here, then clear the param.
-def handle_nav_actions():
-    action = st.query_params.get("action", "")
-    if action == "toggle_theme":
-        st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
-        st.query_params.clear()
-        st.rerun()
-    elif action == "egg_click":
-        st.session_state.egg_clicks += 1
-        if st.session_state.egg_clicks >= 3:
-            st.session_state.show_truck = True
-            st.session_state.egg_clicks = 0
-        st.query_params.clear()
-        st.rerun()
+# ─── CALLBACKS (NATIVE STREAMLIT STATE MANAGEMENT) ────────────────────────────
+def toggle_theme():
+    st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
+
+def handle_logo_click():
+    st.session_state.egg_clicks += 1
+    if st.session_state.egg_clicks >= 3:
+        st.session_state.show_truck = True
+        st.session_state.egg_clicks = 0
 
 
 # ─── ASSET CACHING (MASSIVE BACKEND PERFORMANCE OPTIMIZATION) ─────────────────
@@ -124,7 +117,16 @@ def get_cached_login_css(theme: str) -> str:
     .lp-tag:hover {{ transform: translateY(-2px) scale(1.02); background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 5px 15px -5px rgba(16,185,129,0.15); }}
     .lp-footer {{ background: var(--footer-bg); padding: 4rem 10%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; }}
     .footer-text {{ color: var(--text-muted); font-size: 0.85rem; }}
-
+    div[data-testid="stButton"]:has(button[aria-label="T"]),
+    div[data-testid="stButton"]:has(button[aria-label="E"]) {{
+        visibility: hidden !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+    }}
     </style>
     """
 
@@ -150,14 +152,6 @@ def get_cached_navbar_html(theme: str) -> str:
             <a href="#auth-portal" class="nav-cta">Enterprise Access</a>
         </div>
     </nav>
-    <script>
-    window.toggleTheme = function() {
-        window.location.search = '?action=toggle_theme';
-    };
-    window.triggerEgg = function() {
-        window.location.search = '?action=egg_click';
-    };
-    </script>
     """
     return html.replace('TOGGLE_ICON_PLACEHOLDER', toggle_icon)
 
@@ -279,9 +273,6 @@ def get_cached_shell_css() -> str:
 # ─── 2. ENTERPRISE SAAS LANDING & AUTH PORTAL ─────────────────────────────────
 def login_screen():
 
-    # ── HANDLE NAVBAR ACTIONS (query param bridge) ──
-    handle_nav_actions()
-
     # ── RENDER CACHED UI ASSETS ──
     st.markdown(get_cached_login_css(st.session_state.theme), unsafe_allow_html=True)
     st.markdown(get_cached_navbar_html(st.session_state.theme), unsafe_allow_html=True)
@@ -293,6 +284,23 @@ def login_screen():
         <style>@keyframes drive { 0% { left: -100px; } 100% { left: 120vw; } }</style>
         """, unsafe_allow_html=True)
         st.session_state.show_truck = False
+
+    # ── HIDDEN STREAMLIT BRIDGE BUTTONS (zero-height, visually invisible) ──
+    # These are real st.buttons so Streamlit can update session_state on click.
+    # They are collapsed to zero size via CSS injected in get_cached_login_css.
+    st.button("T", on_click=toggle_theme,      key="_tbtn")
+    st.button("E", on_click=handle_logo_click, key="_ebtn")
+
+    # ── JS BRIDGE (injected fresh every render so it always executes) ──
+    # st.markdown strips <script> tags, so we use the onerror trick on a 0px image.
+    # This runs after the buttons exist in the DOM and defines the navbar onclick targets.
+    st.markdown(
+        '<img src="x" style="display:none" onerror="'
+        'window.toggleTheme=function(){var b=document.querySelectorAll(\'button\');for(var i=0;i<b.length;i++){if(b[i].innerText.trim()===\'T\'){b[i].click();return;}}};'
+        'window.triggerEgg=function(){var b=document.querySelectorAll(\'button\');for(var i=0;i<b.length;i++){if(b[i].innerText.trim()===\'E\'){b[i].click();return;}}};'
+        '">',
+        unsafe_allow_html=True
+    )
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
     col_brand, col_auth = st.columns([1.2, 1], gap="large")
