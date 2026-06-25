@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 from auth import verify_password
 from database import get_db
 from styles.theme import apply_enterprise_theme
@@ -9,7 +10,7 @@ import pages.fleet      as fleet
 import pages.reports    as reports
 import pages.audit_logs as audit_logs
 
-# ─── 1. PAGE CONFIGURATION ────────────────────────────────────────────────────
+# ─── 1. PAGE CONFIGURATION & STATE INIT ───────────────────────────────────────
 st.set_page_config(
     page_title="LogiTrack PK | Enterprise Logistics",
     page_icon="📦",
@@ -19,182 +20,224 @@ st.set_page_config(
 
 if 'user' not in st.session_state:
     st.session_state.user = None
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'dark'
+if 'egg_clicks' not in st.session_state:
+    st.session_state.egg_clicks = 0
+if 'show_truck' not in st.session_state:
+    st.session_state.show_truck = False
+
+# ─── CALLBACKS (NATIVE STREAMLIT STATE MANAGEMENT) ────────────────────────────
+def toggle_theme():
+    st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
+
+def handle_logo_click():
+    st.session_state.egg_clicks += 1
+    if st.session_state.egg_clicks >= 3:
+        st.session_state.show_truck = True
+        st.session_state.egg_clicks = 0
 
 # ─── 2. ENTERPRISE SAAS LANDING & AUTH PORTAL ─────────────────────────────────
 def login_screen():
-    # ─── GLOBAL LANDING PAGE CSS & DYNAMIC THEME ENGINE ───
-    st.markdown("""
+    
+    # ── CSS INJECTION: Base Variables (Dark Mode Default) ──
+    css_vars = """
+        --bg-main: #030712;
+        --text-main: #f8fafc;
+        --text-sub: #94a3b8;
+        --text-muted: #64748b;
+        --border-light: rgba(255,255,255,0.03);
+        --border-mid: rgba(255,255,255,0.05);
+        --border-heavy: rgba(255,255,255,0.1);
+        --nav-bg: rgba(3, 7, 18, 0.75);
+        --card-bg: rgba(255,255,255,0.015);
+        --card-hover: rgba(255,255,255,0.03);
+        --btn-bg: #f8fafc;
+        --btn-text: #030712;
+        --footer-bg: #010206;
+        --title-grad: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+    """
+    
+    # ── CSS INJECTION: Conditional Light Mode Override ──
+    if st.session_state.theme == 'light':
+        css_vars = """
+        --bg-main: #f8fafc;
+        --text-main: #0f172a;
+        --text-sub: #475569;
+        --text-muted: #64748b;
+        --border-light: rgba(0,0,0,0.05);
+        --border-mid: rgba(0,0,0,0.1);
+        --border-heavy: rgba(0,0,0,0.2);
+        --nav-bg: rgba(248, 250, 252, 0.85);
+        --card-bg: #ffffff;
+        --card-hover: #f1f5f9;
+        --btn-bg: #0f172a;
+        --btn-text: #ffffff;
+        --footer-bg: #f1f5f9;
+        --title-grad: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+        """
+
+    # ── GLOBAL LANDING PAGE CSS ──
+    st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* Dynamic Theme Variables */
-body {
-    --bg-main: #030712;
-    --text-main: #f8fafc;
-    --text-sub: #94a3b8;
-    --text-muted: #64748b;
-    --border-light: rgba(255,255,255,0.03);
-    --border-mid: rgba(255,255,255,0.05);
-    --border-heavy: rgba(255,255,255,0.1);
-    --nav-bg: rgba(3, 7, 18, 0.75);
-    --card-bg: rgba(255,255,255,0.015);
-    --card-hover: rgba(255,255,255,0.03);
-    --btn-bg: #f8fafc;
-    --btn-text: #030712;
-    --footer-bg: #010206;
-    --title-grad: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
-}
-
-body.light-theme {
-    --bg-main: #f8fafc;
-    --text-main: #0f172a;
-    --text-sub: #475569;
-    --text-muted: #64748b;
-    --border-light: rgba(0,0,0,0.05);
-    --border-mid: rgba(0,0,0,0.1);
-    --border-heavy: rgba(0,0,0,0.2);
-    --nav-bg: rgba(248, 250, 252, 0.85);
-    --card-bg: #ffffff;
-    --card-hover: #f1f5f9;
-    --btn-bg: #0f172a;
-    --btn-text: #ffffff;
-    --footer-bg: #f1f5f9;
-    --title-grad: linear-gradient(135deg, #0f172a 0%, #475569 100%);
-}
+/* Apply Dynamic Variables */
+:root {{
+    {css_vars}
+}}
 
 /* Core Resets & Application Override */
-html, body, .stApp { 
+html, body, .stApp {{ 
     background-color: var(--bg-main) !important; 
     color: var(--text-main) !important; 
     font-family: 'Plus Jakarta Sans', sans-serif; 
     overflow-x: hidden;
     scroll-behavior: smooth;
     transition: background-color 0.3s ease, color 0.3s ease;
-}
-[data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header { display: none !important; }
-.block-container { padding: 0 !important; max-width: 100% !important; }
+}}
+[data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header {{ display: none !important; }}
+.block-container {{ padding: 0 !important; max-width: 100% !important; }}
 
-/* ── PREMIUM FLOATING NAVBAR ── */
-.floating-nav {
+/* ── PREMIUM FLOATING NAVBAR (STREAMLIT NATIVE ADAPTATION) ── */
+.floating-nav-container {{
     position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
     width: 90%; max-width: 1200px; height: 64px;
     background: var(--nav-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
     border: 1px solid var(--border-heavy); border-radius: 100px;
-    display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem 0 2rem;
+    display: flex; justify-content: space-between; align-items: center; padding: 0 1.5rem 0 0.5rem;
     z-index: 1000; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
     transition: all 0.3s ease;
-}
-@media (max-width: 1024px) { .floating-nav { width: 95%; border-radius: 24px; } .nav-links { display: none !important; } }
+}}
 
-.nav-brand-group { display: flex; align-items: center; gap: 1rem; }
-.nav-logo { font-size: 1.25rem; font-weight: 800; color: var(--text-main) !important; text-decoration: none !important; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.5px; }
-.nav-divider { width: 1px; height: 24px; background: var(--border-heavy); }
-.nav-subtitle { font-size: 0.75rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1.5px; }
+/* Hack to make Streamlit buttons look like clean logos/icons */
+.nav-logo-btn button {{ background: transparent !important; border: none !important; color: var(--text-main) !important; font-size: 1.1rem !important; font-weight: 800 !important; box-shadow: none !important; padding: 0 0.5rem !important; }}
+.nav-logo-btn button:hover {{ color: #10b981 !important; background: transparent !important; transform: none !important; }}
 
-.nav-links { display: flex; gap: 2rem; align-items: center; }
-.nav-link { color: var(--text-sub) !important; text-decoration: none !important; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; position: relative; }
-.nav-link:hover { color: #10b981 !important; }
-.nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 0; background: #10b981; transition: width 0.2s ease; border-radius: 2px; }
-.nav-link:hover::after { width: 100%; }
+.theme-toggle-btn button {{ background: transparent !important; border: none !important; font-size: 1.3rem !important; box-shadow: none !important; padding: 0 !important; transition: transform 0.2s !important; }}
+.theme-toggle-btn button:hover {{ transform: scale(1.15) rotate(15deg) !important; background: transparent !important; }}
 
-.nav-controls { display: flex; align-items: center; gap: 1rem; }
-.theme-toggle { cursor: pointer; font-size: 1.2rem; user-select: none; transition: transform 0.2s; }
-.theme-toggle:hover { transform: scale(1.15) rotate(15deg); }
-.nav-cta { 
+.nav-links {{ display: flex; gap: 2rem; align-items: center; margin-left: 2rem; }}
+.nav-link {{ color: var(--text-sub) !important; text-decoration: none !important; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; position: relative; }}
+.nav-link:hover {{ color: #10b981 !important; }}
+.nav-link::after {{ content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 0; background: #10b981; transition: width 0.2s ease; border-radius: 2px; }}
+.nav-link:hover::after {{ width: 100%; }}
+
+.nav-cta {{ 
     background: var(--card-bg); border: 1px solid var(--border-heavy); color: var(--text-main) !important; text-decoration: none !important;
-    padding: 0.5rem 1.25rem; border-radius: 100px; font-size: 0.85rem; font-weight: 700; transition: all 0.3s ease;
-}
-.nav-cta:hover { background: var(--text-main); color: var(--bg-main) !important; box-shadow: 0 0 20px rgba(16,185,129,0.2); }
+    padding: 0.5rem 1.25rem; border-radius: 100px; font-size: 0.85rem; font-weight: 700; transition: all 0.3s ease; margin-left: 1rem;
+}}
+.nav-cta:hover {{ background: var(--text-main); color: var(--bg-main) !important; box-shadow: 0 0 20px rgba(16,185,129,0.2); }}
 
-/* ── HERO SECTION & BRAND HIERARCHY ── */
-[data-testid="stHorizontalBlock"]:first-of-type {
+/* ── HERO SECTION ── */
+[data-testid="stHorizontalBlock"]:first-of-type {{
     min-height: 100vh; padding: 120px 8% 40px 8%; align-items: center;
     background-image: radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.05), transparent 40%), linear-gradient(var(--border-light) 1px, transparent 1px), linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
     background-size: 100% 100%, 60px 60px, 60px 60px; background-position: center center;
     border-bottom: 1px solid var(--border-light);
-}
+}}
 
-[data-testid="column"]:nth-of-type(1) { padding-right: 4rem !important; }
-.hero-super { color: #10b981; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; display: block; }
-.brand-title { font-size: 5rem; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 1.5rem; background: var(--title-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.brand-desc { font-size: 1.15rem; color: var(--text-sub); line-height: 1.6; max-width: 90%; font-weight: 500; margin-bottom: 3rem; }
+[data-testid="column"]:nth-of-type(1) {{ padding-right: 4rem !important; }}
+.hero-super {{ color: #10b981; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; display: block; }}
+.brand-title {{ font-size: 5rem; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 1.5rem; background: var(--title-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
+.brand-desc {{ font-size: 1.15rem; color: var(--text-sub); line-height: 1.6; max-width: 90%; font-weight: 500; margin-bottom: 3rem; }}
 
 /* Corridor Visualization */
-.corridor-map { position: relative; height: 60px; display: flex; align-items: center; margin-top: 2rem; width: 90%; }
-.corridor-line { position: absolute; width: 100%; height: 2px; background: var(--border-heavy); top: 50%; transform: translateY(-50%); }
-.corridor-flow { position: absolute; width: 30%; height: 2px; background: linear-gradient(90deg, transparent, #10b981, transparent); top: 50%; transform: translateY(-50%); animation: freightFlow 3s infinite linear; }
-.corridor-node { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 8px; top: 50%; transform: translate(-50%, -15px); }
-.node-dot { width: 12px; height: 12px; background: var(--bg-main); border: 2px solid #3b82f6; border-radius: 50%; z-index: 2; transition: all 0.3s; }
-.corridor-node:hover .node-dot { background: #10b981; border-color: #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.5); transform: scale(1.2); }
-.node-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; transition: color 0.3s; }
-.corridor-node:hover .node-label { color: var(--text-main); }
-@keyframes freightFlow { 0% { left: -30%; } 100% { left: 100%; } }
+.corridor-map {{ position: relative; height: 60px; display: flex; align-items: center; margin-top: 2rem; width: 90%; }}
+.corridor-line {{ position: absolute; width: 100%; height: 2px; background: var(--border-heavy); top: 50%; transform: translateY(-50%); }}
+.corridor-flow {{ position: absolute; width: 30%; height: 2px; background: linear-gradient(90deg, transparent, #10b981, transparent); top: 50%; transform: translateY(-50%); animation: freightFlow 3s infinite linear; }}
+.corridor-node {{ position: absolute; display: flex; flex-direction: column; align-items: center; gap: 8px; top: 50%; transform: translate(-50%, -15px); }}
+.node-dot {{ width: 12px; height: 12px; background: var(--bg-main); border: 2px solid #3b82f6; border-radius: 50%; z-index: 2; transition: all 0.3s; }}
+.corridor-node:hover .node-dot {{ background: #10b981; border-color: #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.5); transform: scale(1.2); }}
+.node-label {{ font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; transition: color 0.3s; }}
+.corridor-node:hover .node-label {{ color: var(--text-main); }}
+@keyframes freightFlow {{ 0% {{ left: -30%; }} 100% {{ left: 100%; }} }}
 
 /* ── AUTH PORTAL ── */
-[data-testid="column"]:nth-of-type(2) {
+[data-testid="column"]:nth-of-type(2) {{
     background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-heavy); border-radius: 24px; padding: 3.5rem 3rem !important;
     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); position: relative; overflow: hidden;
-}
-[data-testid="column"]:nth-of-type(2)::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #3b82f6); }
+}}
+[data-testid="column"]:nth-of-type(2)::before {{ content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #3b82f6); }}
 
-.auth-heading { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: var(--text-main); }
-.auth-sub { color: var(--text-sub); font-size: 0.9rem; margin-bottom: 2rem; font-weight: 500; }
-[data-testid="stForm"] { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
-.stTextInput label { color: var(--text-sub) !important; font-size: 0.75rem !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem !important; }
-.stTextInput input { border-radius: 10px !important; border: 1px solid var(--border-heavy) !important; background: var(--bg-main) !important; color: var(--text-main) !important; padding: 0.8rem 1rem !important; font-size: 0.95rem !important; transition: all 0.2s; }
-.stTextInput input:focus { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }
-.stButton > button { border-radius: 10px !important; background: var(--btn-bg) !important; color: var(--btn-text) !important; font-weight: 800 !important; font-size: 0.95rem !important; padding: 0.8rem !important; margin-top: 1.5rem !important; border: none !important; transition: all 0.3s !important; }
-.stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 15px 30px -10px rgba(16,185,129,0.4) !important; }
+.auth-heading {{ font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: var(--text-main); }}
+.auth-sub {{ color: var(--text-sub); font-size: 0.9rem; margin-bottom: 2rem; font-weight: 500; }}
+[data-testid="stForm"] {{ background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }}
+.stTextInput label {{ color: var(--text-sub) !important; font-size: 0.75rem !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem !important; }}
+.stTextInput input {{ border-radius: 10px !important; border: 1px solid var(--border-heavy) !important; background: var(--bg-main) !important; color: var(--text-main) !important; padding: 0.8rem 1rem !important; font-size: 0.95rem !important; transition: all 0.2s; }}
+.stTextInput input:focus {{ border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }}
+.stButton > button {{ border-radius: 10px !important; background: var(--btn-bg) !important; color: var(--btn-text) !important; font-weight: 800 !important; font-size: 0.95rem !important; padding: 0.8rem !important; margin-top: 1.5rem !important; border: none !important; transition: all 0.3s !important; }}
+.stButton > button:hover {{ transform: translateY(-2px) !important; box-shadow: 0 15px 30px -10px rgba(16,185,129,0.4) !important; }}
 
 /* ── DOCUMENTATION SECTIONS ── */
-.lp-section { padding: 8rem 10%; border-bottom: 1px solid var(--border-light); scroll-margin-top: 80px; }
-.lp-header { font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 1rem; color: var(--text-main); text-align: center; }
-.lp-sub { font-size: 1.1rem; color: var(--text-sub); text-align: center; max-width: 700px; margin: 0 auto 4rem auto; line-height: 1.6; }
+.lp-section {{ padding: 8rem 10%; border-bottom: 1px solid var(--border-light); scroll-margin-top: 80px; }}
+.lp-header {{ font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 1rem; color: var(--text-main); text-align: center; }}
+.lp-sub {{ font-size: 1.1rem; color: var(--text-sub); text-align: center; max-width: 700px; margin: 0 auto 4rem auto; line-height: 1.6; }}
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+.grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }}
+.grid-3 {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }}
+.grid-4 {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }}
 
-.lp-card { background: var(--card-bg); border: 1px solid var(--border-mid); border-radius: 20px; padding: 2.5rem 2rem; transition: all 0.3s; }
-.lp-card:hover { background: var(--card-hover); transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); border-color: var(--border-heavy); }
-.card-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--border-mid); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-heavy); }
-.card-title { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.5px; }
-.card-desc { font-size: 0.95rem; color: var(--text-sub); line-height: 1.6; }
+.lp-card {{ background: var(--card-bg); border: 1px solid var(--border-mid); border-radius: 20px; padding: 2.5rem 2rem; transition: all 0.3s; }}
+.lp-card:hover {{ background: var(--card-hover); transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); border-color: var(--border-heavy); }}
+.card-icon {{ width: 48px; height: 48px; border-radius: 12px; background: var(--border-mid); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-heavy); }}
+.card-title {{ font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.5px; }}
+.card-desc {{ font-size: 0.95rem; color: var(--text-sub); line-height: 1.6; }}
 
-.tag-wrap { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-.lp-tag { padding: 0.6rem 1.25rem; border-radius: 24px; background: var(--card-bg); border: 1px solid var(--border-heavy); font-size: 0.9rem; color: var(--text-sub); font-weight: 600; transition: all 0.3s; cursor: default; }
-.lp-tag:hover { transform: translateY(-3px) scale(1.02); background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 10px 20px -5px rgba(16,185,129,0.2); }
+.tag-wrap {{ display: flex; flex-wrap: wrap; gap: 0.75rem; }}
+.lp-tag {{ padding: 0.6rem 1.25rem; border-radius: 24px; background: var(--card-bg); border: 1px solid var(--border-heavy); font-size: 0.9rem; color: var(--text-sub); font-weight: 600; transition: all 0.3s; cursor: default; }}
+.lp-tag:hover {{ transform: translateY(-3px) scale(1.02); background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 10px 20px -5px rgba(16,185,129,0.2); }}
 
-.lp-footer { background: var(--footer-bg); padding: 4rem 10%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; }
-.footer-text { color: var(--text-muted); font-size: 0.85rem; }
+.lp-footer {{ background: var(--footer-bg); padding: 4rem 10%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; }}
+.footer-text {{ color: var(--text-muted); font-size: 0.85rem; }}
+
+/* Streamlit Container Overrides for Navbar Layout */
+[data-testid="column"] {{ padding: 0 !important; }}
 </style>
-
-<div id="auth-portal" style="position: absolute; top: 0;"></div>
-
-<nav class="floating-nav">
-    <div class="nav-brand-group">
-        <a href="#auth-portal" class="nav-logo">
-            <span id="easter-egg-btn" style="cursor:pointer;" title="Honk!">📦</span>
-            LogiTrack
-        </a>
-        <div class="nav-divider"></div>
-        <span class="nav-subtitle">Enterprise OS</span>
-    </div>
-    <div class="nav-links">
-        <a href="#network" class="nav-link">Network Maps</a>
-        <a href="#ecosystem" class="nav-link">Pakistan Corridors</a>
-        <a href="#capabilities" class="nav-link">Platform Capabilities</a>
-        <a href="#team" class="nav-link">Engineering</a>
-    </div>
-    <div class="nav-controls">
-        <div class="theme-toggle" id="theme-toggle-btn" title="Toggle Light/Dark Mode">🌓</div>
-        <a href="#auth-portal" class="nav-cta">System Access</a>
-    </div>
-</nav>
-
-<img src="dummy" style="display:none;" onerror="if(!window.lLoaded){window.lLoaded=true;var t=document.getElementById('theme-toggle-btn');if(t){t.addEventListener('click',function(){document.body.classList.toggle('light-theme');});}var e=document.getElementById('easter-egg-btn');if(e){var c=0;e.addEventListener('click',function(ev){ev.preventDefault();c++;if(c===3){c=0;var tr=document.createElement('div');tr.innerHTML='🚚💨';tr.style.cssText='position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999;transition:left 2.5s cubic-bezier(0.25, 1, 0.5, 1);';document.body.appendChild(tr);setTimeout(function(){tr.style.left='120vw';},50);setTimeout(function(){tr.remove();},2600);}});}}">
 """, unsafe_allow_html=True)
+
+    # ── THE EASTER EGG (Rendered conditionally based on Streamlit State) ──
+    if st.session_state.show_truck:
+        st.markdown("""
+        <div style="position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999;animation: drive 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;">🚚💨</div>
+        <style>@keyframes drive { 0% { left: -100px; } 100% { left: 120vw; } }</style>
+        """, unsafe_allow_html=True)
+        # Reset state immediately so it doesn't loop forever on next render
+        st.session_state.show_truck = False
+
+    # ── NATIVE STREAMLIT NAVBAR ──
+    st.markdown("<div id='auth-portal' style='position:absolute;top:0;'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='floating-nav-container'>", unsafe_allow_html=True)
+    
+    # We use Streamlit columns to perfectly position the navbar elements
+    nav_col1, nav_col2, nav_col3 = st.columns([2, 5, 2])
+    
+    with nav_col1:
+        st.markdown("<div class='nav-logo-btn'>", unsafe_allow_html=True)
+        st.button("📦 LogiTrack", key="btn_logo", on_click=handle_logo_click)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+    with nav_col2:
+        st.markdown("""
+        <div class='nav-links' style='justify-content:center;'>
+            <a href='#network' class='nav-link'>Network Maps</a>
+            <a href='#ecosystem' class='nav-link'>Pakistan Corridors</a>
+            <a href='#capabilities' class='nav-link'>Platform Capabilities</a>
+            <a href='#team' class='nav-link'>Engineering</a>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with nav_col3:
+        st.markdown("<div style='display:flex; justify-content:flex-end; align-items:center; gap:0.5rem;'>", unsafe_allow_html=True)
+        st.markdown("<div class='theme-toggle-btn'>", unsafe_allow_html=True)
+        toggle_icon = "🌞" if st.session_state.theme == 'light' else "🌓"
+        st.button(toggle_icon, key="btn_theme", on_click=toggle_theme)
+        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<a href='#auth-portal' class='nav-cta'>System Access</a>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+    st.markdown("</div>", unsafe_allow_html=True) # Close floating-nav-container
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
     col_brand, col_auth = st.columns([1.4, 1], gap="large")
@@ -232,6 +275,7 @@ html, body, .stApp {
             conn.close()
             if user and verify_password(password, user['password_hash']):
                 st.session_state.user = {'user_id': user['user_id'], 'full_name': user['full_name'], 'role': user['role']}
+                st.session_state.theme = 'dark' # Force dark theme on login to protect dashboard
                 st.rerun()
             else:
                 st.error("Authentication failed. Invalid credentials or deactivated account.")
@@ -347,8 +391,6 @@ Version 2.4.0 (Enterprise Build)<br><br>
 if not st.session_state.user:
     login_screen()
 else:
-    # SAFETY SCRIPT: Force removing light-theme class to protect Dashboard Dark Mode UI
-    st.markdown("<img src='dummy' style='display:none;' onerror=\"document.body.classList.remove('light-theme');\">", unsafe_allow_html=True)
     apply_enterprise_theme()
 
     # ── Top bar CSS + layout ───────────────────────────────────────────────
