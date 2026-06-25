@@ -193,38 +193,7 @@ html, body, .stApp {
     </div>
 </nav>
 
-<img src="dummy" style="display:none;" onerror="
-    if(!window.logitrackScriptLoaded) {
-        window.logitrackScriptLoaded = true;
-        
-        /* Theme Toggle Logic */
-        var themeBtn = document.getElementById('theme-toggle-btn');
-        if(themeBtn) {
-            themeBtn.addEventListener('click', function() {
-                document.body.classList.toggle('light-theme');
-            });
-        }
-        
-        /* Easter Egg Logic */
-        var eggBtn = document.getElementById('easter-egg-btn');
-        if(eggBtn) {
-            var clicks = 0;
-            eggBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                clicks++;
-                if(clicks === 3) {
-                    clicks = 0;
-                    var truck = document.createElement('div');
-                    truck.innerHTML = '🚚💨';
-                    truck.style.cssText = 'position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999;transition:left 2.5s cubic-bezier(0.25, 1, 0.5, 1);';
-                    document.body.appendChild(truck);
-                    setTimeout(function() { truck.style.left = '120vw'; }, 50);
-                    setTimeout(function() { truck.remove(); }, 2600);
-                }
-            });
-        }
-    }
-">
+<img src="dummy" style="display:none;" onerror="if(!window.lLoaded){window.lLoaded=true;var t=document.getElementById('theme-toggle-btn');if(t){t.addEventListener('click',function(){document.body.classList.toggle('light-theme');});}var e=document.getElementById('easter-egg-btn');if(e){var c=0;e.addEventListener('click',function(ev){ev.preventDefault();c++;if(c===3){c=0;var tr=document.createElement('div');tr.innerHTML='🚚💨';tr.style.cssText='position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999;transition:left 2.5s cubic-bezier(0.25, 1, 0.5, 1);';document.body.appendChild(tr);setTimeout(function(){tr.style.left='120vw';},50);setTimeout(function(){tr.remove();},2600);}});}}">
 """, unsafe_allow_html=True)
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
@@ -379,7 +348,7 @@ if not st.session_state.user:
     login_screen()
 else:
     # SAFETY SCRIPT: Force removing light-theme class to protect Dashboard Dark Mode UI
-    st.markdown("<img src='dummy' onerror=\"document.body.classList.remove('light-theme');\" style='display:none;'>", unsafe_allow_html=True)
+    st.markdown("<img src='dummy' style='display:none;' onerror=\"document.body.classList.remove('light-theme');\">", unsafe_allow_html=True)
     apply_enterprise_theme()
 
     # ── Top bar CSS + layout ───────────────────────────────────────────────
