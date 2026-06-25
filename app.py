@@ -27,15 +27,22 @@ if 'egg_clicks' not in st.session_state:
 if 'show_truck' not in st.session_state:
     st.session_state.show_truck = False
 
-# ─── CALLBACKS (NATIVE STREAMLIT STATE MANAGEMENT) ────────────────────────────
-def toggle_theme():
-    st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
-
-def handle_logo_click():
-    st.session_state.egg_clicks += 1
-    if st.session_state.egg_clicks >= 3:
-        st.session_state.show_truck = True
-        st.session_state.egg_clicks = 0
+# ─── QUERY PARAM ACTION HANDLER ───────────────────────────────────────────────
+# JS in the navbar writes ?action=toggle_theme or ?action=egg_click to the URL,
+# which triggers a Streamlit rerun. We handle the action here, then clear the param.
+def handle_nav_actions():
+    action = st.query_params.get("action", "")
+    if action == "toggle_theme":
+        st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
+        st.query_params.clear()
+        st.rerun()
+    elif action == "egg_click":
+        st.session_state.egg_clicks += 1
+        if st.session_state.egg_clicks >= 3:
+            st.session_state.show_truck = True
+            st.session_state.egg_clicks = 0
+        st.query_params.clear()
+        st.rerun()
 
 
 # ─── ASSET CACHING (MASSIVE BACKEND PERFORMANCE OPTIMIZATION) ─────────────────
@@ -117,10 +124,7 @@ def get_cached_login_css(theme: str) -> str:
     .lp-tag:hover {{ transform: translateY(-2px) scale(1.02); background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 5px 15px -5px rgba(16,185,129,0.15); }}
     .lp-footer {{ background: var(--footer-bg); padding: 4rem 10%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; margin-top: 4rem; }}
     .footer-text {{ color: var(--text-muted); font-size: 0.85rem; }}
-    [data-testid="stButton"]:has(button[data-testid="hidden_theme_btn"]),
-    [data-testid="stButton"]:has(button[data-testid="hidden_egg_btn"]) {{ display: none !important; }}
-    [data-testid="stButton"]:has(#hidden_theme_btn),
-    [data-testid="stButton"]:has(#hidden_egg_btn) {{ display: none !important; }}
+
     </style>
     """
 
@@ -148,16 +152,10 @@ def get_cached_navbar_html(theme: str) -> str:
     </nav>
     <script>
     window.toggleTheme = function() {
-        var bs = document.querySelectorAll('button');
-        for (var j = 0; j < bs.length; j++) {
-            if (bs[j].innerText.includes('HiddenThemeBtn')) { bs[j].click(); break; }
-        }
+        window.location.search = '?action=toggle_theme';
     };
     window.triggerEgg = function() {
-        var bs = document.querySelectorAll('button');
-        for (var j = 0; j < bs.length; j++) {
-            if (bs[j].innerText.includes('HiddenEggBtn')) { bs[j].click(); break; }
-        }
+        window.location.search = '?action=egg_click';
     };
     </script>
     """
@@ -280,7 +278,10 @@ def get_cached_shell_css() -> str:
 
 # ─── 2. ENTERPRISE SAAS LANDING & AUTH PORTAL ─────────────────────────────────
 def login_screen():
-    
+
+    # ── HANDLE NAVBAR ACTIONS (query param bridge) ──
+    handle_nav_actions()
+
     # ── RENDER CACHED UI ASSETS ──
     st.markdown(get_cached_login_css(st.session_state.theme), unsafe_allow_html=True)
     st.markdown(get_cached_navbar_html(st.session_state.theme), unsafe_allow_html=True)
@@ -292,10 +293,6 @@ def login_screen():
         <style>@keyframes drive { 0% { left: -100px; } 100% { left: 120vw; } }</style>
         """, unsafe_allow_html=True)
         st.session_state.show_truck = False
-
-    # ── THE HIDDEN STREAMLIT BRIDGE ──
-    st.button("HiddenThemeBtn", on_click=toggle_theme, key="hidden_theme_btn")
-    st.button("HiddenEggBtn", on_click=handle_logo_click, key="hidden_egg_btn")
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
     col_brand, col_auth = st.columns([1.2, 1], gap="large")
