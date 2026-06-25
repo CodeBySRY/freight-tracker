@@ -22,12 +22,12 @@ if 'user' not in st.session_state:
 
 # ─── 2. ENTERPRISE SAAS LANDING & AUTH PORTAL ─────────────────────────────────
 def login_screen():
-    # ─── GLOBAL LANDING PAGE CSS ───
+    # ─── GLOBAL LANDING PAGE CSS & NAVBAR ───
     st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* Core Resets */
+/* Core Resets & Premium Typography */
 html, body, .stApp { 
     background-color: #030712 !important; 
     color: #f8fafc; 
@@ -36,65 +36,112 @@ html, body, .stApp {
     scroll-behavior: smooth;
 }
 [data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header { display: none !important; }
+
+/* Remove default padding, establish Hero spacing */
 .block-container { padding: 0 !important; max-width: 100% !important; }
 
-/* ── NAVBAR ── */
-.lp-navbar {
-    position: fixed; top: 0; left: 0; width: 100%; height: 75px;
-    background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05); z-index: 1000;
-    display: flex; justify-content: space-between; align-items: center; padding: 0 5%;
+/* ── PREMIUM FLOATING NAVBAR (Linear/Vercel Aesthetic) ── */
+.floating-nav {
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 1200px;
+    height: 64px;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.5rem 0 2rem;
+    z-index: 1000;
+    box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.nav-logo { font-size: 1.25rem; font-weight: 800; color: #f8fafc; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
-.nav-links { display: flex; gap: 2.5rem; align-items: center; }
-.nav-link { color: #94a3b8; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s; }
-.nav-link:hover { color: #10b981; }
 
-/* ── HERO SECTION (100vh Split) ── */
+/* Navbar Shrink on Scroll Simulation */
+@media (max-width: 1024px) { .floating-nav { width: 95%; border-radius: 24px; } .nav-links { display: none !important; } }
+
+.nav-brand-group { display: flex; align-items: center; gap: 1rem; }
+.nav-logo { font-size: 1.25rem; font-weight: 800; color: #f8fafc; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.5px; }
+.nav-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.15); }
+.nav-subtitle { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; }
+
+.nav-links { display: flex; gap: 2rem; align-items: center; }
+.nav-link { color: #cbd5e1; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; position: relative; }
+.nav-link:hover { color: #10b981; }
+.nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 0; background: #10b981; transition: width 0.2s ease; border-radius: 2px; }
+.nav-link:hover::after { width: 100%; }
+
+.nav-cta { 
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc;
+    padding: 0.5rem 1.25rem; border-radius: 100px; font-size: 0.85rem; font-weight: 700; 
+    text-decoration: none; transition: all 0.3s ease;
+}
+.nav-cta:hover { background: #f8fafc; color: #030712; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+
+/* ── HERO SECTION & BRAND HIERARCHY ── */
 [data-testid="stHorizontalBlock"]:first-of-type {
     min-height: 100vh;
-    padding: 75px 5% 0 5%;
-    display: flex;
+    padding: 120px 8% 40px 8%;
     align-items: center;
-    background: radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.04) 0%, transparent 40%),
-                radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 40%);
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.05), transparent 40%),
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 60px 60px, 60px 60px;
+    background-position: center center;
     border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
-/* Left Column: Auth Portal */
-[data-testid="column"]:nth-of-type(1) {
-    padding: 3rem 4rem !important;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
+/* Brand Dominance (Left Column) */
+[data-testid="column"]:nth-of-type(1) { padding-right: 4rem !important; }
 
-/* Right Column: Branding */
+.hero-super { color: #10b981; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; display: block; }
+.brand-title { font-size: 5rem; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 1.5rem; color: #f8fafc; }
+.brand-desc { font-size: 1.15rem; color: #94a3b8; line-height: 1.6; max-width: 90%; font-weight: 500; margin-bottom: 3rem; }
+
+/* Logistics Corridor Visualization */
+.corridor-map { position: relative; height: 60px; display: flex; align-items: center; margin-top: 2rem; width: 90%; }
+.corridor-line { position: absolute; width: 100%; height: 2px; background: rgba(255,255,255,0.1); top: 50%; transform: translateY(-50%); }
+.corridor-flow { position: absolute; width: 30%; height: 2px; background: linear-gradient(90deg, transparent, #10b981, transparent); top: 50%; transform: translateY(-50%); animation: freightFlow 3s infinite linear; }
+.corridor-node { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 8px; top: 50%; transform: translate(-50%, -15px); }
+.node-dot { width: 12px; height: 12px; background: #030712; border: 2px solid #3b82f6; border-radius: 50%; z-index: 2; transition: all 0.3s; }
+.corridor-node:hover .node-dot { background: #10b981; border-color: #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.5); transform: scale(1.2); }
+.node-label { font-size: 0.7rem; font-weight: 700; color: #64748b; letter-spacing: 1px; transition: color 0.3s; }
+.corridor-node:hover .node-label { color: #f8fafc; }
+
+@keyframes freightFlow { 0% { left: -30%; } 100% { left: 100%; } }
+
+/* ── AUTH PORTAL (Right Column) ── */
 [data-testid="column"]:nth-of-type(2) {
-    padding: 3rem 4rem !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 3.5rem 3rem !important;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
     position: relative;
+    overflow: hidden;
 }
+[data-testid="column"]:nth-of-type(2)::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #3b82f6); }
 
-/* Auth Form Styling */
-.auth-heading { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; }
-.auth-sub { color: #94a3b8; font-size: 0.95rem; margin-bottom: 2.5rem; line-height: 1.5; }
+.auth-heading { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: #f8fafc; }
+.auth-sub { color: #64748b; font-size: 0.9rem; margin-bottom: 2rem; font-weight: 500; }
 [data-testid="stForm"] { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
-.stTextInput label { color: #cbd5e1 !important; font-size: 0.8rem !important; font-weight: 600 !important; margin-bottom: 0.5rem !important; text-transform: uppercase; letter-spacing: 1px; }
-.stTextInput input { border-radius: 8px !important; border: 1px solid rgba(255,255,255,0.1) !important; background: rgba(255,255,255,0.02) !important; color: white !important; padding: 0.8rem 1rem !important; transition: all 0.2s; }
-.stTextInput input:focus { border-color: #10b981 !important; background: rgba(16,185,129,0.05) !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.1) !important; }
-.stButton > button { border-radius: 8px !important; background: #f8fafc !important; color: #030712 !important; font-weight: 700 !important; font-size: 0.95rem !important; padding: 0.75rem !important; margin-top: 1rem !important; transition: all 0.2s !important; border: none !important; }
-.stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 10px 20px -10px rgba(255,255,255,0.3) !important; background: #ffffff !important; }
+.stTextInput label { color: #94a3b8 !important; font-size: 0.75rem !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem !important; }
+.stTextInput input { border-radius: 10px !important; border: 1px solid rgba(255,255,255,0.08) !important; background: rgba(0,0,0,0.2) !important; color: white !important; padding: 0.8rem 1rem !important; font-size: 0.95rem !important; transition: all 0.2s; }
+.stTextInput input:focus { border-color: #10b981 !important; background: rgba(16,185,129,0.02) !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }
+.stButton > button { border-radius: 10px !important; background: #f8fafc !important; color: #030712 !important; font-weight: 800 !important; font-size: 0.95rem !important; padding: 0.8rem !important; margin-top: 1.5rem !important; border: none !important; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+.stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 15px 30px -10px rgba(255,255,255,0.4) !important; background: #ffffff !important; }
 
-/* Branding Styling */
-.brand-title { font-size: 6rem; font-weight: 800; letter-spacing: -3px; line-height: 1; margin-bottom: 1.5rem; background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.brand-desc { font-size: 1.15rem; color: #94a3b8; line-height: 1.7; max-width: 90%; font-weight: 400; }
-
-/* ── LANDING PAGE SECTIONS ── */
-.lp-section { padding: 8rem 10%; border-bottom: 1px solid rgba(255,255,255,0.03); scroll-margin-top: 75px; }
+/* ── DOCUMENTATION SECTIONS ── */
+.lp-section { padding: 8rem 10%; border-bottom: 1px solid rgba(255,255,255,0.03); scroll-margin-top: 80px; }
 .lp-header { font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 1rem; color: #f8fafc; text-align: center; }
 .lp-sub { font-size: 1.1rem; color: #94a3b8; text-align: center; max-width: 700px; margin: 0 auto 4rem auto; line-height: 1.6; }
 
@@ -103,54 +150,66 @@ html, body, .stApp {
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
 
-/* Cards */
-.lp-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 2.5rem 2rem; transition: all 0.3s ease; }
-.lp-card:hover { background: rgba(255,255,255,0.04); transform: translateY(-4px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); }
-.card-icon { width: 56px; height: 56px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.05); }
-.card-title { font-size: 1.25rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.75rem; letter-spacing: -0.5px; }
+/* Cards & Micro-Interactions */
+.lp-card { background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 2.5rem 2rem; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.lp-card:hover { background: rgba(255,255,255,0.03); transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); }
+.card-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.05); }
+.card-title { font-size: 1.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.75rem; letter-spacing: -0.5px; }
 .card-desc { font-size: 0.95rem; color: #94a3b8; line-height: 1.6; }
 
-/* Target Audience Tags with Hover Animation */
+/* Ecosystem Tags */
 .tag-wrap { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-.lp-tag { padding: 0.6rem 1.25rem; border-radius: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; color: #cbd5e1; font-weight: 600; cursor: default; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.lp-tag:hover { transform: translateY(-4px) scale(1.02); background: rgba(16,185,129,0.1); border-color: #10b981; color: #10b981; box-shadow: 0 10px 20px -5px rgba(16,185,129,0.3); }
-
-/* Animated Hub Visualization */
-.hub-visual { width: 100%; height: 300px; display: flex; align-items: center; justify-content: center; position: relative; }
-.hub-node { width: 24px; height: 24px; background: #10b981; border-radius: 50%; position: relative; box-shadow: 0 0 20px #10b981; z-index: 2; }
-.hub-ring { position: absolute; border: 2px solid rgba(16,185,129,0.5); border-radius: 50%; animation: ripple 3s infinite linear; }
-.hub-ring:nth-child(2) { animation-delay: 1s; }
-.hub-ring:nth-child(3) { animation-delay: 2s; }
-@keyframes ripple { 0% { width: 24px; height: 24px; opacity: 1; } 100% { width: 250px; height: 250px; opacity: 0; } }
+.lp-tag { padding: 0.6rem 1.25rem; border-radius: 24px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); font-size: 0.9rem; color: #cbd5e1; font-weight: 600; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: default; }
+.lp-tag:hover { transform: translateY(-3px) scale(1.02); background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 10px 20px -5px rgba(16,185,129,0.2); }
 
 /* Footer */
-.lp-footer { background: #010308; padding: 4rem 10%; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+.lp-footer { background: #010206; padding: 4rem 10%; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
 .footer-text { color: #64748b; font-size: 0.85rem; }
 </style>
 
-<nav class="lp-navbar">
-    <a href="#" class="nav-logo">📦 LogiTrack PK</a>
-    <div class="nav-links">
-        <a href="#overview" class="nav-link">Platform</a>
-        <a href="#ecosystem" class="nav-link">Ecosystem</a>
-        <a href="#capabilities" class="nav-link">Capabilities</a>
-        <a href="#team" class="nav-link">Team</a>
-        <a href="#contact" class="nav-link">Support</a>
+<nav class="floating-nav">
+    <div class="nav-brand-group">
+        <a href="#" class="nav-logo">📦 LogiTrack</a>
+        <div class="nav-divider"></div>
+        <span class="nav-subtitle">Enterprise OS</span>
     </div>
+    <div class="nav-links">
+        <a href="#network" class="nav-link">Network Maps</a>
+        <a href="#ecosystem" class="nav-link">Pakistan Corridors</a>
+        <a href="#capabilities" class="nav-link">Platform Capabilities</a>
+        <a href="#team" class="nav-link">Engineering</a>
+    </div>
+    <a href="#" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" class="nav-cta">System Access</a>
 </nav>
 """, unsafe_allow_html=True)
 
-    # ─── 2.1 HERO SECTION (Streamlit Columns for Auth Logic) ───
-    col_auth, col_brand = st.columns([1, 1.2])
+    # ─── 2.1 HERO SECTION (Streamlit Columns) ───
+    col_brand, col_auth = st.columns([1.4, 1], gap="large")
     
+    with col_brand:
+        st.markdown("""
+<span class='hero-super'>Freight Intelligence Network</span>
+<div class='brand-title'>Logistics visibility,<br>engineered for scale.</div>
+<div class='brand-desc'>The centralized operating system for Pakistan's freight network. Command your fleet, track shipments, and coordinate dispatch operations with unprecedented clarity.</div>
+
+<div class='corridor-map'>
+    <div class='corridor-line'></div>
+    <div class='corridor-flow'></div>
+    <div class='corridor-node' style='left: 0%;'><div class='node-dot'></div><span class='node-label'>KHI</span></div>
+    <div class='corridor-node' style='left: 33%;'><div class='node-dot'></div><span class='node-label'>LHE</span></div>
+    <div class='corridor-node' style='left: 66%;'><div class='node-dot'></div><span class='node-label'>ISB</span></div>
+    <div class='corridor-node' style='left: 100%;'><div class='node-dot'></div><span class='node-label'>PEW</span></div>
+</div>
+""", unsafe_allow_html=True)
+
     with col_auth:
-        st.markdown("<div class='auth-heading'>Operational access</div>", unsafe_allow_html=True)
-        st.markdown("<div class='auth-sub'>Authenticate to manage your enterprise logistics and freight workflows.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='auth-heading'>Authentication</div>", unsafe_allow_html=True)
+        st.markdown("<div class='auth-sub'>Secure terminal for authorized personnel.</div>", unsafe_allow_html=True)
         
         with st.form("login_form"):
             email    = st.text_input("Email", placeholder="admin@logitrack.pk")
             password = st.text_input("Password", type="password", placeholder="••••••••")
-            submit   = st.form_submit_button("Sign in to workspace →", use_container_width=True)
+            submit   = st.form_submit_button("Enter Workspace →", use_container_width=True)
 
         if submit:
             conn = get_db()
@@ -164,32 +223,25 @@ html, body, .stApp {
             else:
                 st.error("Authentication failed. Invalid credentials or deactivated account.")
 
-    with col_brand:
-        st.markdown("""
-<div class='brand-title'>LogiTrack PK</div>
-<div class='brand-desc'>A modern freight operations and shipment visibility platform built specifically to streamline Pakistan's complex logistics ecosystem.</div>
-""", unsafe_allow_html=True)
-
-    # ─── 2.2 MARKETING & DOCUMENTATION SECTIONS (Raw HTML) ───
-    # MUST BE FLUSH LEFT TO PREVENT MARKDOWN INDENTATION BUGS
+    # ─── 2.2 MARKETING & DOCUMENTATION SECTIONS (Flush HTML) ───
     st.markdown("""
-<section id='overview' class='lp-section'>
-<div class='lp-header'>Centralized Freight Operations</div>
-<div class='lp-sub'>LogiTrack PK replaces fragmented workflows with a single source of truth. Command your fleet, coordinate dispatch operations, and track deliveries with unprecedented clarity.</div>
+<section id='network' class='lp-section'>
+<div class='lp-header'>Centralized Operations</div>
+<div class='lp-sub'>LogiTrack PK replaces fragmented workflows with a single source of truth. Command your fleet, coordinate dispatch operations, and track deliveries with unparalleled operational visibility.</div>
 <div class='grid-3'>
 <div class='lp-card'>
 <div class='card-icon'>👁️</div>
-<div class='card-title'>Shipment Visibility</div>
-<div class='card-desc'>Monitor the exact status of every contract in your network from origin loading to destination sign-off.</div>
+<div class='card-title'>Shipment Telematics</div>
+<div class='card-desc'>Monitor the exact status of every contract in your network from origin loading dock to destination sign-off.</div>
 </div>
 <div class='lp-card'>
 <div class='card-icon'>🚚</div>
-<div class='card-title'>Carrier Management</div>
-<div class='card-desc'>Maintain a live ledger of your fleet's capacity, availability, and active deployment status.</div>
+<div class='card-title'>Carrier Ledgers</div>
+<div class='card-desc'>Maintain a live, centralized registry of your fleet's capacity, availability, and active deployment status.</div>
 </div>
 <div class='lp-card'>
 <div class='card-icon'>⚡</div>
-<div class='card-title'>Dispatch Coordination</div>
+<div class='card-title'>Dispatch Protocols</div>
 <div class='card-desc'>Seamlessly assign pending orders to available carriers using intelligent, zero-friction workflows.</div>
 </div>
 </div>
@@ -198,9 +250,9 @@ html, body, .stApp {
 <section id='ecosystem' class='lp-section' style='background: rgba(255,255,255,0.01);'>
 <div class='grid-2'>
 <div>
-<div class='lp-header' style='text-align: left;'>Tailored for <span style="color:#10b981; font-family:'Plus Jakarta Sans', sans-serif; font-weight:800; text-shadow: 0 0 20px rgba(16,185,129,0.3);">Pakistan's</span> Ecosystem</div>
+<div class='lp-header' style='text-align: left;'>Architected for <span style="color:#10b981; font-family:'Plus Jakarta Sans', sans-serif; font-weight:800; text-shadow: 0 0 20px rgba(16,185,129,0.2);">Pakistan's</span> Ecosystem</div>
 <div class='lp-sub' style='text-align: left; margin-bottom: 2rem;'>
-Designed exclusively for the operational realities of the domestic supply chain. We serve the critical corridors connecting <b>Karachi, Lahore, Islamabad, Faisalabad, Multan, Peshawar, and Quetta.</b>
+Designed exclusively for the operational realities of the domestic supply chain. We serve the critical transport corridors connecting <b>Karachi, Lahore, Islamabad, Faisalabad, Multan, Peshawar, and Quetta.</b>
 </div>
 <div class='tag-wrap'>
 <span class='lp-tag'>Freight Forwarders</span>
@@ -211,26 +263,27 @@ Designed exclusively for the operational realities of the domestic supply chain.
 <span class='lp-tag'>Intercity Networks</span>
 </div>
 </div>
-<div style='background: rgba(16,185,129,0.02); border: 1px solid rgba(16,185,129,0.1); border-radius: 24px; padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; overflow: hidden;'>
-<div class='hub-visual'>
-<div class='hub-node'></div>
-<div class='hub-ring'></div>
-<div class='hub-ring'></div>
-<div class='hub-ring'></div>
+<div style='background: rgba(16,185,129,0.03); border: 1px solid rgba(16,185,129,0.1); border-radius: 24px; padding: 3rem; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; position: relative; overflow: hidden;'>
+<div style='width: 100px; height: 100px; border-radius: 50%; border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; position: relative;'>
+    <div style='width: 60px; height: 60px; border-radius: 50%; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center;'>
+        <div style='width: 20px; height: 20px; border-radius: 50%; background: #10b981; box-shadow: 0 0 20px #10b981;'></div>
+    </div>
+    <div style='position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #10b981; border-top-color: transparent; animation: spin 4s linear infinite;'></div>
 </div>
-<div style='color: #10b981; font-weight: 800; font-size: 1.2rem; letter-spacing: 4px; text-transform: uppercase; margin-top: 1rem;'>Network Hub</div>
+<div style='color: #10b981; font-weight: 700; font-size: 0.85rem; letter-spacing: 4px; text-transform: uppercase; margin-top: 1.5rem;'>Central Hub Active</div>
+<style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
 </div>
 </div>
 </section>
 
 <section id='capabilities' class='lp-section'>
 <div class='lp-header'>Core Platform Capabilities</div>
-<div class='lp-sub'>Enterprise-grade architecture ensuring security, speed, and analytical depth.</div>
+<div class='lp-sub'>Enterprise-grade architecture ensuring high-availability, cryptographic security, and analytical depth.</div>
 <div class='grid-4'>
-<div class='lp-card'><div class='card-title' style='color:#10b981;'>Real-Time Tracking</div><div class='card-desc'>Live status updates for all active freight.</div></div>
-<div class='lp-card'><div class='card-title' style='color:#3b82f6;'>Audit Logging</div><div class='card-desc'>Immutable, cryptographic history of all actions.</div></div>
-<div class='lp-card'><div class='card-title' style='color:#f59e0b;'>Zero Trust RBAC</div><div class='card-desc'>Strict role-based access to operational modules.</div></div>
-<div class='lp-card'><div class='card-title' style='color:#8b5cf6;'>Performance Analytics</div><div class='card-desc'>Live Plotly data grids and network BI.</div></div>
+<div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#10b981; font-size:1.1rem;'>Real-Time Tracking</div><div class='card-desc' style='font-size:0.85rem;'>Live status updates for all active freight.</div></div>
+<div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#3b82f6; font-size:1.1rem;'>Audit Logging</div><div class='card-desc' style='font-size:0.85rem;'>Immutable, cryptographic history of all actions.</div></div>
+<div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#f59e0b; font-size:1.1rem;'>Zero Trust RBAC</div><div class='card-desc' style='font-size:0.85rem;'>Strict role-based access to operational modules.</div></div>
+<div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#8b5cf6; font-size:1.1rem;'>BI Analytics</div><div class='card-desc' style='font-size:0.85rem;'>Live Plotly data grids and network intelligence.</div></div>
 </div>
 </section>
 
@@ -239,34 +292,34 @@ Designed exclusively for the operational realities of the domestic supply chain.
 <div class='lp-sub'>Designed, architected, and developed by software engineers committed to modernizing industrial logistics infrastructure.</div>
 <div class='grid-3'>
 <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
-<div style='width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.05); margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.1); font-weight: 700;'>SR</div>
-<div class='card-title'>Shayan Rizwan</div>
-<div class='card-desc'>Platform Architecture</div>
+<div style='width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.03); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 700;'>SR</div>
+<div class='card-title' style='font-size:1.1rem;'>Shayan Rizwan</div>
+<div class='card-desc' style='font-size:0.85rem;'>Platform Architecture</div>
 </div>
 <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
-<div style='width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.05); margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.1); font-weight: 700;'>AS</div>
-<div class='card-title'>Agha Salaat</div>
-<div class='card-desc'>Systems Engineering</div>
+<div style='width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.03); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 700;'>AS</div>
+<div class='card-title' style='font-size:1.1rem;'>Agha Salaat</div>
+<div class='card-desc' style='font-size:0.85rem;'>Systems Engineering</div>
 </div>
 <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
-<div style='width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.05); margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.1); font-weight: 700;'>AM</div>
-<div class='card-title'>Anzar Mubashir</div>
-<div class='card-desc'>Backend Infrastructure</div>
+<div style='width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.03); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 700;'>AM</div>
+<div class='card-title' style='font-size:1.1rem;'>Anzar Mubashir</div>
+<div class='card-desc' style='font-size:0.85rem;'>Backend Infrastructure</div>
 </div>
 </div>
 </section>
 
 <section id='contact' class='lp-section' style='text-align: center;'>
-<div class='card-icon' style='margin: 0 auto 1.5rem auto; width: 72px; height: 72px; font-size: 2rem;'>💬</div>
+<div class='card-icon' style='margin: 0 auto 1.5rem auto; width: 64px; height: 64px; font-size: 1.5rem;'>💬</div>
 <div class='lp-header'>Operational Support</div>
 <div class='lp-sub'>We value user feedback and continuously improve operational reliability. For issue reporting, technical assistance, or feature requests, contact our engineering team.</div>
-<a href='mailto:u2024585@giki.edu.pk' style='display: inline-block; background: #f8fafc; color: #030712; padding: 1rem 2.5rem; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 1rem; transition: transform 0.2s; box-shadow: 0 10px 25px rgba(255,255,255,0.2);'>u2024585@giki.edu.pk</a>
-<div style='margin-top: 1.5rem; color: #64748b; font-size: 0.9rem; font-weight: 600;'>Expected Response SLA: Under 24 Hours</div>
+<a href='mailto:u2024585@giki.edu.pk' style='display: inline-block; background: #f8fafc; color: #030712; padding: 0.9rem 2.5rem; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.95rem; transition: all 0.3s; box-shadow: 0 10px 25px rgba(255,255,255,0.1);'>u2024585@giki.edu.pk</a>
+<div style='margin-top: 1.5rem; color: #64748b; font-size: 0.85rem; font-weight: 600;'>Expected Response SLA: Under 24 Hours</div>
 </section>
 
 <footer class='lp-footer'>
 <div class='footer-text'>
-<strong style='color:#f8fafc; font-size: 1.1rem;'>📦 LogiTrack PK</strong><br><br>
+<strong style='color:#f8fafc; font-size: 1rem;'>📦 LogiTrack PK</strong><br><br>
 © 2026 LogiTrack Systems. All rights reserved.
 </div>
 <div class='footer-text' style='text-align: right;'>
