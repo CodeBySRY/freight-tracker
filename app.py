@@ -170,10 +170,12 @@ html, body, .stApp {
 .footer-text { color: var(--text-muted); font-size: 0.85rem; }
 </style>
 
+<div id="auth-portal" style="position: absolute; top: 0;"></div>
+
 <nav class="floating-nav">
     <div class="nav-brand-group">
         <a href="#auth-portal" class="nav-logo">
-            <span onclick="let t=document.createElement('div');t.innerHTML='🚚💨';t.style.cssText='position:fixed;top:80px;left:-100px;font-size:40px;z-index:9999;transition:left 2.5s cubic-bezier(0.25, 1, 0.5, 1);';document.body.appendChild(t);setTimeout(()=>t.style.left='120vw',50);setTimeout(()=>t.remove(),2600);" style="cursor:pointer;" title="Honk!">📦</span>
+            <span id="easter-egg-btn" style="cursor:pointer;" title="Honk!">📦</span>
             LogiTrack
         </a>
         <div class="nav-divider"></div>
@@ -186,12 +188,43 @@ html, body, .stApp {
         <a href="#team" class="nav-link">Engineering</a>
     </div>
     <div class="nav-controls">
-        <div class="theme-toggle" onclick="document.body.classList.toggle('light-theme')" title="Toggle Light/Dark Mode">🌓</div>
+        <div class="theme-toggle" id="theme-toggle-btn" title="Toggle Light/Dark Mode">🌓</div>
         <a href="#auth-portal" class="nav-cta">System Access</a>
     </div>
 </nav>
 
-<div id="auth-portal" style="position: absolute; top: 0;"></div>
+<img src="dummy" style="display:none;" onerror="
+    if(!window.logitrackScriptLoaded) {
+        window.logitrackScriptLoaded = true;
+        
+        /* Theme Toggle Logic */
+        var themeBtn = document.getElementById('theme-toggle-btn');
+        if(themeBtn) {
+            themeBtn.addEventListener('click', function() {
+                document.body.classList.toggle('light-theme');
+            });
+        }
+        
+        /* Easter Egg Logic */
+        var eggBtn = document.getElementById('easter-egg-btn');
+        if(eggBtn) {
+            var clicks = 0;
+            eggBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                clicks++;
+                if(clicks === 3) {
+                    clicks = 0;
+                    var truck = document.createElement('div');
+                    truck.innerHTML = '🚚💨';
+                    truck.style.cssText = 'position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999;transition:left 2.5s cubic-bezier(0.25, 1, 0.5, 1);';
+                    document.body.appendChild(truck);
+                    setTimeout(function() { truck.style.left = '120vw'; }, 50);
+                    setTimeout(function() { truck.remove(); }, 2600);
+                }
+            });
+        }
+    }
+">
 """, unsafe_allow_html=True)
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
@@ -324,7 +357,7 @@ Designed exclusively for the operational realities of the domestic supply chain.
 <div class='card-icon' style='margin: 0 auto 1.5rem auto; width: 64px; height: 64px; font-size: 1.5rem;'>💬</div>
 <div class='lp-header'>Operational Support</div>
 <div class='lp-sub'>We value user feedback and continuously improve operational reliability. For issue reporting, technical assistance, or feature requests, contact our engineering team.</div>
-<a href='mailto:u2024585@giki.edu.pk' style='display: inline-block; background: var(--btn-bg); color: var(--btn-text); padding: 0.9rem 2.5rem; border-radius: 8px; font-weight: 700; text-decoration: none !important; font-size: 0.95rem; transition: all 0.3s; box-shadow: 0 10px 25px var(--border-heavy);'>u2024585@giki.edu.pk</a>
+<a href='mailto:u2024585@giki.edu.pk' style='display: inline-block; background: var(--btn-bg); color: var(--btn-text) !important; padding: 0.9rem 2.5rem; border-radius: 8px; font-weight: 700; text-decoration: none !important; font-size: 0.95rem; transition: all 0.3s; box-shadow: 0 10px 25px var(--border-heavy);'>u2024585@giki.edu.pk</a>
 <div style='margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;'>Expected Response SLA: Under 24 Hours</div>
 </section>
 
@@ -346,7 +379,7 @@ if not st.session_state.user:
     login_screen()
 else:
     # SAFETY SCRIPT: Force removing light-theme class to protect Dashboard Dark Mode UI
-    st.markdown("<img src=x onerror=\"document.body.classList.remove('light-theme');\" style='display:none;'>", unsafe_allow_html=True)
+    st.markdown("<img src='dummy' onerror=\"document.body.classList.remove('light-theme');\" style='display:none;'>", unsafe_allow_html=True)
     apply_enterprise_theme()
 
     # ── Top bar CSS + layout ───────────────────────────────────────────────
