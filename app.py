@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 from auth import verify_password
 from database import get_db
 from styles.theme import apply_enterprise_theme
@@ -21,14 +22,23 @@ if 'user' not in st.session_state:
     st.session_state.user = None
 if 'theme' not in st.session_state:
     st.session_state.theme = 'dark'
+if 'egg_clicks' not in st.session_state:
+    st.session_state.egg_clicks = 0
+if 'show_truck' not in st.session_state:
+    st.session_state.show_truck = False
 
 # ─── CALLBACKS (NATIVE STREAMLIT STATE MANAGEMENT) ────────────────────────────
 def toggle_theme():
     st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
 
+def handle_logo_click():
+    st.session_state.egg_clicks += 1
+    if st.session_state.egg_clicks >= 3:
+        st.session_state.show_truck = True
+        st.session_state.egg_clicks = 0
+
 
 # ─── ASSET CACHING (MASSIVE BACKEND PERFORMANCE OPTIMIZATION) ─────────────────
-# By caching these huge strings, Python skips parsing them on every re-render.
 @st.cache_data(show_spinner=False)
 def get_cached_login_css(theme: str) -> str:
     css_vars = """
@@ -60,54 +70,53 @@ def get_cached_login_css(theme: str) -> str:
     [data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header {{ display: none !important; }}
     
     /* Push content down to account for the fixed top navbar */
-    .block-container {{ padding-top: 100px !important; padding-bottom: 0 !important; max-width: 1350px !important; }}
+    .block-container {{ padding-top: 130px !important; padding-bottom: 0 !important; max-width: 1350px !important; }}
 
-    /* ── PREMIUM FULL-WIDTH FIXED NAVBAR (Native Streamlit Columns) ── */
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) {{
-        position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100vw !important; max-width: 100vw !important;
-        height: 72px !important; background: var(--nav-bg) !important; backdrop-filter: blur(24px) !important; -webkit-backdrop-filter: blur(24px) !important;
-        border-bottom: 1px solid var(--border-heavy) !important; z-index: 999999 !important; padding: 0 5vw !important; margin: 0 !important;
-        align-items: center !important; box-shadow: 0 4px 30px rgba(0,0,0,0.1) !important;
-    }}
-    
-    /* Force Streamlit's column blocks to behave properly */
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"] {{ display: flex; align-items: center; height: 100%; }}
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-child(1) {{ justify-content: flex-start; }}
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-child(2) {{ justify-content: center; }}
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-child(3) {{ justify-content: flex-end; }}
-    
-    /* Force column 3's inner wrapper into a flex-row so the Toggle and CTA button sit side-by-side */
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-child(3) > [data-testid="stVerticalBlock"] {{
-        display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-end !important; gap: 1.5rem !important;
+    /* ── PURE HTML FIXED NAVBAR (Unified Single Container) ── */
+    .floating-nav-container {{
+        position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
+        width: 90%; max-width: 1100px; height: 60px;
+        background: var(--nav-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+        border: 1px solid var(--border-heavy); border-radius: 100px;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0 0.5rem 0 1.5rem; /* Tighter on the right to hug the button perfectly */
+        z-index: 999999;
+        box-shadow: 0 15px 35px -5px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
     }}
 
-    /* Branding Subtitle */
-    .nav-brand-group {{ display: flex; align-items: center; gap: 0.8rem; text-decoration: none; cursor: default; }}
-    .nav-logo {{ font-size: 1.25rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem; letter-spacing: -0.5px; transition: color 0.2s; }}
-    .nav-logo:hover {{ color: #10b981; }}
-    .nav-divider {{ width: 1px; height: 24px; background: var(--border-heavy); }}
+    /* Branding Fused Anchor */
+    .nav-brand-group {{ display: flex; align-items: center; gap: 0.75rem; text-decoration: none; cursor: pointer; }}
+    .nav-logo {{ font-size: 1.15rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem; letter-spacing: -0.5px; transition: color 0.2s; }}
+    .nav-brand-group:hover .nav-logo {{ color: #10b981; }}
+    .nav-divider {{ width: 1px; height: 20px; background: var(--border-heavy); }}
     .nav-subtitle {{ font-size: 0.7rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; margin-top: 2px; }}
 
-    /* Navbar Text Links */
-    .nav-links {{ display: flex; gap: 2.5rem; align-items: center; height: 100%; }}
-    .nav-link {{ color: var(--text-sub); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: all 0.2s ease; position: relative; }}
+    /* Centered Links */
+    .nav-links {{ display: flex; gap: 2rem; align-items: center; height: 100%; }}
+    .nav-link {{ color: var(--text-sub); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s ease; position: relative; }}
     .nav-link:hover {{ color: #10b981; }}
-    .nav-link::after {{ content: ''; position: absolute; width: 0; height: 2px; bottom: -6px; left: 0; background: #10b981; transition: width 0.2s ease; border-radius: 2px; }}
-    .nav-link:hover::after {{ width: 100%; }}
 
-    /* Theme Toggle Native Button Override */
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-child(3) .stButton > button {{
-        background: transparent !important; border: none !important; box-shadow: none !important; font-size: 1.4rem !important; padding: 0 !important; width: 40px !important; height: 40px !important; display: flex; align-items: center; justify-content: center; transition: transform 0.2s !important; margin: 0 !important;
+    /* Grouped Right Controls */
+    .nav-controls {{ display: flex; align-items: center; gap: 0.5rem; }}
+    
+    .theme-toggle-btn {{ 
+        cursor: pointer; font-size: 1.15rem; width: 40px; height: 40px; display: flex; 
+        justify-content: center; align-items: center; border-radius: 50%; 
+        transition: all 0.2s; color: var(--text-main); 
     }}
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-child(3) .stButton > button:hover {{ transform: scale(1.15) rotate(15deg) !important; background: transparent !important; }}
+    .theme-toggle-btn:hover {{ background: rgba(255,255,255,0.05); transform: rotate(15deg); }}
 
-    /* CTA Link */
-    .nav-cta {{ display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border-heavy); color: var(--text-main) !important; text-decoration: none !important; padding: 0.55rem 1.5rem; border-radius: 100px; font-size: 0.85rem; font-weight: 700; transition: all 0.3s ease; white-space: nowrap; }}
-    .nav-cta:hover {{ background: var(--text-main); color: var(--bg-main) !important; box-shadow: 0 5px 20px rgba(16,185,129,0.2); transform: translateY(-1px); }}
+    .nav-cta {{ 
+        display: inline-flex; justify-content: center; align-items: center; background: var(--card-bg); 
+        border: 1px solid var(--border-heavy); color: var(--text-main) !important; text-decoration: none !important; 
+        padding: 0 1.25rem; height: 40px; border-radius: 100px; font-size: 0.85rem; font-weight: 700; 
+        transition: all 0.3s ease; white-space: nowrap; 
+    }}
+    .nav-cta:hover {{ background: var(--text-main); color: var(--bg-main) !important; box-shadow: 0 5px 15px rgba(16,185,129,0.2); transform: translateY(-1px); }}
 
     /* ── HERO SECTION TYPOGRAPHY ── */
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(2) {{ margin-top: 40px !important; align-items: center; }}
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(2) > [data-testid="column"]:nth-of-type(1) {{ padding-right: 5rem !important; }}
+    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) {{ align-items: center; }}
+    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-of-type(1) {{ padding-right: 5rem !important; }}
     .hero-super {{ color: #10b981; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; display: block; }}
     .brand-title {{ font-size: 3.8rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1.15; margin-bottom: 1.75rem; background: var(--title-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
     .brand-desc {{ font-size: 1.1rem; color: var(--text-sub); line-height: 1.7; max-width: 95%; font-weight: 400; margin-bottom: 3.5rem; }}
@@ -158,9 +167,43 @@ def get_cached_login_css(theme: str) -> str:
     """
 
 @st.cache_data(show_spinner=False)
+def get_cached_navbar_html(theme: str) -> str:
+    toggle_icon = "🌞" if theme == 'light' else "🌓"
+    
+    html = """
+    <!-- Top anchor allows the logo to perfectly scroll back to the very beginning -->
+    <div id="top-anchor" style="position: absolute; top: 0; left: 0; width: 1px; height: 1px;"></div>
+    
+    <nav class="floating-nav-container">
+        <!-- Logo block integrated as a unified anchor that scrolls up & triggers Python state -->
+        <a href="#top-anchor" class="nav-brand-group" onclick="window.triggerEgg && window.triggerEgg(); window.scrollTo({top:0, behavior:'smooth'});">
+            <div class="nav-logo">📦 LogiTrack PK</div>
+            <div class="nav-divider"></div>
+            <span class="nav-subtitle">Freight Intelligence</span>
+        </a>
+        
+        <div class="nav-links">
+            <a href="#network" class="nav-link">Operations</a>
+            <a href="#ecosystem" class="nav-link">Freight Network</a>
+            <a href="#capabilities" class="nav-link">Platform Modules</a>
+            <a href="#team" class="nav-link">Engineering</a>
+        </div>
+        
+        <div class="nav-controls">
+            <div class="theme-toggle-btn" onclick="window.toggleTheme && window.toggleTheme();" title="Toggle Theme">TOGGLE_ICON_PLACEHOLDER</div>
+            <a href="#auth-portal" class="nav-cta">System Access</a>
+        </div>
+    </nav>
+    
+    <!-- Safely Minified Bridge Script -->
+    <img src="dummy" style="display:none;" onerror="if(!window.lLoaded){window.lLoaded=true;setInterval(function(){var b=document.querySelectorAll('button');for(var i=0;i<b.length;i++){if(b[i].innerText.includes('HiddenThemeBtn')||b[i].innerText.includes('HiddenEggBtn')){var c=b[i].closest('div[data-testid=\\'stButton\\']');if(c)c.style.display='none';}}},50);window.toggleTheme=function(){var bs=document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenThemeBtn')){bs[j].click();break;}}};window.triggerEgg=function(){var bs=document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenEggBtn')){bs[j].click();break;}}};}">
+    """
+    return html.replace('TOGGLE_ICON_PLACEHOLDER', toggle_icon)
+
+@st.cache_data(show_spinner=False)
 def get_cached_hero_brand_html() -> str:
     return """
-    <span class='hero-super'>Freight Intelligence Network</span>
+    <span class='hero-super'>Enterprise Logistics OS</span>
     <div class='brand-title'>Logistics visibility,<br>engineered for scale.</div>
     <div class='brand-desc'>The centralized operating system for Pakistan's freight network. Command your fleet, track shipments, and coordinate dispatch operations with unprecedented clarity.</div>
     <div class='corridor-map'>
@@ -258,50 +301,49 @@ def get_cached_marketing_sections_html() -> str:
     </footer>
     """
 
+@st.cache_data(show_spinner=False)
+def get_cached_shell_css() -> str:
+    return """
+    <style>
+        [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none !important; }
+        .block-container { padding-left: 1.75rem !important; padding-right: 1.75rem !important; padding-top: 1.5rem !important; max-width: 100% !important; }
+        .stButton > button[kind="primary"] { border-radius: 8px !important; background: linear-gradient(135deg, #059669, #10b981) !important; color: white !important; border: none !important; font-weight: 700 !important; transition: all 0.15s !important; }
+        .stButton > button[kind="primary"]:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 16px -4px rgba(16,185,129,0.4) !important; }
+        .stButton > button:not([kind="primary"]) { border-radius: 8px !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #94a3b8 !important; background: transparent !important; font-weight: 600 !important; transition: all 0.15s !important; }
+        .stButton > button:not([kind="primary"]):hover { border-color: #10b981 !important; color: #10b981 !important; transform: translateY(-1px) !important; background: rgba(16,185,129,0.05) !important;}
+        .stButton > button:disabled { opacity: 0.3 !important; cursor: not-allowed !important; transform: none !important; }
+    </style>
+    """
+
 # ─── 2. ENTERPRISE SAAS LANDING & AUTH PORTAL ─────────────────────────────────
 def login_screen():
     
-    # Render cached CSS to massively reduce backend render time
+    # Render cached CSS
     st.markdown(get_cached_login_css(st.session_state.theme), unsafe_allow_html=True)
-    st.markdown("<div id='auth-portal' style='position:absolute;top:0;'></div>", unsafe_allow_html=True)
-
-    # ─── 2.1 FIXED TOP NAVBAR (Streamlit Native Columns) ───
-    # By using native columns and targeting them with pure CSS, we guarantee perfect behavior
-    nav_logo, nav_links, nav_controls = st.columns([1.2, 3, 1.2], vertical_alignment="center")
     
-    with nav_logo:
-        st.markdown("""
-        <div class="nav-brand-group">
-            <div class="nav-logo">📦 LogiTrack PK</div>
-            <div class="nav-divider"></div>
-            <span class="nav-subtitle">Freight OS</span>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with nav_links:
-        st.markdown("""
-        <div class='nav-links'>
-            <a href='#network' class='nav-link'>Operations</a>
-            <a href='#ecosystem' class='nav-link'>Freight Network</a>
-            <a href='#capabilities' class='nav-link'>Platform Modules</a>
-            <a href='#team' class='nav-link'>Engineering</a>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with nav_controls:
-        # Native Streamlit State interaction - perfectly synced and robust
-        toggle_icon = "🌞" if st.session_state.theme == 'light' else "🌓"
-        st.button(toggle_icon, key="btn_theme", on_click=toggle_theme)
-        st.markdown("<a href='#auth-portal' class='nav-cta'>Enterprise Access</a>", unsafe_allow_html=True)
+    # Render unified floating navbar
+    st.markdown(get_cached_navbar_html(st.session_state.theme), unsafe_allow_html=True)
 
+    # Conditionally render Easter Egg animation
+    if st.session_state.show_truck:
+        st.markdown("""
+        <div style="position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999999;animation: drive 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;">🚚💨</div>
+        <style>@keyframes drive { 0% { left: -100px; } 100% { left: 120vw; } }</style>
+        """, unsafe_allow_html=True)
+        st.session_state.show_truck = False
 
-    # ─── 2.2 HERO SECTION (Streamlit Columns) ───
+    # Hidden Streamlit buttons for native state management
+    st.button("HiddenThemeBtn", on_click=toggle_theme)
+    st.button("HiddenEggBtn", on_click=handle_logo_click)
+
+    # ─── 2.1 HERO SECTION (Streamlit Columns) ───
     col_brand, col_auth = st.columns([1.2, 1], gap="large")
     
     with col_brand:
         st.markdown(get_cached_hero_brand_html(), unsafe_allow_html=True)
 
     with col_auth:
+        st.markdown("<div id='auth-portal'></div>", unsafe_allow_html=True)
         st.markdown("<div class='auth-heading'>Authentication</div>", unsafe_allow_html=True)
         st.markdown("<div class='auth-sub'>Secure terminal for authorized personnel.</div>", unsafe_allow_html=True)
         
@@ -323,7 +365,7 @@ def login_screen():
             else:
                 st.error("Authentication failed. Invalid credentials or deactivated account.")
 
-    # ─── 2.3 MARKETING & DOCUMENTATION SECTIONS ───
+    # ─── 2.2 MARKETING & DOCUMENTATION SECTIONS ───
     st.markdown(get_cached_marketing_sections_html(), unsafe_allow_html=True)
 
 
@@ -335,20 +377,9 @@ else:
     st.markdown("<img src='dummy' style='display:none;' onerror=\"document.body.classList.remove('light-theme');\">", unsafe_allow_html=True)
     apply_enterprise_theme()
 
-    # ── Top bar CSS + layout ───────────────────────────────────────────────
-    st.markdown("""
-        <style>
-            [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none !important; }
-            .block-container { padding-left: 1.75rem !important; padding-right: 1.75rem !important; padding-top: 1.5rem !important; max-width: 100% !important; }
-            .stButton > button[kind="primary"] { border-radius: 8px !important; background: linear-gradient(135deg, #059669, #10b981) !important; color: white !important; border: none !important; font-weight: 700 !important; transition: all 0.15s !important; }
-            .stButton > button[kind="primary"]:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 16px -4px rgba(16,185,129,0.4) !important; }
-            .stButton > button:not([kind="primary"]) { border-radius: 8px !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #94a3b8 !important; background: transparent !important; font-weight: 600 !important; transition: all 0.15s !important; }
-            .stButton > button:not([kind="primary"]):hover { border-color: #10b981 !important; color: #10b981 !important; transform: translateY(-1px) !important; background: rgba(16,185,129,0.05) !important;}
-            .stButton > button:disabled { opacity: 0.3 !important; cursor: not-allowed !important; transform: none !important; }
-        </style>
-    """, unsafe_allow_html=True)
+    # ── Top bar CSS + layout ──
+    st.markdown(get_cached_shell_css(), unsafe_allow_html=True)
 
-    # ── Global top-bar ─────────────────────────────────────────────────────
     hdr_left, hdr_right = st.columns([8, 2])
     with hdr_left:
         st.markdown("""
@@ -365,11 +396,10 @@ else:
 
     st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.05);margin:0.75rem 0 1.5rem 0;'>", unsafe_allow_html=True)
 
-    # ── Two-column layout: nav + workspace ────────────────────────────────
     nav_col, workspace_col = st.columns([2, 8], gap="large")
     user_role = st.session_state.user['role']
 
-    # ─ LEFT: Navigation rail ──────────────────────────────────────────────
+    # ─ LEFT: Navigation rail ─
     with nav_col:
         role_colors = {
             "System Administrator": ("#10b981", "rgba(16,185,129,0.1)", "rgba(16,185,129,0.2)"),
@@ -415,7 +445,7 @@ else:
             },
         )
 
-    # ─ RIGHT: Workspace ───────────────────────────────────────────────────
+    # ─ RIGHT: Workspace ─
     with workspace_col:
         if selected_module == "Dashboard": dashboard.render_page()
         elif selected_module == "Shipments": shipments.render_page()
