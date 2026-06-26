@@ -572,7 +572,7 @@ def login_screen():
 
     # ── HIDDEN BRIDGE BUTTONS ─────────────────────────────────────────────
     # Collapsed to zero via CSS (aria-label selector). Clicked by the JS bridge below.
-    st.button(toggle_icon, key="__theme__", on_click=toggle_theme)
+    st.button("Toggle Mode", key="__theme__", on_click=toggle_theme)
     st.button("🥚",        key="__egg__",   on_click=handle_logo_click)
 
     # ── JS BRIDGE ─────────────────────────────────────────────────────────
