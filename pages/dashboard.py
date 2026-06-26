@@ -1,142 +1,268 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from database import get_db
+from services.reporting_service import (
+    fetch_executive_overview,
+    fetch_activity_feed,
+    fetch_shipment_status_distribution,
+)
 
-def render_page(module_name="Dashboard"):
-    # ── CSS Optimization for Dashboard Data Density ──
-    st.markdown("""
-    <style>
-        /* Typography Hierarchy Improvements */
-        .breadcrumb { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem; }
-        .dashboard-title { font-size: 2rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; margin-bottom: 1.5rem; line-height: 1.1; }
-        .section-header { font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 2rem 0 1rem 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
-        
-        /* Status Ribbon */
-        .status-ribbon { display: flex; gap: 2rem; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1.5rem; margin-bottom: 2rem; }
-        .ribbon-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
-        .ribbon-val { color: var(--text-main); font-weight: 700; }
-        .dot-green { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
-        .dot-amber { width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; }
+_PLOTLY_BASE = dict(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#94a3b8', family='Plus Jakarta Sans', size=12), margin=dict(t=10, b=10, l=0, r=0))
+STATUS_COLORS = {'Delivered': '#10b981', 'In Transit': '#3b82f6', 'Delayed': '#f59e0b', 'Cancelled': '#ef4444', 'Pending': '#64748b'}
+_DOT_COLOR = {'In Transit': '#3b82f6', 'Delivered': '#10b981', 'Delayed': '#f59e0b', 'Cancelled': '#ef4444', 'Pending': '#64748b'}
 
-        /* KPI Cards Contextual Redesign */
-        .kpi-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; transition: all 0.2s ease; cursor: default; }
-        .kpi-container:hover { border-color: var(--text-muted); transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
-        .kpi-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-        .kpi-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-icon { width: 32px; height: 32px; border-radius: 6px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1rem; border: 1px solid var(--border-color); }
-        .kpi-value { font-size: 2rem; font-weight: 800; color: var(--text-main); line-height: 1; margin-bottom: 0.5rem; }
-        .kpi-trend { font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 0.25rem; }
-        .trend-up { color: #10b981; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 4px; }
-        .trend-down { color: #ef4444; background: rgba(239,68,68,0.1); padding: 2px 6px; border-radius: 4px; }
-        .trend-desc { color: var(--text-muted); font-weight: 500; }
-        
-        /* Chart Container */
-        .chart-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; }
-    </style>
-    """, unsafe_allow_html=True)
+# ─── CONTEXTUAL WORKFLOW DIALOGS ─────────────────────────────────────────────
+@st.dialog("📦 Draft Comprehensive Freight Order")
+def draft_order_dialog():
+    st.markdown("<p style='color:#94a3b8;font-size:0.9rem;margin-top:-10px;'>Create a new contract. All fields marked * are required.</p>", unsafe_allow_html=True)
+    customer = st.text_input("Customer Name *", placeholder="e.g., Giga Group")
+    col1, col2 = st.columns(2)
+    with col1: origin = st.text_input("Origin City *", placeholder="e.g., Karachi")
+    with col2: dest   = st.text_input("Destination City *", placeholder="e.g., Islamabad")
+    desc = st.text_input("Cargo Description", placeholder="e.g., Electronics Pallets")
+    col3, col4 = st.columns(2)
+    with col3: c_type = st.selectbox("Cargo Type", ["Standard", "Fragile", "Hazardous", "Refrigerated"])
+    with col4: weight = st.number_input("Weight (kg)", min_value=0.0, step=10.5)
+    col5, col6 = st.columns(2)
+    with col5: priority = st.selectbox("Priority Level", ["Standard", "Expedited", "Overnight", "Critical"])
+    with col6: exp_date = st.date_input("Expected Delivery Date")
+    instructions = st.text_area("Special Instructions", height=68, placeholder="Gate codes, handling protocols...")
 
-    # ── Hierarchy: Breadcrumb & Title ──
-    st.markdown(f"<div class='breadcrumb'>Workspace / {module_name}</div>", unsafe_allow_html=True)
-    st.markdown("<div class='dashboard-title'>Command Center</div>", unsafe_allow_html=True)
+    if st.button("Save Order to Database", type="primary", use_container_width=True):
+        if customer and origin and dest:
+            conn = get_db()
+            cur  = conn.cursor()
+            try:
+                cur.execute("INSERT INTO orders (customer_name,origin_city,destination_city,cargo_description,cargo_type,cargo_weight_kg,priority,special_instructions,expected_delivery_date,created_by) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", (customer, origin, dest, desc, c_type, weight, priority, instructions, exp_date, st.session_state.user['user_id']))
+                conn.commit()
+                st.success(f"Order validated and saved for {customer}!")
+                st.rerun()
+            except Exception as e:
+                conn.rollback()
+                st.error(f"Database error: {e}")
+            finally:
+                conn.close()
+        else:
+            st.error("Customer, Origin, and Destination are mandatory fields.")
 
-    # ── Operational Context: Status Ribbon ──
-    st.markdown("""
-        <div class='status-ribbon'>
-            <div class='ribbon-item'><div class='dot-green'></div> System: <span class='ribbon-val'>Operational</span></div>
-            <div class='ribbon-item'><div class='dot-green'></div> Fleet Ready: <span class='ribbon-val'>94%</span></div>
-            <div class='ribbon-item'><div class='dot-amber'></div> Active Dispatches: <span class='ribbon-val'>18</span></div>
-            <div class='ribbon-item' style='margin-left: auto; color: #10b981;'>Live Sync Active ⚡</div>
-        </div>
-    """, unsafe_allow_html=True)
+@st.dialog("🚚 Dispatch Fleet")
+def dispatch_fleet_dialog():
+    if st.session_state.user['role'] not in ["System Administrator", "Dispatcher"]:
+        st.error("SECURITY VIOLATION: Unauthorized clearance level.")
+        st.stop()
+    st.markdown("<p style='color:#94a3b8;font-size:0.9rem;margin-top:-10px;'>Assign a pending order to an available carrier.</p>", unsafe_allow_html=True)
+    conn = get_db(); cur = conn.cursor()
+    cur.execute("SELECT order_id,origin_city,destination_city FROM orders WHERE order_id NOT IN (SELECT order_id FROM shipments)")
+    pending_orders = cur.fetchall()
+    cur.execute("SELECT carrier_id,company_name FROM carriers WHERE is_available=TRUE")
+    available_carriers = cur.fetchall()
+    conn.close()
+    if not pending_orders:
+        st.info("No pending orders available to dispatch.")
+    elif not available_carriers:
+        st.warning("No carriers available. Please wait for an active delivery to complete, or register a new carrier.")
+    else:
+        order_opts   = {f"Order #{o['order_id']} ({o['origin_city']} ➔ {o['destination_city']})": o['order_id'] for o in pending_orders}
+        carrier_opts = {c['company_name']: c['carrier_id'] for c in available_carriers}
+        sel_order   = st.selectbox("Select Pending Order", options=list(order_opts.keys()))
+        sel_carrier = st.selectbox("Assign to Carrier",   options=list(carrier_opts.keys()))
+        if st.button("Initiate Dispatch", type="primary", use_container_width=True):
+            o_id = order_opts[sel_order]
+            c_id = carrier_opts[sel_carrier]
+            conn = get_db(); cur = conn.cursor()
+            try:
+                cur.execute("INSERT INTO shipments (order_id,carrier_id,status) VALUES (%s,%s,'In Transit') RETURNING shipment_id", (o_id, c_id))
+                new_ship_id = cur.fetchone()['shipment_id']
+                cur.execute("INSERT INTO status_log (shipment_id,old_status,new_status,changed_by) VALUES (%s,'Pending','In Transit',%s)", (new_ship_id, st.session_state.user['user_id']))
+                cur.execute("UPDATE carriers SET is_available=FALSE WHERE carrier_id=%s", (c_id,))
+                conn.commit()
+                st.success("Fleet dispatched securely. Carrier locked.")
+                st.rerun()
+            except Exception as e:
+                conn.rollback()
+                st.error(f"Transaction failed. Error: {e}")
+            finally:
+                conn.close()
 
-    # ── Quick Actions (Workflow Shortcuts) ──
-    qa_c1, qa_c2, qa_c3, qa_c4 = st.columns(4)
-    qa_c1.button("➕ Create Shipment", use_container_width=True, type="primary")
-    qa_c2.button("🚚 Assign Fleet", use_container_width=True)
-    qa_c3.button("📄 Generate Report", use_container_width=True)
-    qa_c4.button("🔍 Search Records", use_container_width=True)
+@st.dialog("✅ Update Delivery Status")
+def update_status_dialog():
+    if st.session_state.user['role'] not in ["System Administrator", "Warehouse Manager"]:
+        st.error("SECURITY VIOLATION: Unauthorized clearance level.")
+        st.stop()
+    st.markdown("<p style='color:#94a3b8;font-size:0.9rem;margin-top:-10px;'>Record delivery progress or mark delays.</p>", unsafe_allow_html=True)
+    conn = get_db(); cur = conn.cursor()
+    cur.execute("SELECT s.shipment_id, o.order_id, o.destination_city, c.company_name FROM shipments s JOIN orders o ON s.order_id=o.order_id JOIN carriers c ON s.carrier_id=c.carrier_id WHERE s.status IN ('In Transit','Delayed')")
+    active_ships = cur.fetchall()
+    conn.close()
+    if not active_ships:
+        st.info("No active shipments awaiting delivery updates.")
+    else:
+        ship_opts  = {f"Ship #{s['shipment_id']} (Order #{s['order_id']} ➔ {s['destination_city']} via {s['company_name']})": s['shipment_id'] for s in active_ships}
+        sel_ship   = st.selectbox("Select Active Shipment", options=list(ship_opts.keys()))
+        new_status = st.selectbox("New Status", ["Delivered", "Delayed", "Cancelled"])
+        notes      = st.text_input("Receiving Notes", placeholder="e.g., Signed by receiver at Dock 4.")
+        if st.button("Confirm Status Update", type="primary", use_container_width=True):
+            s_id = ship_opts[sel_ship]
+            conn = get_db(); cur = conn.cursor()
+            try:
+                cur.execute("SELECT status,carrier_id FROM shipments WHERE shipment_id=%s", (s_id,))
+                ship_data = cur.fetchone()
+                old_status, c_id = ship_data['status'], ship_data['carrier_id']
+                if new_status == 'Delivered':
+                    cur.execute("UPDATE shipments SET status=%s,actual_delivery_date=CURRENT_DATE,delivered_at=CURRENT_TIMESTAMP WHERE shipment_id=%s", (new_status, s_id))
+                else:
+                    cur.execute("UPDATE shipments SET status=%s WHERE shipment_id=%s", (new_status, s_id))
+                cur.execute("INSERT INTO status_log (shipment_id,old_status,new_status,notes,changed_by) VALUES (%s,%s,%s,%s,%s)", (s_id, old_status, new_status, notes, st.session_state.user['user_id']))
+                if new_status in ['Delivered', 'Cancelled']:
+                    cur.execute("UPDATE carriers SET is_available=TRUE WHERE carrier_id=%s", (c_id,))
+                conn.commit()
+                st.success(f"Shipment #{s_id} marked as {new_status}. Fleet status updated.")
+                st.rerun()
+            except Exception as e:
+                conn.rollback()
+                st.error(f"Transaction failed. Error: {e}")
+            finally:
+                conn.close()
 
-    st.markdown("<div class='section-header'>Network Overview</div>", unsafe_allow_html=True)
+@st.dialog("🏢 Register Fleet Carrier")
+def add_carrier_dialog():
+    if st.session_state.user['role'] != "System Administrator":
+        st.error("SECURITY VIOLATION: Unauthorized clearance level.")
+        st.stop()
+    st.markdown("<p style='color:#94a3b8;font-size:0.9rem;margin-top:-10px;'>Add a new vehicle to the logistics network.</p>", unsafe_allow_html=True)
+    col_c1, col_c2 = st.columns(2)
+    with col_c1: company = st.text_input("Carrier Company Name *", placeholder="e.g., TCS Logistics")
+    with col_c2: phone   = st.text_input("Dispatch Contact Phone *", placeholder="+92 300 1234567")
+    v_type = st.selectbox("Vehicle Classification *", ["Select...", "Flatbed", "Box Truck", "Reefer (Refrigerated)", "LTL Van", "All Vehicle Types"])
+    if st.button("Add to Fleet", type="primary", use_container_width=True):
+        if not company or not phone or v_type == "Select...":
+            st.error("Please fill all mandatory fields.")
+        else:
+            conn = get_db(); cur = conn.cursor()
+            try:
+                cur.execute("INSERT INTO carriers (company_name,contact_phone,vehicle_type,is_available) VALUES (%s,%s,%s,TRUE)", (company, phone, v_type))
+                conn.commit()
+                st.success(f"{company} registered safely into the dispatch network.")
+                st.rerun()
+            except Exception as e:
+                conn.rollback()
+                st.error(f"Transaction failed. Error: {e}")
+            finally:
+                conn.close()
 
-    # ── High-Level Contextual KPIs ──
-    kpi_c1, kpi_c2, kpi_c3, kpi_c4 = st.columns(4)
+# ─── HELPERS ─────────────────────────────────────────────────────────────────
+def _kpi(icon, title, value, sub, accent):
+    return f"""
+    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:1.5rem; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 15px 30px -10px rgba(0,0,0,0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+        <div style="width:40px;height:40px;border-radius:12px;background:{accent}22;color:{accent};display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:1rem;">{icon}</div>
+        <div style="color:#64748b;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.25rem;">{title}</div>
+        <div style="color:#f8fafc;font-size:2rem;font-weight:800;line-height:1;">{value}</div>
+        <div style="color:#475569;font-size:0.75rem;margin-top:0.5rem;font-weight:600;">{sub}</div>
+    </div>
+    """
+
+def _action_card(icon, title, desc, locked=False):
+    opacity = "opacity:0.45;" if locked else ""
+    return f"""
+    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:1.5rem; {opacity} transition:transform 0.2s;" onmouseover="if(!{str(locked).lower()}) this.style.transform='translateY(-4px)';" onmouseout="this.style.transform='translateY(0)';">
+        <span style="font-size:1.8rem;display:block;margin-bottom:0.5rem;">{icon}</span>
+        <h4 style="color:#f8fafc;margin:0 0 0.4rem 0;font-size:1.1rem;font-weight:800;">{title}</h4>
+        <p style="color:#94a3b8;font-size:0.85rem;margin:0;line-height:1.5;">{desc}</p>
+    </div>
+    """
+
+def _render_activity_feed(events):
+    if not events:
+        st.markdown("<p style='color:#475569;text-align:center;padding:2rem 0;font-size:0.85rem;'>No activity recorded yet.</p>", unsafe_allow_html=True)
+        return
+
+    items_html = ""
+    # Single-line HTML construction to absolutely prevent Markdown Preformatted Text blocks
+    for e in events:
+        dot_color  = _DOT_COLOR.get(e['new_status'], '#64748b')
+        ts         = e['changed_at'].strftime("%b %d, %H:%M") if e['changed_at'] else ""
+        route      = f"{e['origin_city']} → {e['destination_city']}"
+        desc       = f"<strong style='color:#f8fafc;font-size:0.95rem;'>Ship #{e['shipment_id']}</strong> <span style='color:#475569;'>·</span> {e['customer_name']} <span style='color:#475569;'>·</span> {route}"
+        status_txt = f"<span style='color:{dot_color};font-weight:800;background:{dot_color}22;padding:2px 8px;border-radius:12px;font-size:0.75rem;text-transform:uppercase;'>{e['new_status']}</span>"
+        items_html += f"<div style='display:flex;gap:1.25rem;align-items:flex-start;padding:1rem 1.25rem;margin-bottom:0.75rem;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;transition:background 0.2s;' onmouseover='this.style.background=\"rgba(255,255,255,0.04)\"' onmouseout='this.style.background=\"rgba(255,255,255,0.02)\"'>"
+        items_html += f"<div style='width:12px;height:12px;border-radius:50%;background:{dot_color};margin-top:5px;box-shadow:0 0 12px {dot_color}88;flex-shrink:0;'></div>"
+        items_html += f"<div style='flex:1;'><div style='color:#cbd5e1;margin-bottom:0.4rem;line-height:1.4;'>{desc} <span style='margin:0 0.5rem;'>→</span> {status_txt}</div>"
+        items_html += f"<div style='font-size:0.75rem;color:#64748b;font-weight:600;'>{ts} &nbsp;·&nbsp; Authorized by {e['operator']}</div></div></div>"
     
-    with kpi_c1:
-        st.markdown("""
-        <div class='kpi-container'>
-            <div class='kpi-top'><span class='kpi-label'>Total Orders</span><div class='kpi-icon'>📦</div></div>
-            <div class='kpi-value'>1,248</div>
-            <div class='kpi-trend'><span class='trend-up'>↑ 12.5%</span> <span class='trend-desc'>vs yesterday</span></div>
+    st.markdown(f"<div>{items_html}</div>", unsafe_allow_html=True)
+
+# ─── MAIN RENDER ─────────────────────────────────────────────────────────────
+def render_page():
+    st.markdown("""
+        <div style='margin-bottom:2rem;'>
+            <div style='color:#10b981;font-size:0.75rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;'>Operations</div>
+            <h2 style='color:#f8fafc;font-weight:800;font-size:2.2rem;margin:0;letter-spacing:-0.5px;'>Command Center</h2>
+            <p style='color:#94a3b8;font-size:0.95rem;margin:4px 0 0 0;'>Live operational overview across your enterprise freight network.</p>
         </div>
-        """, unsafe_allow_html=True)
-        
-    with kpi_c2:
-        st.markdown("""
-        <div class='kpi-container'>
-            <div class='kpi-top'><span class='kpi-label'>Active Fleet</span><div class='kpi-icon'>🚚</div></div>
-            <div class='kpi-value'>342</div>
-            <div class='kpi-trend'><span class='trend-up'>↑ 4.1%</span> <span class='trend-desc'>utilization</span></div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with kpi_c3:
-        st.markdown("""
-        <div class='kpi-container'>
-            <div class='kpi-top'><span class='kpi-label'>Delayed</span><div class='kpi-icon'>⚠️</div></div>
-            <div class='kpi-value'>12</div>
-            <div class='kpi-trend'><span class='trend-down'>↓ 2.0%</span> <span class='trend-desc'>improving</span></div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with kpi_c4:
-        st.markdown("""
-        <div class='kpi-container'>
-            <div class='kpi-top'><span class='kpi-label'>Revenue (PKR)</span><div class='kpi-icon'>💵</div></div>
-            <div class='kpi-value'>4.2M</div>
-            <div class='kpi-trend'><span class='trend-up'>↑ 8.3%</span> <span class='trend-desc'>vs last week</span></div>
-        </div>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-    st.markdown("<div class='section-header'>Analytical Insights</div>", unsafe_allow_html=True)
+    metrics  = fetch_executive_overview()
+    events   = fetch_activity_feed(limit=12)
+    df_status = fetch_shipment_status_distribution()
+    user_role = st.session_state.user['role']
 
-    # ── Lightweight Data Visualizations (Plotly) ──
-    # Determine chart theme colors based on Streamlit state
-    chart_bg = 'rgba(0,0,0,0)'
-    text_col = '#f8fafc' if st.session_state.theme == 'dark' else '#0f172a'
-    grid_col = 'rgba(255,255,255,0.05)' if st.session_state.theme == 'dark' else 'rgba(0,0,0,0.05)'
+    # ── 1. EXECUTIVE KPI STRIP
+    k1, k2, k3, k4, k5, k6 = st.columns(6)
+    fleet_pct = (round(metrics['available_carriers'] / metrics['total_carriers'] * 100) if metrics['total_carriers'] > 0 else 0)
 
-    chart_c1, chart_c2 = st.columns([6, 4], gap="large")
+    with k1: st.markdown(_kpi("📋", "Total Orders", metrics['total_orders'], "All time", "#3b82f6"), unsafe_allow_html=True)
+    with k2: st.markdown(_kpi("🚚", "In Transit", metrics['active_shipments'], "Currently active", "#10b981"), unsafe_allow_html=True)
+    with k3: st.markdown(_kpi("⚠️", "Delayed", metrics['delayed_shipments'], "Needs attention", "#f59e0b"), unsafe_allow_html=True)
+    with k4: st.markdown(_kpi("🏢", "Fleet Ready", metrics['available_carriers'], f"{fleet_pct}% availability", "#8b5cf6"), unsafe_allow_html=True)
+    with k5: st.markdown(_kpi("📅", "Due Today", metrics['orders_today'], "Expected deliveries", "#06b6d4"), unsafe_allow_html=True)
+    with k6: st.markdown(_kpi("✅", "Delivered", metrics['delivered_today'], "Completed runs", "#34d399"), unsafe_allow_html=True)
 
-    with chart_c1:
-        st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
-        # Dummy Data for 7-Day Trend
-        dates = [(datetime.now() - timedelta(days=i)).strftime('%b %d') for i in range(6, -1, -1)]
-        volumes = [150, 180, 175, 210, 250, 240, 310]
-        df_trend = pd.DataFrame({'Date': dates, 'Volume': volumes})
-        
-        fig1 = px.line(df_trend, x='Date', y='Volume', title='7-Day Shipment Volume', markers=True)
-        fig1.update_traces(line_color='#10b981', line_width=3, marker=dict(size=8, color='#10b981'))
-        fig1.update_layout(
-            paper_bgcolor=chart_bg, plot_bgcolor=chart_bg, font_color=text_col,
-            margin=dict(l=20, r=20, t=40, b=20), height=300,
-            xaxis=dict(showgrid=False, title=""), yaxis=dict(gridcolor=grid_col, title="")
-        )
-        st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False})
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.05);margin:2.5rem 0;'>", unsafe_allow_html=True)
 
-    with chart_c2:
-        st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
-        # Dummy Data for Fleet Distribution
-        df_fleet = pd.DataFrame({'Status': ['In Transit', 'Loading', 'Maintenance', 'Idle'], 'Count': [210, 85, 12, 35]})
-        
-        fig2 = px.pie(df_fleet, values='Count', names='Status', hole=0.7, title='Live Fleet Distribution')
-        fig2.update_traces(marker=dict(colors=['#3b82f6', '#10b981', '#ef4444', '#64748b']), textinfo='none')
-        fig2.update_layout(
-            paper_bgcolor=chart_bg, font_color=text_col,
-            margin=dict(l=20, r=20, t=40, b=20), height=300,
-            showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
-        )
-        st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False})
-        st.markdown("</div>", unsafe_allow_html=True)
+    # ── 2. OPERATIONAL WORKFLOWS
+    st.markdown("<h3 style='color:#f8fafc;font-size:1.2rem;font-weight:800;margin-bottom:1rem;'>Operational Workflows</h3>", unsafe_allow_html=True)
+    ac1, ac2, ac3, ac4 = st.columns(4)
+
+    with ac1:
+        st.markdown(_action_card("📦", "Draft Order", "Create and validate a new freight contract into the pending queue."), unsafe_allow_html=True)
+        if st.button("Initiate Draft", key="btn_draft", use_container_width=True): draft_order_dialog()
+    with ac2:
+        can_dispatch = user_role in ["System Administrator", "Dispatcher"]
+        st.markdown(_action_card("🚚", "Dispatch Fleet", "Assign pending orders to available carriers and deploy trucks.", locked=not can_dispatch), unsafe_allow_html=True)
+        if can_dispatch:
+            if st.button("Open Dispatch UI", key="btn_dispatch", use_container_width=True): dispatch_fleet_dialog()
+        else: st.button("Restricted", key="btn_dispatch_locked", disabled=True, use_container_width=True)
+    with ac3:
+        can_update = user_role in ["System Administrator", "Warehouse Manager"]
+        st.markdown(_action_card("✅", "Update Log", "Record delivery progress, mark delays, or close out shipments.", locked=not can_update), unsafe_allow_html=True)
+        if can_update:
+            if st.button("Update Status", key="btn_update", use_container_width=True): update_status_dialog()
+        else: st.button("Restricted", key="btn_update_locked", disabled=True, use_container_width=True)
+    with ac4:
+        can_add = user_role == "System Administrator"
+        st.markdown(_action_card("🏢", "Add Carrier", "Register new fleet assets to expand network capacity.", locked=not can_add), unsafe_allow_html=True)
+        if can_add:
+            if st.button("Register Asset", key="btn_carrier", use_container_width=True): add_carrier_dialog()
+        else: st.button("Restricted", key="btn_carrier_locked", disabled=True, use_container_width=True)
+
+    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.05);margin:2.5rem 0;'>", unsafe_allow_html=True)
+
+    # ── 3. ANALYTICS + ACTIVITY FEED
+    chart_col, feed_col = st.columns([1.2, 1], gap="large")
+
+    with chart_col:
+        st.markdown("<h3 style='color:#f8fafc;font-size:1.2rem;font-weight:800;margin-bottom:1rem;'>Shipment Status Distribution</h3>", unsafe_allow_html=True)
+        if not df_status.empty:
+            fig = px.pie(df_status, values='n', names='status', hole=0.65, color='status', color_discrete_map=STATUS_COLORS)
+            fig.update_layout(**_PLOTLY_BASE, showlegend=True, legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.1, font=dict(color='#94a3b8', size=11)), height=350)
+            fig.update_traces(textposition='outside', textinfo='percent+label', textfont=dict(color='#cbd5e1', size=11), marker=dict(line=dict(color='#040914', width=3)), hovertemplate='<b>%{label}</b><br>Count: %{value}<br>Share: %{percent}<extra></extra>')
+            total_shipments = int(df_status['n'].sum())
+            fig.add_annotation(text=f"<b>{total_shipments}</b><br><span style='font-size:10px'>TOTAL</span>", x=0.5, y=0.5, showarrow=False, font=dict(size=22, color='#f8fafc', family='Plus Jakarta Sans'))
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.markdown("<div style='background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:3rem;text-align:center;color:#64748b;font-weight:600;'>No shipment data available yet.</div>", unsafe_allow_html=True)
+
+    with feed_col:
+        st.markdown("<h3 style='color:#f8fafc;font-size:1.2rem;font-weight:800;margin-bottom:1rem;'>Live Activity Feed</h3>", unsafe_allow_html=True)
+        _render_activity_feed(events)
