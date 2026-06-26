@@ -82,7 +82,9 @@ def get_cached_login_css(theme: str) -> str:
     .block-container {{
         padding-top: 96px !important;
         padding-bottom: 0 !important;
-        max-width: 1350px !important;
+        max-width: 100% !important;
+        padding-left: 4vw !important;
+        padding-right: 4vw !important;
     }}
 
     /* ── NAVBAR (pure HTML, fixed) ───────────────────────────────────────── */
@@ -108,9 +110,10 @@ def get_cached_login_css(theme: str) -> str:
         align-items: center;
         gap: 0.75rem;
         cursor: pointer;
-        text-decoration: none;
+        text-decoration: none !important;
         flex-shrink: 0;
     }}
+    .lt-brand:hover, .lt-brand:visited, .lt-brand:active {{ text-decoration: none !important; }}
     .lt-logo {{
         font-size: 1.15rem;
         font-weight: 800;
@@ -443,7 +446,7 @@ def get_cached_marketing_html() -> str:
         </div>
         <div style='color:#10b981;font-weight:700;font-size:0.85rem;letter-spacing:4px;
                     text-transform:uppercase;margin-top:1.5rem;'>Central Hub Active</div>
-        <style>@keyframes spin {{ 100% {{ transform:rotate(360deg); }} }}</style>
+        <style>@keyframes spin { 100% { transform:rotate(360deg); } }</style>
     </div>
     </div>
     </section>
