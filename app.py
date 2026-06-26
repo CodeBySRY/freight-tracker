@@ -22,20 +22,10 @@ if 'user' not in st.session_state:
     st.session_state.user = None
 if 'theme' not in st.session_state:
     st.session_state.theme = 'dark'
-if 'egg_clicks' not in st.session_state:
-    st.session_state.egg_clicks = 0
-if 'show_truck' not in st.session_state:
-    st.session_state.show_truck = False
 
 # ─── CALLBACKS (NATIVE STREAMLIT STATE MANAGEMENT) ────────────────────────────
 def toggle_theme():
     st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
-
-def handle_logo_click():
-    st.session_state.egg_clicks += 1
-    if st.session_state.egg_clicks >= 3:
-        st.session_state.show_truck = True
-        st.session_state.egg_clicks = 0
 
 
 # ─── ASSET CACHING (MASSIVE BACKEND PERFORMANCE OPTIMIZATION) ─────────────────
@@ -46,7 +36,7 @@ def get_cached_login_css(theme: str) -> str:
         css_vars = """
         --bg-main: #f8fafc; --text-main: #0f172a; --text-sub: #475569; --text-muted: #64748b;
         --border-light: rgba(0,0,0,0.05); --border-mid: rgba(0,0,0,0.1); --border-heavy: rgba(0,0,0,0.2);
-        --nav-bg: rgba(248, 250, 252, 0.85); --card-bg: #ffffff; --card-hover: #f1f5f9;
+        --nav-bg: rgba(248, 250, 252, 0.9); --card-bg: #ffffff; --card-hover: #f1f5f9;
         --btn-bg: #0f172a; --btn-text: #ffffff; --footer-bg: #f1f5f9; --title-grad: linear-gradient(135deg, #0f172a 0%, #475569 100%);
         """
     else:
@@ -83,96 +73,96 @@ def get_cached_login_css(theme: str) -> str:
     [data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header {{ display: none !important; }}
     
     /* Offset container to account for fixed full-width navbar */
-    .block-container {{ padding-top: 130px !important; padding-bottom: 0 !important; max-width: 1350px !important; }}
+    .block-container {{ padding-top: 140px !important; padding-bottom: 0 !important; max-width: 1350px !important; }}
 
     /* ── UNIFIED ENTERPRISE NAVBAR ── */
-    .enterprise-nav {{
-        position: fixed; top: 0; left: 0; width: 100vw; height: 70px;
+    .enterprise-navbar {{
+        position: fixed; top: 0; left: 0; width: 100vw; height: 75px;
         background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--border-heavy); z-index: 999999;
         display: flex; align-items: center; justify-content: space-between;
-        padding: 0 4rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: background 0.3s ease;
+        padding: 0 4rem; transition: background 0.3s ease;
     }}
     
     /* Navbar Flex Groups */
-    .nav-left {{ flex: 1; display: flex; align-items: center; gap: 0.75rem; text-decoration: none; cursor: pointer; }}
-    .nav-center {{ display: flex; justify-content: center; align-items: center; gap: 2.5rem; }}
-    .nav-right {{ flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 1.25rem; }}
+    .nav-left {{ flex: 1; display: flex; align-items: center; gap: 1rem; text-decoration: none; cursor: pointer; }}
+    .nav-center {{ display: flex; justify-content: center; align-items: center; gap: 3rem; }}
+    .nav-right {{ flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 1.5rem; }}
 
     /* Branding */
-    .nav-logo {{ font-size: 1.2rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem; letter-spacing: -0.5px; transition: color 0.2s; }}
+    .nav-logo {{ font-size: 1.3rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.5px; transition: color 0.2s; }}
     .nav-left:hover .nav-logo {{ color: #10b981; }}
-    .nav-divider {{ width: 1px; height: 20px; background: var(--border-heavy); margin: 0 0.25rem; }}
-    .nav-subtitle {{ font-size: 0.75rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1.5px; white-space: nowrap; margin-top: 1px; }}
+    .nav-divider {{ width: 1px; height: 24px; background: var(--border-heavy); }}
+    .nav-subtitle {{ font-size: 0.8rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; margin-top: 2px; }}
 
     /* Navigation Links */
-    .nav-link {{ color: var(--text-sub); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.3s ease; position: relative; padding: 0.5rem 0; }}
+    .nav-link {{ color: var(--text-sub); text-decoration: none; font-size: 0.95rem; font-weight: 600; transition: color 0.3s ease; position: relative; padding: 0.5rem 0; }}
     .nav-link:hover {{ color: var(--text-main); }}
-    .nav-link::after {{ content: ''; position: absolute; left: 0; bottom: 0; width: 0%; height: 2px; background-color: #10b981; transition: width 0.3s ease; border-radius: 2px; }}
+    .nav-link::after {{ content: ''; position: absolute; left: 50%; bottom: 0; width: 0%; height: 2px; background-color: #10b981; transition: all 0.3s ease; transform: translateX(-50%); border-radius: 2px; }}
     .nav-link:hover::after {{ width: 100%; }}
 
     /* Controls (Toggle & CTA) */
-    .theme-toggle-btn {{ cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; color: var(--text-main); transition: all 0.2s ease; user-select: none; }}
-    .theme-toggle-btn:hover {{ background: var(--card-hover); transform: rotate(15deg); }}
+    .theme-toggle-btn {{ cursor: pointer; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; color: var(--text-main); transition: all 0.2s ease; user-select: none; border: 1px solid transparent; }}
+    .theme-toggle-btn:hover {{ background: var(--card-bg); border-color: var(--border-heavy); }}
     
-    .nav-cta {{ display: inline-flex; align-items: center; justify-content: center; background: var(--card-bg); border: 1px solid var(--border-heavy); color: var(--text-main); text-decoration: none; padding: 0 1.5rem; height: 40px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; transition: all 0.2s ease; white-space: nowrap; }}
-    .nav-cta:hover {{ background: var(--text-main); color: var(--bg-main); box-shadow: 0 4px 15px rgba(16,185,129,0.15); border-color: transparent; }}
+    .nav-cta {{ display: inline-flex; align-items: center; justify-content: center; background: var(--btn-bg); color: var(--btn-text) !important; text-decoration: none; padding: 0 1.75rem; height: 44px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
+    .nav-cta:hover {{ transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }}
 
     /* ── HERO SECTION TYPOGRAPHY & LAYOUT ── */
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) {{ align-items: center; }}
+    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) {{ align-items: center; padding-bottom: 4rem; border-bottom: 1px solid var(--border-light); }}
     [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-of-type(1) {{ padding-right: 4rem !important; }}
     
-    .hero-super {{ color: #10b981; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; display: block; }}
-    .hero-title {{ font-size: 3.2rem; font-weight: 800; letter-spacing: -1px; line-height: 1.2; margin-bottom: 2rem; background: var(--title-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
-    .hero-desc {{ font-size: 1.05rem; color: var(--text-sub); line-height: 1.7; max-width: 95%; font-weight: 400; margin-bottom: 3.5rem; }}
+    .hero-super {{ color: #10b981; font-size: 0.9rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; display: block; }}
+    .hero-title {{ font-size: 3.4rem; font-weight: 800; letter-spacing: -1px; line-height: 1.25; margin-bottom: 2rem; background: var(--title-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
+    .hero-desc {{ font-size: 1.1rem; color: var(--text-sub); line-height: 1.7; max-width: 95%; font-weight: 400; margin-bottom: 3.5rem; }}
 
     /* Corridor Visualization */
-    .corridor-map {{ position: relative; height: 50px; display: flex; align-items: center; margin-top: 2rem; width: 85%; opacity: 0.8; }}
+    .corridor-map {{ position: relative; height: 50px; display: flex; align-items: center; margin-top: 2rem; width: 90%; opacity: 0.9; }}
     .corridor-line {{ position: absolute; width: 100%; height: 2px; background: var(--border-heavy); top: 50%; transform: translateY(-50%); }}
     .corridor-flow {{ position: absolute; width: 30%; height: 2px; background: linear-gradient(90deg, transparent, #10b981, transparent); top: 50%; transform: translateY(-50%); animation: freightFlow 3s infinite linear; }}
-    .corridor-node {{ position: absolute; display: flex; flex-direction: column; align-items: center; gap: 6px; top: 50%; transform: translate(-50%, -12px); }}
-    .node-dot {{ width: 10px; height: 10px; background: var(--bg-main); border: 2px solid #3b82f6; border-radius: 50%; z-index: 2; transition: all 0.3s; }}
+    .corridor-node {{ position: absolute; display: flex; flex-direction: column; align-items: center; gap: 8px; top: 50%; transform: translate(-50%, -12px); }}
+    .node-dot {{ width: 12px; height: 12px; background: var(--bg-main); border: 2px solid #3b82f6; border-radius: 50%; z-index: 2; transition: all 0.3s; }}
     .corridor-node:hover .node-dot {{ background: #10b981; border-color: #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.5); transform: scale(1.3); }}
-    .node-label {{ font-size: 0.65rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; transition: color 0.3s; }}
+    .node-label {{ font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; transition: color 0.3s; }}
     .corridor-node:hover .node-label {{ color: var(--text-main); }}
     @keyframes freightFlow {{ 0% {{ left: -30%; }} 100% {{ left: 100%; }} }}
 
     /* ── AUTHENTICATION PORTAL ── */
     [data-testid="stForm"] {{ background: var(--card-bg) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid var(--border-heavy) !important; border-radius: 12px !important; padding: 3rem 2.5rem !important; box-shadow: 0 15px 35px -10px rgba(0,0,0,0.2) !important; position: relative !important; overflow: hidden !important; }}
     [data-testid="stForm"]::before {{ content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #3b82f6); }}
-    .auth-heading {{ font-size: 1.35rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: var(--text-main); }}
-    .auth-sub {{ color: var(--text-sub); font-size: 0.9rem; margin-bottom: 2rem; font-weight: 400; line-height: 1.5; }}
+    .auth-heading {{ font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: var(--text-main); }}
+    .auth-sub {{ color: var(--text-sub); font-size: 0.95rem; margin-bottom: 2rem; font-weight: 400; line-height: 1.5; }}
     .stTextInput label {{ color: var(--text-sub) !important; font-size: 0.75rem !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem !important; }}
     .stTextInput input {{ border-radius: 6px !important; border: 1px solid var(--border-heavy) !important; background: var(--bg-main) !important; color: var(--text-main) !important; padding: 0.75rem 1rem !important; font-size: 0.95rem !important; transition: all 0.2s; }}
     .stTextInput input:focus {{ border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }}
     [data-testid="stFormSubmitButton"] > button {{ border-radius: 6px !important; background: var(--btn-bg) !important; border: none !important; padding: 0.75rem !important; margin-top: 1.5rem !important; transition: all 0.2s ease !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; }}
-    [data-testid="stFormSubmitButton"] > button:hover {{ transform: translateY(-1px) !important; box-shadow: 0 8px 15px rgba(0,0,0,0.15) !important; }}
+    [data-testid="stFormSubmitButton"] > button:hover {{ transform: translateY(-2px) !important; box-shadow: 0 8px 15px rgba(0,0,0,0.15) !important; }}
     [data-testid="stFormSubmitButton"] > button p {{ color: var(--btn-text) !important; font-weight: 700 !important; font-size: 0.95rem !important; }}
 
     /* ── REUSABLE COMPONENT CLASSES ── */
-    .lp-section {{ padding: 6rem 8%; border-top: 1px solid var(--border-light); scroll-margin-top: 70px; }}
-    .lp-header {{ font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 1rem; color: var(--text-main); text-align: center; }}
-    .lp-sub {{ font-size: 1.05rem; color: var(--text-sub); text-align: center; max-width: 750px; margin: 0 auto 3.5rem auto; line-height: 1.6; font-weight: 400; }}
+    .lp-section {{ padding: 6rem 8%; border-bottom: 1px solid var(--border-light); scroll-margin-top: 90px; }}
+    .lp-header {{ font-size: 2.2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 1rem; color: var(--text-main); text-align: center; }}
+    .lp-sub {{ font-size: 1.1rem; color: var(--text-sub); text-align: center; max-width: 750px; margin: 0 auto 3.5rem auto; line-height: 1.6; font-weight: 400; }}
     
     .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }}
-    .grid-3 {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }}
-    .grid-4 {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }}
+    .grid-3 {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }}
+    .grid-4 {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }}
 
     .lp-card {{ background: var(--card-bg); border: 1px solid var(--border-mid); border-radius: 12px; padding: 2.5rem 2rem; transition: all 0.3s ease; }}
-    .lp-card:hover {{ background: var(--card-hover); transform: translateY(-3px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.15); border-color: var(--border-heavy); }}
-    .card-icon {{ width: 48px; height: 48px; border-radius: 10px; background: var(--border-mid); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-heavy); }}
-    .card-title {{ font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.5px; }}
+    .lp-card:hover {{ background: var(--card-hover); transform: translateY(-4px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.15); border-color: var(--border-heavy); }}
+    .card-icon {{ width: 52px; height: 52px; border-radius: 10px; background: var(--border-mid); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1.5rem; border: 1px solid var(--border-heavy); }}
+    .card-title {{ font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.5px; }}
     .card-desc {{ font-size: 0.95rem; color: var(--text-sub); line-height: 1.6; }}
 
     .tag-wrap {{ display: flex; flex-wrap: wrap; gap: 0.75rem; }}
     .lp-tag {{ padding: 0.5rem 1rem; border-radius: 100px; background: var(--card-bg); border: 1px solid var(--border-heavy); font-size: 0.85rem; color: var(--text-sub); font-weight: 600; transition: all 0.2s; cursor: default; }}
     .lp-tag:hover {{ background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 4px 12px rgba(16,185,129,0.1); }}
 
-    .lp-footer {{ background: var(--footer-bg); padding: 4rem 8%; border-top: 1px solid var(--border-mid); display: flex; justify-content: space-between; align-items: center; }}
-    .footer-text {{ color: var(--text-muted); font-size: 0.85rem; }}
+    .lp-footer {{ background: var(--footer-bg); padding: 4rem 8%; display: flex; justify-content: space-between; align-items: center; }}
+    .footer-text {{ color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }}
     
     /* Responsive Adjustments */
-    @media (max-width: 1024px) {{ .nav-center {{ display: none; }} .enterprise-nav {{ padding: 0 2rem; }} }}
+    @media (max-width: 1024px) {{ .nav-center {{ display: none; }} .enterprise-navbar {{ padding: 0 2rem; }} }}
     </style>
     """
 
@@ -183,8 +173,8 @@ def get_cached_navbar_html(theme: str) -> str:
     html = """
     <div id="top-anchor" style="position: absolute; top: 0; left: 0; width: 1px; height: 1px;"></div>
     
-    <header class="enterprise-nav">
-        <a href="#top-anchor" class="nav-left" onclick="window.triggerEgg && window.triggerEgg(); window.scrollTo({top:0, behavior:'smooth'});">
+    <header class="enterprise-navbar">
+        <a href="#top-anchor" class="nav-left" onclick="window.scrollTo({top:0, behavior:'smooth'});">
             <div class="nav-logo">📦 LogiTrack PK</div>
             <div class="nav-divider"></div>
             <span class="nav-subtitle">Freight OS</span>
@@ -203,14 +193,14 @@ def get_cached_navbar_html(theme: str) -> str:
         </div>
     </header>
     
-    <img src="dummy" style="display:none;" onerror="if(!window.navScriptLoaded){window.navScriptLoaded=true;setInterval(function(){var b=document.querySelectorAll('button');for(var i=0;i<b.length;i++){if(b[i].innerText.includes('HiddenThemeBtn')||b[i].innerText.includes('HiddenEggBtn')){var c=b[i].closest('div[data-testid=\\'stButton\\']');if(c)c.style.display='none';}}},50);window.toggleTheme=function(){var bs=document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenThemeBtn')){bs[j].click();break;}}};window.triggerEgg=function(){var bs=document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenEggBtn')){bs[j].click();break;}}};}">
+    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" style="display:none;" onload="if(!window.navScriptLoaded){window.navScriptLoaded=true;setInterval(function(){var b=window.parent.document.querySelectorAll('button');for(var i=0;i<b.length;i++){if(b[i].innerText.includes('HiddenThemeBtn')){var c=b[i].closest('div[data-testid=\\'stButton\\']');if(c)c.style.display='none';}}},50);window.toggleTheme=function(){var bs=window.parent.document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenThemeBtn')){bs[j].click();break;}}};}">
     """
     return html.replace('TOGGLE_ICON_PLACEHOLDER', toggle_icon)
 
 @st.cache_data(show_spinner=False)
 def get_cached_hero_brand_html() -> str:
     return """
-    <span class='hero-super'>Freight Intelligence Network</span>
+    <span class='hero-super'>Enterprise Logistics OS</span>
     <div class='hero-title'>Logistics visibility,<br>engineered for scale.</div>
     <div class='hero-desc'>The centralized operating system for Pakistan's freight network. Command your fleet, track shipments, and coordinate dispatch operations with unprecedented clarity.</div>
     
@@ -240,7 +230,7 @@ def get_cached_marketing_sections_html() -> str:
     <section id='ecosystem' class='lp-section' style='background: var(--card-bg);'>
         <div class='grid-2'>
             <div>
-                <div class='lp-header' style='text-align: left;'>Architected for <span style="color:#10b981; font-family:'Plus Jakarta Sans', sans-serif; font-weight:800; text-shadow: 0 0 20px rgba(16,185,129,0.2);">Pakistan's</span> Ecosystem</div>
+                <div class='lp-header' style='text-align: left;'>Architected for <span style="color:#10b981; font-weight:800; text-shadow: 0 0 20px rgba(16,185,129,0.2);">Pakistan's</span> Ecosystem</div>
                 <div class='lp-sub' style='text-align: left; margin-bottom: 2rem;'>Designed exclusively for the operational realities of the domestic supply chain. We serve the critical transport corridors connecting <b>Karachi, Lahore, Islamabad, Faisalabad, Multan, Peshawar, and Quetta.</b></div>
                 <div class='tag-wrap'>
                     <span class='lp-tag'>Freight Forwarders</span><span class='lp-tag'>3PL Providers</span><span class='lp-tag'>Fleet Operators</span>
@@ -248,13 +238,13 @@ def get_cached_marketing_sections_html() -> str:
                 </div>
             </div>
             <div style='background: rgba(16,185,129,0.03); border: 1px solid rgba(16,185,129,0.1); border-radius: 16px; padding: 3rem; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; position: relative; overflow: hidden;'>
-                <div style='width: 100px; height: 100px; border-radius: 50%; border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; position: relative;'>
-                    <div style='width: 60px; height: 60px; border-radius: 50%; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center;'>
-                        <div style='width: 20px; height: 20px; border-radius: 50%; background: #10b981; box-shadow: 0 0 20px #10b981;'></div>
+                <div style='width: 120px; height: 120px; border-radius: 50%; border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; position: relative;'>
+                    <div style='width: 70px; height: 70px; border-radius: 50%; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center;'>
+                        <div style='width: 24px; height: 24px; border-radius: 50%; background: #10b981; box-shadow: 0 0 20px #10b981;'></div>
                     </div>
                     <div style='position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #10b981; border-top-color: transparent; animation: spin 4s linear infinite;'></div>
                 </div>
-                <div style='color: #10b981; font-weight: 700; font-size: 0.85rem; letter-spacing: 4px; text-transform: uppercase; margin-top: 1.5rem;'>Central Hub Active</div>
+                <div style='color: #10b981; font-weight: 700; font-size: 0.9rem; letter-spacing: 4px; text-transform: uppercase; margin-top: 1.5rem;'>Central Hub Active</div>
                 <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
             </div>
         </div>
@@ -264,10 +254,10 @@ def get_cached_marketing_sections_html() -> str:
         <div class='lp-header'>Platform Modules</div>
         <div class='lp-sub'>Enterprise-grade architecture ensuring high-availability, cryptographic security, and analytical depth.</div>
         <div class='grid-4'>
-            <div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#10b981; font-size:1.1rem;'>Real-Time Tracking</div><div class='card-desc' style='font-size:0.85rem;'>Live status updates for all active freight.</div></div>
-            <div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#3b82f6; font-size:1.1rem;'>Audit Logging</div><div class='card-desc' style='font-size:0.85rem;'>Immutable, cryptographic history of all actions.</div></div>
-            <div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#f59e0b; font-size:1.1rem;'>Zero Trust RBAC</div><div class='card-desc' style='font-size:0.85rem;'>Strict role-based access to operational modules.</div></div>
-            <div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#8b5cf6; font-size:1.1rem;'>BI Analytics</div><div class='card-desc' style='font-size:0.85rem;'>Live Plotly data grids and network intelligence.</div></div>
+            <div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#10b981;'>Real-Time Tracking</div><div class='card-desc'>Live status updates for all active freight.</div></div>
+            <div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#3b82f6;'>Audit Logging</div><div class='card-desc'>Immutable, cryptographic history of all actions.</div></div>
+            <div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#f59e0b;'>Zero Trust RBAC</div><div class='card-desc'>Strict role-based access to operational modules.</div></div>
+            <div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#8b5cf6;'>BI Analytics</div><div class='card-desc'>Live Plotly data grids and network intelligence.</div></div>
         </div>
     </section>
 
@@ -276,33 +266,25 @@ def get_cached_marketing_sections_html() -> str:
         <div class='lp-sub'>Designed, architected, and developed by software engineers committed to modernizing industrial logistics infrastructure.</div>
         <div class='grid-3'>
             <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
-                <div style='width: 56px; height: 56px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>SR</div>
-                <div class='card-title' style='font-size:1.1rem;'>Shayan Rizwan</div>
-                <div class='card-desc' style='font-size:0.85rem;'>Platform Architecture</div>
+                <div style='width: 64px; height: 64px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>SR</div>
+                <div class='card-title'>Shayan Rizwan</div>
+                <div class='card-desc'>Platform Architecture</div>
             </div>
             <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
-                <div style='width: 56px; height: 56px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>AS</div>
-                <div class='card-title' style='font-size:1.1rem;'>Agha Salaat</div>
-                <div class='card-desc' style='font-size:0.85rem;'>Systems Engineering</div>
+                <div style='width: 64px; height: 64px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>AS</div>
+                <div class='card-title'>Agha Salaat</div>
+                <div class='card-desc'>Systems Engineering</div>
             </div>
             <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
-                <div style='width: 56px; height: 56px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.2rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>AM</div>
-                <div class='card-title' style='font-size:1.1rem;'>Anzar Mubashir</div>
-                <div class='card-desc' style='font-size:0.85rem;'>Backend Infrastructure</div>
+                <div style='width: 64px; height: 64px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>AM</div>
+                <div class='card-title'>Anzar Mubashir</div>
+                <div class='card-desc'>Backend Infrastructure</div>
             </div>
         </div>
     </section>
 
-    <section id='contact' class='lp-section' style='text-align: center;'>
-        <div class='card-icon' style='margin: 0 auto 1.5rem auto; width: 64px; height: 64px; font-size: 1.5rem;'>💬</div>
-        <div class='lp-header'>Operational Support</div>
-        <div class='lp-sub'>We value user feedback and continuously improve operational reliability. For issue reporting, technical assistance, or feature requests, contact our engineering team.</div>
-        <a href='mailto:u2024585@giki.edu.pk' style='display: inline-block; background: var(--btn-bg); color: var(--btn-text) !important; padding: 0.85rem 2.5rem; border-radius: 6px; font-weight: 700; text-decoration: none !important; font-size: 0.95rem; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>u2024585@giki.edu.pk</a>
-        <div style='margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;'>Expected Response SLA: Under 24 Hours</div>
-    </section>
-
     <footer class='lp-footer'>
-        <div class='footer-text'><strong style='color:var(--text-main); font-size: 1rem;'>📦 LogiTrack PK</strong><br><br>© 2026 LogiTrack Systems. All rights reserved.</div>
+        <div class='footer-text'><strong style='color:var(--text-main); font-size: 1.05rem;'>📦 LogiTrack PK</strong><br><br>© 2026 LogiTrack Systems. All rights reserved.</div>
         <div class='footer-text' style='text-align: right;'>Version 2.4.0 (Enterprise Build)<br><br><span style='opacity: 0.7;'>Protected by Zero Trust Security Architecture.</span></div>
     </footer>
     """
@@ -333,17 +315,8 @@ def login_screen():
     # Invisible anchor for authentication scrolling
     st.markdown("<div id='auth-portal' style='position:absolute; top:-20px;'></div>", unsafe_allow_html=True)
 
-    # Conditionally render Easter Egg animation based on strict Python state
-    if st.session_state.show_truck:
-        st.markdown("""
-        <div style="position:fixed;top:90px;left:-100px;font-size:60px;z-index:9999999;animation: drive 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;">🚚💨</div>
-        <style>@keyframes drive { 0% { left: -100px; } 100% { left: 120vw; } }</style>
-        """, unsafe_allow_html=True)
-        st.session_state.show_truck = False
-
-    # Hidden Streamlit Bridge Buttons
+    # Hidden Streamlit Bridge Button
     st.button("HiddenThemeBtn", on_click=toggle_theme)
-    st.button("HiddenEggBtn", on_click=handle_logo_click)
 
     # ─── 2.1 HERO SECTION (Streamlit Columns) ───
     col_brand, col_auth = st.columns([1.2, 1], gap="large")
@@ -358,7 +331,7 @@ def login_screen():
         with st.form("login_form"):
             email    = st.text_input("Email", placeholder="admin@logitrack.pk")
             password = st.text_input("Password", type="password", placeholder="••••••••")
-            submit   = st.form_submit_button("Enter Workspace →", use_container_width=True)
+            submit   = st.form_submit_button("System Access", use_container_width=True)
 
         if submit:
             conn = get_db()
