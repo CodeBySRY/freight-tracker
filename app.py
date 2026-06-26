@@ -27,80 +27,10 @@ def toggle_theme():
 
 
 # ─── LANDING PAGE ASSET CACHING ───────────────────────────────────────────────
-@st.cache_data(show_spinner=False)
-def get_cached_login_css(theme: str) -> str:
-    if theme == 'light':
-        css_vars = "--bg-main: #f8fafc; --text-main: #0f172a; --text-sub: #475569; --text-muted: #64748b; --border-light: rgba(0,0,0,0.05); --border-mid: rgba(0,0,0,0.1); --border-heavy: rgba(0,0,0,0.2); --nav-bg: rgba(248, 250, 252, 0.9); --card-bg: #ffffff; --card-hover: #f1f5f9; --btn-bg: #0f172a; --btn-text: #ffffff; --footer-bg: #f1f5f9; --title-grad: linear-gradient(135deg, #0f172a 0%, #475569 100%);"
-    else:
-        css_vars = "--bg-main: #030712; --text-main: #f8fafc; --text-sub: #94a3b8; --text-muted: #64748b; --border-light: rgba(255,255,255,0.03); --border-mid: rgba(255,255,255,0.05); --border-heavy: rgba(255,255,255,0.1); --nav-bg: rgba(3, 7, 18, 0.85); --card-bg: rgba(255,255,255,0.015); --card-hover: rgba(255,255,255,0.03); --btn-bg: #f8fafc; --btn-text: #030712; --footer-bg: #010206; --title-grad: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);"
+
     
-    return f"""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    :root {{ {css_vars} }}
-    html, body, .stApp {{ background-color: var(--bg-main) !important; color: var(--text-main) !important; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; scroll-behavior: smooth; transition: background-color 0.3s ease, color 0.3s ease; }}
-    .stApp {{ background-image: radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.04), transparent 45%), linear-gradient(var(--border-light) 1px, transparent 1px), linear-gradient(90deg, var(--border-light) 1px, transparent 1px) !important; background-size: 100% 100%, 80px 80px, 80px 80px !important; background-position: center center !important; background-attachment: fixed !important; }}
-    [data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header[data-testid="stHeader"] {{ display: none !important; }}
-    .block-container {{ padding-top: 140px !important; padding-bottom: 0 !important; max-width: 1350px !important; }}
-    .enterprise-navbar {{ position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 75px !important; background: var(--nav-bg) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border-bottom: 1px solid var(--border-heavy) !important; z-index: 999999 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 4rem !important; box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important; transition: background 0.3s ease !important; }}
-    .nav-left {{ flex: 1; display: flex; align-items: center; gap: 0.75rem; text-decoration: none !important; cursor: pointer; }}
-    .nav-center {{ display: flex; justify-content: center; align-items: center; gap: 3rem; }}
-    .nav-right {{ flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 1.25rem; }}
-    .nav-logo {{ font-size: 1.3rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.5px; transition: color 0.2s; }}
-    .nav-left:hover .nav-logo {{ color: #10b981; }}
-    .nav-divider {{ width: 1px; height: 24px; background: var(--border-heavy); margin: 0 0.25rem; }}
-    .nav-subtitle {{ font-size: 0.8rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1.5px; white-space: nowrap; margin-top: 2px; }}
-    .nav-link {{ color: var(--text-sub) !important; text-decoration: none !important; font-size: 0.95rem; font-weight: 600; transition: color 0.3s ease; position: relative; padding: 0.5rem 0; }}
-    .nav-link:hover {{ color: var(--text-main) !important; }}
-    .nav-link::after {{ content: ''; position: absolute; left: 50%; bottom: 0; width: 0%; height: 2px; background-color: #10b981; transition: all 0.3s ease; transform: translateX(-50%); border-radius: 2px; }}
-    .nav-link:hover::after {{ width: 100%; }}
-    .theme-toggle-btn {{ cursor: pointer; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; color: var(--text-main); transition: all 0.2s ease; user-select: none; border: 1px solid transparent; }}
-    .theme-toggle-btn:hover {{ background: var(--card-bg); border-color: var(--border-heavy); transform: rotate(15deg); }}
-    .nav-cta {{ display: inline-flex; align-items: center; justify-content: center; background: var(--btn-bg); color: var(--btn-text) !important; text-decoration: none !important; padding: 0 1.75rem; height: 44px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
-    .nav-cta:hover {{ transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }}
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) {{ align-items: center; padding-bottom: 4rem; border-bottom: 1px solid var(--border-light); }}
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"]:nth-of-type(1) > [data-testid="column"]:nth-of-type(1) {{ padding-right: 4rem !important; }}
-    .hero-super {{ color: #10b981; font-size: 0.9rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; display: block; }}
-    .hero-title {{ font-size: 3.4rem; font-weight: 800; letter-spacing: -1px; line-height: 1.25; margin-bottom: 2rem; background: var(--title-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
-    .hero-desc {{ font-size: 1.1rem; color: var(--text-sub); line-height: 1.7; max-width: 95%; font-weight: 400; margin-bottom: 3.5rem; }}
-    .corridor-map {{ position: relative; height: 50px; display: flex; align-items: center; margin-top: 2rem; width: 90%; opacity: 0.9; }}
-    .corridor-line {{ position: absolute; width: 100%; height: 2px; background: var(--border-heavy); top: 50%; transform: translateY(-50%); }}
-    .corridor-flow {{ position: absolute; width: 30%; height: 2px; background: linear-gradient(90deg, transparent, #10b981, transparent); top: 50%; transform: translateY(-50%); animation: freightFlow 3s infinite linear; }}
-    .corridor-node {{ position: absolute; display: flex; flex-direction: column; align-items: center; gap: 8px; top: 50%; transform: translate(-50%, -12px); }}
-    .node-dot {{ width: 12px; height: 12px; background: var(--bg-main); border: 2px solid #3b82f6; border-radius: 50%; z-index: 2; transition: all 0.3s; }}
-    .corridor-node:hover .node-dot {{ background: #10b981; border-color: #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.5); transform: scale(1.3); }}
-    .node-label {{ font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; transition: color 0.3s; }}
-    .corridor-node:hover .node-label {{ color: var(--text-main); }}
-    @keyframes freightFlow {{ 0% {{ left: -30%; }} 100% {{ left: 100%; }} }}
-    [data-testid="stForm"] {{ background: var(--card-bg) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid var(--border-heavy) !important; border-radius: 12px !important; padding: 3rem 2.5rem !important; box-shadow: 0 15px 35px -10px rgba(0,0,0,0.2) !important; position: relative !important; overflow: hidden !important; }}
-    [data-testid="stForm"]::before {{ content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #3b82f6); }}
-    .auth-heading {{ font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: var(--text-main); }}
-    .auth-sub {{ color: var(--text-sub); font-size: 0.95rem; margin-bottom: 2rem; font-weight: 400; line-height: 1.5; }}
-    .stTextInput label {{ color: var(--text-sub) !important; font-size: 0.75rem !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem !important; }}
-    .stTextInput input {{ border-radius: 6px !important; border: 1px solid var(--border-heavy) !important; background: var(--bg-main) !important; color: var(--text-main) !important; padding: 0.75rem 1rem !important; font-size: 0.95rem !important; transition: all 0.2s; }}
-    .stTextInput input:focus {{ border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }}
-    [data-testid="stFormSubmitButton"] > button {{ border-radius: 6px !important; background: var(--btn-bg) !important; border: none !important; padding: 0.75rem !important; margin-top: 1.5rem !important; transition: all 0.2s ease !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; }}
-    [data-testid="stFormSubmitButton"] > button:hover {{ transform: translateY(-1px) !important; box-shadow: 0 8px 15px rgba(0,0,0,0.15) !important; }}
-    [data-testid="stFormSubmitButton"] > button *, [data-testid="stFormSubmitButton"] > button p {{ color: var(--btn-text) !important; font-weight: 700 !important; font-size: 0.95rem !important; }}
-    .lp-section {{ padding: 6rem 8%; border-bottom: 1px solid var(--border-light); scroll-margin-top: 90px; }}
-    .lp-header {{ font-size: 2.2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 1rem; color: var(--text-main); text-align: center; }}
-    .lp-sub {{ font-size: 1.1rem; color: var(--text-sub); text-align: center; max-width: 750px; margin: 0 auto 3.5rem auto; line-height: 1.6; font-weight: 400; }}
-    .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }}
-    .grid-3 {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }}
-    .grid-4 {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }}
-    .lp-card {{ background: var(--card-bg); border: 1px solid var(--border-mid); border-radius: 12px; padding: 2.5rem 2rem; transition: all 0.3s ease; }}
-    .lp-card:hover {{ background: var(--card-hover); transform: translateY(-4px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.15); border-color: var(--border-heavy); }}
-    .card-icon {{ width: 52px; height: 52px; border-radius: 10px; background: var(--border-mid); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1.5rem; border: 1px solid var(--border-heavy); }}
-    .card-title {{ font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.5px; }}
-    .card-desc {{ font-size: 0.95rem; color: var(--text-sub); line-height: 1.6; }}
-    .tag-wrap {{ display: flex; flex-wrap: wrap; gap: 0.75rem; }}
-    .lp-tag {{ padding: 0.5rem 1rem; border-radius: 100px; background: var(--card-bg); border: 1px solid var(--border-heavy); font-size: 0.85rem; color: var(--text-sub); font-weight: 600; transition: all 0.2s; cursor: default; }}
-    .lp-tag:hover {{ background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 4px 12px rgba(16,185,129,0.1); }}
-    .lp-footer {{ background: var(--footer-bg); padding: 4rem 8%; display: flex; justify-content: space-between; align-items: center; }}
-    .footer-text {{ color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }}
-    @media (max-width: 1024px) {{ .nav-center {{ display: none; }} .enterprise-navbar {{ padding: 0 2rem !important; }} }}
-    </style>
-    """
+    
+    
 
 @st.cache_data(show_spinner=False)
 def get_cached_navbar_html(theme: str) -> str:
@@ -232,7 +162,7 @@ def get_cached_shell_css(theme: str) -> str:
         /* Streamlit Button Overrides */
         .stButton > button[kind="primary"] {{ border-radius: 6px !important; background: linear-gradient(135deg, #059669, #10b981) !important; color: white !important; border: none !important; font-weight: 700 !important; transition: all 0.15s !important; height: 36px; }}
         .stButton > button[kind="primary"]:hover {{ transform: translateY(-1px) !important; box-shadow: 0 4px 12px rgba(16,185,129,0.3) !important; }}
-        .stButton > button:not([kind="primary"]) {{ border-radius: 6px !important; border: 1px solid var(--border-color) !important; color: var(--text-muted) !important; background: var(--card-bg) !important; font-weight: 600 !important; transition: all 0.15s !important; height: 36px; font-size: 0.85rem !important; }}
+        .stButton > button:not([kind="primary"]) {{ border-radius: 6px !important; border: 1px solid var(--border-color) !important; color: white !important; background: var(--card-bg) !important; font-weight: 600 !important; transition: all 0.15s !important; height: 36px; font-size: 0.85rem !important; }}
         .stButton > button:not([kind="primary"]):hover {{ border-color: #10b981 !important; color: #10b981 !important; background: rgba(16,185,129,0.05) !important; }}
     </style>
     """
