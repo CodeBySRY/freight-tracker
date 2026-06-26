@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 from auth import verify_password
 from database import get_db
 from styles.theme import apply_enterprise_theme
@@ -30,6 +31,7 @@ def toggle_theme():
 # ─── ASSET CACHING (MASSIVE BACKEND PERFORMANCE OPTIMIZATION) ─────────────────
 @st.cache_data(show_spinner=False)
 def get_cached_login_css(theme: str) -> str:
+    # Define color palettes based on active theme
     if theme == 'light':
         css_vars = """
         --bg-main: #f8fafc; --text-main: #0f172a; --text-sub: #475569; --text-muted: #64748b;
@@ -68,24 +70,25 @@ def get_cached_login_css(theme: str) -> str:
         background-attachment: fixed !important; 
     }}
     
-    [data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header {{ display: none !important; }}
+    /* Safely hide Streamlit specific elements without destroying custom UI */
+    [data-testid="stSidebar"], [data-testid="collapsedControl"], #MainMenu, footer, header[data-testid="stHeader"] {{ display: none !important; }}
     
-    /* Offset container to account for fixed pure-HTML navbar */
-    .block-container {{ padding-top: 130px !important; padding-bottom: 0 !important; max-width: 1350px !important; }}
+    /* Offset container to account for fixed full-width navbar */
+    .block-container {{ padding-top: 140px !important; padding-bottom: 0 !important; max-width: 1350px !important; }}
 
-    /* ── PURE HTML ENTERPRISE NAVBAR ── */
+    /* ── UNIFIED ENTERPRISE NAVBAR ── */
     .enterprise-navbar {{
-        position: fixed; top: 0; left: 0; width: 100vw; height: 75px;
-        background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid var(--border-heavy); z-index: 999999;
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 0 4rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: background 0.3s ease;
+        position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 75px !important;
+        background: var(--nav-bg) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important;
+        border-bottom: 1px solid var(--border-heavy) !important; z-index: 999999 !important;
+        display: flex !important; align-items: center !important; justify-content: space-between !important;
+        padding: 0 4rem !important; box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important; transition: background 0.3s ease !important;
     }}
     
     /* Navbar Flex Groups */
     .nav-left {{ flex: 1; display: flex; align-items: center; gap: 0.75rem; text-decoration: none !important; cursor: pointer; }}
     .nav-center {{ display: flex; justify-content: center; align-items: center; gap: 3rem; }}
-    .nav-right {{ flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 1.5rem; }}
+    .nav-right {{ flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 1.25rem; }}
 
     /* Branding */
     .nav-logo {{ font-size: 1.3rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.5px; transition: color 0.2s; }}
@@ -135,7 +138,7 @@ def get_cached_login_css(theme: str) -> str:
     .stTextInput input:focus {{ border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }}
     [data-testid="stFormSubmitButton"] > button {{ border-radius: 6px !important; background: var(--btn-bg) !important; border: none !important; padding: 0.75rem !important; margin-top: 1.5rem !important; transition: all 0.2s ease !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; }}
     [data-testid="stFormSubmitButton"] > button:hover {{ transform: translateY(-1px) !important; box-shadow: 0 8px 15px rgba(0,0,0,0.15) !important; }}
-    [data-testid="stFormSubmitButton"] > button p {{ color: var(--btn-text) !important; font-weight: 700 !important; font-size: 0.95rem !important; }}
+    [data-testid="stFormSubmitButton"] > button *, [data-testid="stFormSubmitButton"] > button p {{ color: var(--btn-text) !important; font-weight: 700 !important; font-size: 0.95rem !important; }}
 
     /* ── REUSABLE COMPONENT CLASSES ── */
     .lp-section {{ padding: 6rem 8%; border-bottom: 1px solid var(--border-light); scroll-margin-top: 90px; }}
@@ -147,7 +150,7 @@ def get_cached_login_css(theme: str) -> str:
     .grid-4 {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }}
 
     .lp-card {{ background: var(--card-bg); border: 1px solid var(--border-mid); border-radius: 12px; padding: 2.5rem 2rem; transition: all 0.3s ease; }}
-    .lp-card:hover {{ background: var(--card-hover); transform: translateY(-3px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.15); border-color: var(--border-heavy); }}
+    .lp-card:hover {{ background: var(--card-hover); transform: translateY(-4px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.15); border-color: var(--border-heavy); }}
     .card-icon {{ width: 52px; height: 52px; border-radius: 10px; background: var(--border-mid); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1.5rem; border: 1px solid var(--border-heavy); }}
     .card-title {{ font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.5px; }}
     .card-desc {{ font-size: 0.95rem; color: var(--text-sub); line-height: 1.6; }}
@@ -160,7 +163,7 @@ def get_cached_login_css(theme: str) -> str:
     .footer-text {{ color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }}
     
     /* Responsive Adjustments */
-    @media (max-width: 1024px) {{ .nav-center {{ display: none; }} .enterprise-navbar {{ padding: 0 2rem; }} }}
+    @media (max-width: 1024px) {{ .nav-center {{ display: none; }} .enterprise-navbar {{ padding: 0 2rem !important; }} }}
     </style>
     """
 
@@ -171,27 +174,27 @@ def get_cached_navbar_html(theme: str) -> str:
     html = """
     <div id="top-anchor" style="position: absolute; top: 0; left: 0; width: 1px; height: 1px;"></div>
     
-    <header class="enterprise-navbar">
+    <nav class="enterprise-navbar">
         <a href="#top-anchor" class="nav-left" onclick="window.scrollTo({top:0, behavior:'smooth'});">
             <div class="nav-logo">📦 LogiTrack PK</div>
             <div class="nav-divider"></div>
             <span class="nav-subtitle">Freight OS</span>
         </a>
         
-        <nav class="nav-center">
+        <div class="nav-center">
             <a href="#network" class="nav-link">Operations</a>
             <a href="#ecosystem" class="nav-link">Freight Network</a>
             <a href="#capabilities" class="nav-link">Platform Modules</a>
             <a href="#team" class="nav-link">Engineering</a>
-        </nav>
+        </div>
         
         <div class="nav-right">
             <div class="theme-toggle-btn" onclick="window.toggleTheme && window.toggleTheme();" title="Toggle Theme">TOGGLE_ICON_PLACEHOLDER</div>
             <a href="#auth-portal" class="nav-cta">System Access</a>
         </div>
-    </header>
+    </nav>
     
-    <img src="dummy" style="display:none;" onerror="if(!window.navScriptLoaded){window.navScriptLoaded=true;setInterval(function(){var b=window.parent.document.querySelectorAll('button');for(var i=0;i<b.length;i++){if(b[i].innerText.includes('HiddenThemeBtn')){var c=b[i].closest('div[data-testid=\\'stButton\\']');if(c)c.style.display='none';}}},50);window.toggleTheme=function(){var bs=window.parent.document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenThemeBtn')){bs[j].click();break;}}};}">
+    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" style="display:none;" onload="if(!window.navScriptLoaded){window.navScriptLoaded=true;setInterval(function(){var b=window.parent.document.querySelectorAll('button');for(var i=0;i<b.length;i++){if(b[i].innerText.includes('HiddenThemeBtn')){var c=b[i].closest('div[data-testid=\\'stButton\\']');if(c)c.style.display='none';}}},50);window.toggleTheme=function(){var bs=window.parent.document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenThemeBtn')){bs[j].click();break;}}};}">
     """
     return html.replace('TOGGLE_ICON_PLACEHOLDER', toggle_icon)
 
@@ -295,20 +298,6 @@ def get_cached_marketing_sections_html() -> str:
     </footer>
     """
 
-@st.cache_data(show_spinner=False)
-def get_cached_shell_css() -> str:
-    return """
-    <style>
-        [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none !important; }
-        .block-container { padding-left: 1.75rem !important; padding-right: 1.75rem !important; padding-top: 1.5rem !important; max-width: 100% !important; }
-        .stButton > button[kind="primary"] { border-radius: 6px !important; background: linear-gradient(135deg, #059669, #10b981) !important; color: white !important; border: none !important; font-weight: 700 !important; transition: all 0.15s !important; }
-        .stButton > button[kind="primary"]:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 16px -4px rgba(16,185,129,0.4) !important; }
-        .stButton > button:not([kind="primary"]) { border-radius: 6px !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #94a3b8 !important; background: transparent !important; font-weight: 600 !important; transition: all 0.15s !important; }
-        .stButton > button:not([kind="primary"]):hover { border-color: #10b981 !important; color: #10b981 !important; transform: translateY(-1px) !important; background: rgba(16,185,129,0.05) !important;}
-        .stButton > button:disabled { opacity: 0.3 !important; cursor: not-allowed !important; transform: none !important; }
-    </style>
-    """
-
 # ─── 2. ENTERPRISE SAAS LANDING & AUTH PORTAL ─────────────────────────────────
 def login_screen():
     
@@ -365,7 +354,17 @@ else:
     apply_enterprise_theme()
 
     # ── Top bar CSS + layout ──
-    st.markdown(get_cached_shell_css(), unsafe_allow_html=True)
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none !important; }
+            .block-container { padding-left: 1.75rem !important; padding-right: 1.75rem !important; padding-top: 1.5rem !important; max-width: 100% !important; }
+            .stButton > button[kind="primary"] { border-radius: 6px !important; background: linear-gradient(135deg, #059669, #10b981) !important; color: white !important; border: none !important; font-weight: 700 !important; transition: all 0.15s !important; }
+            .stButton > button[kind="primary"]:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 16px -4px rgba(16,185,129,0.4) !important; }
+            .stButton > button:not([kind="primary"]) { border-radius: 6px !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #94a3b8 !important; background: transparent !important; font-weight: 600 !important; transition: all 0.15s !important; }
+            .stButton > button:not([kind="primary"]):hover { border-color: #10b981 !important; color: #10b981 !important; transform: translateY(-1px) !important; background: rgba(16,185,129,0.05) !important;}
+            .stButton > button:disabled { opacity: 0.3 !important; cursor: not-allowed !important; transform: none !important; }
+        </style>
+    """, unsafe_allow_html=True)
 
     hdr_left, hdr_right = st.columns([8, 2])
     with hdr_left:
