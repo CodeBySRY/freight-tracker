@@ -157,73 +157,90 @@ def add_carrier_dialog():
             finally:
                 conn.close()
 
+# ─── SHARED CSS (injected once per render) ────────────────────────────────────
+_DASHBOARD_CSS = """
+<style>
+.lt-kpi {
+    background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 1.4rem 1.5rem;
+    width: 100%;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    cursor: default;
+}
+.lt-kpi:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+.lt-action {
+    background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 1.6rem 1.5rem 1.2rem;
+    width: 100%;
+    min-height: 148px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.lt-action:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -12px rgba(16,185,129,0.25);
+    border-color: rgba(16,185,129,0.3);
+    background: linear-gradient(145deg, rgba(16,185,129,0.05), rgba(255,255,255,0.02));
+}
+.lt-action.locked {
+    opacity: 0.4;
+    filter: grayscale(0.5);
+    pointer-events: none;
+}
+.lt-feed-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1rem 1.1rem;
+    margin-bottom: 0.6rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+    transition: background 0.2s, border-color 0.2s;
+}
+.lt-feed-item:hover {
+    background: rgba(255,255,255,0.045);
+    border-color: rgba(255,255,255,0.1);
+}
+</style>
+"""
+
 # ─── HELPERS ──────────────────────────────────────────────────────────────────
 def _kpi(icon, title, value, sub, accent):
     return f"""
-    <div style="
-        background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-        border: 1px solid rgba(255,255,255,0.07);
-        border-top: 2px solid {accent};
-        border-radius: 16px;
-        padding: 1.4rem 1.5rem;
-        width: 100%;
-        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-        cursor: default;
-        position: relative;
-        overflow: hidden;
-    "
-    onmouseover="
-        this.style.transform='translateY(-5px)';
-        this.style.boxShadow='0 20px 40px -12px {accent}55, 0 0 0 1px {accent}33';
-        this.style.borderColor='{accent}';
-        this.style.background='linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
-    "
-    onmouseout="
-        this.style.transform='translateY(0)';
-        this.style.boxShadow='none';
-        this.style.borderColor='rgba(255,255,255,0.07)';
-        this.style.background='linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))';
-    ">
-        <div style="
-            width:42px; height:42px; border-radius:12px;
-            background: linear-gradient(135deg, {accent}33, {accent}11);
-            border: 1px solid {accent}44;
-            color:{accent};
-            display:flex; align-items:center; justify-content:center;
-            font-size:1.25rem; margin-bottom:1.1rem;
-        ">{icon}</div>
-        <div style="color:#64748b; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:0.3rem;">{title}</div>
-        <div style="color:#f8fafc; font-size:2.1rem; font-weight:800; line-height:1; letter-spacing:-1px;">{value}</div>
-        <div style="color:#475569; font-size:0.75rem; margin-top:0.5rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{sub}</div>
+    <div class="lt-kpi" style="border-top: 2px solid {accent};">
+        <div style="width:42px;height:42px;border-radius:12px;
+                    background:linear-gradient(135deg,{accent}33,{accent}11);
+                    border:1px solid {accent}44;color:{accent};
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:1.25rem;margin-bottom:1.1rem;">{icon}</div>
+        <div style="color:#64748b;font-size:0.72rem;font-weight:700;
+                    text-transform:uppercase;letter-spacing:1.2px;margin-bottom:0.3rem;">{title}</div>
+        <div style="color:#f8fafc;font-size:2.1rem;font-weight:800;
+                    line-height:1;letter-spacing:-1px;">{value}</div>
+        <div style="color:#475569;font-size:0.75rem;margin-top:0.5rem;font-weight:600;
+                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{sub}</div>
     </div>
     """
 
 def _action_card(icon, title, desc, locked=False):
-    opacity   = "opacity:0.4; filter:grayscale(0.5);" if locked else ""
-    hover_in  = "" if locked else "this.style.transform='translateY(-5px)'; this.style.boxShadow='0 20px 40px -12px rgba(16,185,129,0.2), 0 0 0 1px rgba(16,185,129,0.2)'; this.style.borderColor='rgba(16,185,129,0.3)'; this.style.background='linear-gradient(145deg,rgba(16,185,129,0.05),rgba(255,255,255,0.02))';"
-    hover_out = "" if locked else "this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='rgba(255,255,255,0.07)'; this.style.background='linear-gradient(145deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))';"
+    cls = "lt-action locked" if locked else "lt-action"
     return f"""
-    <div style="
-        background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 16px;
-        padding: 1.6rem 1.5rem 1.2rem;
-        width: 100%;
-        {opacity}
-        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
-        min-height: 148px;
-    "
-    onmouseover="{hover_in}"
-    onmouseout="{hover_out}">
-        <div style="
-            width:44px; height:44px; border-radius:12px;
-            background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05));
-            border: 1px solid rgba(16,185,129,0.2);
-            display:flex; align-items:center; justify-content:center;
-            font-size:1.5rem; margin-bottom:0.85rem;
-        ">{icon}</div>
-        <h4 style="color:#f8fafc; margin:0 0 0.4rem 0; font-size:1.05rem; font-weight:800; letter-spacing:-0.3px;">{title}</h4>
-        <p style="color:#64748b; font-size:0.82rem; margin:0; line-height:1.55;">{desc}</p>
+    <div class="{cls}">
+        <div style="width:44px;height:44px;border-radius:12px;
+                    background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(16,185,129,0.05));
+                    border:1px solid rgba(16,185,129,0.2);
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:1.5rem;margin-bottom:0.85rem;">{icon}</div>
+        <h4 style="color:#f8fafc;margin:0 0 0.4rem 0;font-size:1.05rem;
+                   font-weight:800;letter-spacing:-0.3px;">{title}</h4>
+        <p style="color:#64748b;font-size:0.82rem;margin:0;line-height:1.55;">{desc}</p>
     </div>
     """
 
@@ -245,35 +262,25 @@ def _render_activity_feed(events):
         route = f"{e['origin_city']} → {e['destination_city']}"
         badge = f"<span style='color:{dot};font-weight:700;background:{dot}22;padding:2px 9px;border-radius:20px;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.5px;border:1px solid {dot}44;'>{e['new_status']}</span>"
         items_html += f"""
-        <div style='
-            display:flex; gap:1rem; align-items:flex-start;
-            padding:1rem 1.1rem;
-            margin-bottom:0.6rem;
-            background:rgba(255,255,255,0.02);
-            border:1px solid rgba(255,255,255,0.05);
-            border-radius:14px;
-            transition:background 0.2s, border-color 0.2s;
-        '
-        onmouseover='this.style.background="rgba(255,255,255,0.045)"; this.style.borderColor="rgba(255,255,255,0.1)";'
-        onmouseout='this.style.background="rgba(255,255,255,0.02)"; this.style.borderColor="rgba(255,255,255,0.05)";'>
-            <div style='flex-shrink:0; margin-top:4px;'>
-                <div style='width:10px;height:10px;border-radius:50%;background:{dot};
-                            box-shadow:0 0 10px {dot}99, 0 0 20px {dot}44;'></div>
+        <div class="lt-feed-item">
+            <div style="flex-shrink:0;margin-top:4px;">
+                <div style="width:10px;height:10px;border-radius:50%;background:{dot};
+                            box-shadow:0 0 10px {dot}99,0 0 20px {dot}44;"></div>
             </div>
-            <div style='flex:1; min-width:0;'>
-                <div style='margin-bottom:0.3rem; line-height:1.45;'>
-                    <strong style='color:#e2e8f0;font-size:0.9rem;'>Ship #{e['shipment_id']}</strong>
-                    <span style='color:#334155; margin:0 0.4rem;'>·</span>
-                    <span style='color:#94a3b8;font-size:0.85rem;'>{e['customer_name']}</span>
-                    <span style='color:#334155; margin:0 0.4rem;'>·</span>
-                    <span style='color:#64748b;font-size:0.82rem;'>{route}</span>
+            <div style="flex:1;min-width:0;">
+                <div style="margin-bottom:0.3rem;line-height:1.45;">
+                    <strong style="color:#e2e8f0;font-size:0.9rem;">Ship #{e['shipment_id']}</strong>
+                    <span style="color:#334155;margin:0 0.4rem;">·</span>
+                    <span style="color:#94a3b8;font-size:0.85rem;">{e['customer_name']}</span>
+                    <span style="color:#334155;margin:0 0.4rem;">·</span>
+                    <span style="color:#64748b;font-size:0.82rem;">{route}</span>
                 </div>
-                <div style='display:flex; align-items:center; gap:0.6rem;'>
+                <div style="display:flex;align-items:center;gap:0.6rem;">
                     {badge}
-                    <span style='color:#334155;font-size:0.7rem;'>·</span>
-                    <span style='font-size:0.72rem;color:#475569;font-weight:600;'>{ts}</span>
-                    <span style='color:#334155;font-size:0.7rem;'>·</span>
-                    <span style='font-size:0.72rem;color:#475569;'>by {e['operator']}</span>
+                    <span style="color:#334155;font-size:0.7rem;">·</span>
+                    <span style="font-size:0.72rem;color:#475569;font-weight:600;">{ts}</span>
+                    <span style="color:#334155;font-size:0.7rem;">·</span>
+                    <span style="font-size:0.72rem;color:#475569;">by {e['operator']}</span>
                 </div>
             </div>
         </div>"""
@@ -295,6 +302,9 @@ def _divider():
 
 # ─── MAIN RENDER ──────────────────────────────────────────────────────────────
 def render_page(module_name="Dashboard"):
+
+    # Inject shared hover CSS (no inline JS needed)
+    st.markdown(_DASHBOARD_CSS, unsafe_allow_html=True)
 
     # ── Page header
     st.markdown(f"""
