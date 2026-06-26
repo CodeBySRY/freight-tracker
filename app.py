@@ -382,7 +382,7 @@ else:
     with workspace_col:
         # Pass the selected_module down to act as a breadcrumb
         if selected_module == "Dashboard": 
-            dashboard.render_page(module_name=selected_module)
+            dashboard.render_page()
         elif selected_module == "Shipments": 
             shipments.render_page()
         elif selected_module == "Fleet": 
