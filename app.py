@@ -22,12 +22,11 @@ if 'user' not in st.session_state:
 if 'theme' not in st.session_state:
     st.session_state.theme = 'dark'
 
-# ─── CALLBACKS (NATIVE STREAMLIT STATE MANAGEMENT) ────────────────────────────
 def toggle_theme():
     st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
 
 
-# ─── ASSET CACHING (MASSIVE BACKEND PERFORMANCE OPTIMIZATION) ─────────────────
+# ─── LANDING PAGE ASSET CACHING ───────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def get_cached_login_css(theme: str) -> str:
     if theme == 'light':
@@ -82,7 +81,7 @@ def get_cached_login_css(theme: str) -> str:
     .stTextInput input:focus {{ border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }}
     [data-testid="stFormSubmitButton"] > button {{ border-radius: 6px !important; background: var(--btn-bg) !important; border: none !important; padding: 0.75rem !important; margin-top: 1.5rem !important; transition: all 0.2s ease !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; }}
     [data-testid="stFormSubmitButton"] > button:hover {{ transform: translateY(-1px) !important; box-shadow: 0 8px 15px rgba(0,0,0,0.15) !important; }}
-    [data-testid="stFormSubmitButton"] > button *, [data-testid="stFormSubmitButton"] > button p {{ color: var(--btn-text) !important; font-weight: 800 !important; font-size: 0.95rem !important; }}
+    [data-testid="stFormSubmitButton"] > button *, [data-testid="stFormSubmitButton"] > button p {{ color: var(--btn-text) !important; font-weight: 700 !important; font-size: 0.95rem !important; }}
     .lp-section {{ padding: 6rem 8%; border-bottom: 1px solid var(--border-light); scroll-margin-top: 90px; }}
     .lp-header {{ font-size: 2.2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 1rem; color: var(--text-main); text-align: center; }}
     .lp-sub {{ font-size: 1.1rem; color: var(--text-sub); text-align: center; max-width: 750px; margin: 0 auto 3.5rem auto; line-height: 1.6; font-weight: 400; }}
@@ -106,14 +105,11 @@ def get_cached_login_css(theme: str) -> str:
 @st.cache_data(show_spinner=False)
 def get_cached_navbar_html(theme: str) -> str:
     toggle_icon = "🌞" if theme == 'light' else "🌓"
-    
-    # Strictly minified HTML string with zero line breaks between tags to prevent Streamlit parsing errors.
     html = """<div id="top-anchor" style="position: absolute; top: 0; left: 0; width: 1px; height: 1px;"></div><nav class="enterprise-navbar"><a href="#top-anchor" class="nav-left" onclick="window.scrollTo({top:0, behavior:'smooth'});"><div class="nav-logo">📦 LogiTrack PK</div><div class="nav-divider"></div><span class="nav-subtitle">Freight OS</span></a><div class="nav-center"><a href="#network" class="nav-link">Operations</a><a href="#ecosystem" class="nav-link">Freight Network</a><a href="#capabilities" class="nav-link">Platform Modules</a><a href="#team" class="nav-link">Engineering</a></div><div class="nav-right"><div class="theme-toggle-btn" onclick="window.toggleTheme && window.toggleTheme();" title="Toggle Theme">TOGGLE_ICON_PLACEHOLDER</div><a href="#auth-portal" class="nav-cta">System Access</a></div></nav><img src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" style="display:none;" onload="if(!window.navScriptLoaded){window.navScriptLoaded=true;setInterval(function(){var b=window.parent.document.querySelectorAll('button');for(var i=0;i<b.length;i++){if(b[i].innerText.includes('HiddenThemeBtn')){var c=b[i].closest('div[data-testid=\\'stButton\\']');if(c)c.style.display='none';}}},50);window.toggleTheme=function(){var bs=window.parent.document.querySelectorAll('button');for(var j=0;j<bs.length;j++){if(bs[j].innerText.includes('HiddenThemeBtn')){bs[j].click();break;}}};}">"""
     return html.replace('TOGGLE_ICON_PLACEHOLDER', toggle_icon)
 
 @st.cache_data(show_spinner=False)
 def get_cached_hero_brand_html() -> str:
-    # Safely formatted string without deep nesting newlines
     return "<span class='hero-super'>Enterprise Logistics OS</span><div class='hero-title'>Logistics visibility,<br>engineered for scale.</div><div class='hero-desc'>The centralized operating system for Pakistan's freight network. Command your fleet, track shipments, and coordinate dispatch operations with unprecedented clarity.</div><div class='corridor-map'><div class='corridor-line'></div><div class='corridor-flow'></div><div class='corridor-node' style='left: 0%;'><div class='node-dot'></div><span class='node-label'>KHI</span></div><div class='corridor-node' style='left: 33%;'><div class='node-dot'></div><span class='node-label'>LHE</span></div><div class='corridor-node' style='left: 66%;'><div class='node-dot'></div><span class='node-label'>ISB</span></div><div class='corridor-node' style='left: 100%;'><div class='node-dot'></div><span class='node-label'>PEW</span></div></div>"
 
 @st.cache_data(show_spinner=False)
@@ -128,7 +124,6 @@ def get_cached_marketing_sections_html() -> str:
             <div class='lp-card'><div class='card-icon'>⚡</div><div class='card-title'>Dispatch Protocols</div><div class='card-desc'>Seamlessly assign pending orders to available carriers using intelligent, zero-friction workflows.</div></div>
         </div>
     </section>
-
     <section id='ecosystem' class='lp-section' style='background: var(--card-bg);'>
         <div class='grid-2'>
             <div>
@@ -151,7 +146,6 @@ def get_cached_marketing_sections_html() -> str:
             </div>
         </div>
     </section>
-
     <section id='capabilities' class='lp-section'>
         <div class='lp-header'>Platform Modules</div>
         <div class='lp-sub'>Enterprise-grade architecture ensuring high-availability, cryptographic security, and analytical depth.</div>
@@ -162,29 +156,24 @@ def get_cached_marketing_sections_html() -> str:
             <div class='lp-card' style='padding: 2rem 1.5rem;'><div class='card-title' style='color:#8b5cf6;'>BI Analytics</div><div class='card-desc'>Live Plotly data grids and network intelligence.</div></div>
         </div>
     </section>
-
     <section id='team' class='lp-section' style='background: var(--card-bg);'>
         <div class='lp-header'>Platform Engineering</div>
         <div class='lp-sub'>Designed, architected, and developed by software engineers committed to modernizing industrial logistics infrastructure.</div>
         <div class='grid-3'>
             <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
                 <div style='width: 64px; height: 64px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>SR</div>
-                <div class='card-title'>Shayan Rizwan</div>
-                <div class='card-desc'>Platform Architecture</div>
+                <div class='card-title'>Shayan Rizwan</div><div class='card-desc'>Platform Architecture</div>
             </div>
             <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
                 <div style='width: 64px; height: 64px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>AS</div>
-                <div class='card-title'>Agha Salaat</div>
-                <div class='card-desc'>Systems Engineering</div>
+                <div class='card-title'>Agha Salaat</div><div class='card-desc'>Systems Engineering</div>
             </div>
             <div class='lp-card' style='text-align: center; padding: 3rem 2rem;'>
                 <div style='width: 64px; height: 64px; border-radius: 50%; background: var(--border-mid); margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--border-heavy); font-weight: 700; color: var(--text-main);'>AM</div>
-                <div class='card-title'>Anzar Mubashir</div>
-                <div class='card-desc'>Backend Infrastructure</div>
+                <div class='card-title'>Anzar Mubashir</div><div class='card-desc'>Backend Infrastructure</div>
             </div>
         </div>
     </section>
-
     <section id='contact' class='lp-section' style='text-align: center;'>
         <div class='card-icon' style='margin: 0 auto 1.5rem auto; width: 64px; height: 64px; font-size: 1.5rem;'>💬</div>
         <div class='lp-header'>Operational Support</div>
@@ -192,52 +181,75 @@ def get_cached_marketing_sections_html() -> str:
         <a href='mailto:u2024585@giki.edu.pk' style='display: inline-block; background: var(--btn-bg); color: var(--btn-text) !important; padding: 0.85rem 2.5rem; border-radius: 6px; font-weight: 700; text-decoration: none !important; font-size: 0.95rem; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>u2024585@giki.edu.pk</a>
         <div style='margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;'>Expected Response SLA: Under 24 Hours</div>
     </section>
-
     <footer class='lp-footer'>
         <div class='footer-text'><strong style='color:var(--text-main); font-size: 1.05rem;'>📦 LogiTrack PK</strong><br><br>© 2026 LogiTrack Systems. All rights reserved.</div>
         <div class='footer-text' style='text-align: right;'>Version 2.4.0 (Enterprise Build)<br><br><span style='opacity: 0.7;'>Protected by Zero Trust Security Architecture.</span></div>
     </footer>
     """
 
+# ─── ENTERPRISE SHELL CSS CACHING ─────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
-def get_cached_shell_css() -> str:
-    return """
+def get_cached_shell_css(theme: str) -> str:
+    # Use strict variable mapping to guarantee contrast in the enterprise shell
+    if theme == 'light':
+        shell_vars = "--bg-main: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border-color: rgba(0,0,0,0.08);"
+    else:
+        shell_vars = "--bg-main: #030712; --card-bg: #0f172a; --text-main: #f8fafc; --text-muted: #94a3b8; --border-color: rgba(255,255,255,0.08);"
+        
+    return f"""
     <style>
-        [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none !important; }
-        .block-container { padding-left: 1.75rem !important; padding-right: 1.75rem !important; padding-top: 1.5rem !important; max-width: 100% !important; }
-        .stButton > button[kind="primary"] { border-radius: 6px !important; background: linear-gradient(135deg, #059669, #10b981) !important; color: white !important; border: none !important; font-weight: 700 !important; transition: all 0.15s !important; }
-        .stButton > button[kind="primary"]:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 16px -4px rgba(16,185,129,0.4) !important; }
-        .stButton > button:not([kind="primary"]) { border-radius: 6px !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #94a3b8 !important; background: transparent !important; font-weight: 600 !important; transition: all 0.15s !important; }
-        .stButton > button:not([kind="primary"]):hover { border-color: #10b981 !important; color: #10b981 !important; transform: translateY(-1px) !important; background: rgba(16,185,129,0.05) !important;}
-        .stButton > button:disabled { opacity: 0.3 !important; cursor: not-allowed !important; transform: none !important; }
+        :root {{ {shell_vars} }}
+        html, body, .stApp {{ background-color: var(--bg-main) !important; }}
+        [data-testid="stSidebar"], [data-testid="collapsedControl"], header[data-testid="stHeader"] {{ display: none !important; }}
+        
+        /* Rigid constraints for the workspace to prevent ultrawide stretching */
+        .block-container {{ padding: 90px 2rem 2rem 2rem !important; max-width: 1440px !important; margin: 0 auto; }}
+        
+        /* ── ENTERPRISE COMMAND BAR (Native Top Header) ── */
+        .command-bar-wrapper {{
+            position: fixed; top: 0; left: 0; width: 100vw; height: 64px;
+            background: var(--bg-main); border-bottom: 1px solid var(--border-color);
+            z-index: 9999; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }}
+        .cmd-left {{ display: flex; align-items: center; gap: 0.75rem; }}
+        .cmd-logo {{ font-size: 1.15rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }}
+        .cmd-sub {{ font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding-left: 0.75rem; border-left: 1px solid var(--border-color); }}
+        .cmd-center {{ font-size: 0.9rem; font-weight: 600; color: var(--text-main); background: var(--card-bg); padding: 0.4rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); }}
+        .cmd-right {{ display: flex; align-items: center; gap: 1rem; }}
+        
+        /* ── NAVIGATION RAIL (Sidebar Refinement) ── */
+        .nav-profile-card {{
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;
+        }}
+        .profile-initials {{ width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; }}
+        .profile-meta {{ display: flex; flex-direction: column; }}
+        .profile-name {{ font-size: 0.85rem; font-weight: 700; color: var(--text-main); }}
+        .profile-status {{ font-size: 0.65rem; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 4px; margin-top: 2px; }}
+        .status-dot {{ width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 5px #10b981; }}
+        
+        /* Streamlit Button Overrides */
+        .stButton > button[kind="primary"] {{ border-radius: 6px !important; background: linear-gradient(135deg, #059669, #10b981) !important; color: white !important; border: none !important; font-weight: 700 !important; transition: all 0.15s !important; height: 36px; }}
+        .stButton > button[kind="primary"]:hover {{ transform: translateY(-1px) !important; box-shadow: 0 4px 12px rgba(16,185,129,0.3) !important; }}
+        .stButton > button:not([kind="primary"]) {{ border-radius: 6px !important; border: 1px solid var(--border-color) !important; color: var(--text-muted) !important; background: var(--card-bg) !important; font-weight: 600 !important; transition: all 0.15s !important; height: 36px; font-size: 0.85rem !important; }}
+        .stButton > button:not([kind="primary"]):hover {{ border-color: #10b981 !important; color: #10b981 !important; background: rgba(16,185,129,0.05) !important; }}
     </style>
     """
 
 # ─── 2. ENTERPRISE SAAS LANDING & AUTH PORTAL ─────────────────────────────────
 def login_screen():
-    
-    # Render globally cached CSS
     st.markdown(get_cached_login_css(st.session_state.theme), unsafe_allow_html=True)
-    
-    # Render Unified Floating Navbar (Safely compacted to prevent markdown parsing bleed)
     st.markdown(get_cached_navbar_html(st.session_state.theme), unsafe_allow_html=True)
-
-    # Invisible anchor for authentication scrolling
     st.markdown("<div id='auth-portal' style='position:absolute; top:-40px;'></div>", unsafe_allow_html=True)
-
-    # Hidden Streamlit Bridge Button
     st.button("HiddenThemeBtn", on_click=toggle_theme)
 
-    # ─── 2.1 HERO SECTION (Streamlit Native Columns) ───
     col_brand, col_auth = st.columns([1.2, 1], gap="large")
-    
     with col_brand:
         st.markdown(get_cached_hero_brand_html(), unsafe_allow_html=True)
-
     with col_auth:
         st.markdown("<div class='auth-heading'>Authentication</div>", unsafe_allow_html=True)
         st.markdown("<div class='auth-sub'>Secure terminal for authorized personnel.</div>", unsafe_allow_html=True)
-        
         with st.form("login_form"):
             email    = st.text_input("Email", placeholder="admin@logitrack.pk")
             password = st.text_input("Password", type="password", placeholder="••••••••")
@@ -251,95 +263,131 @@ def login_screen():
             conn.close()
             if user and verify_password(password, user['password_hash']):
                 st.session_state.user = {'user_id': user['user_id'], 'full_name': user['full_name'], 'role': user['role']}
-                st.session_state.theme = 'dark' # Prevent UI flash entering Dashboard
+                st.session_state.theme = 'dark' # Default enterprise shell to dark mode
                 st.rerun()
             else:
-                st.error("Authentication failed. Invalid credentials or deactivated account.")
+                st.error("Authentication failed. Invalid credentials.")
 
-    # ─── 2.2 MARKETING & DOCUMENTATION SECTIONS ───
     st.markdown(get_cached_marketing_sections_html(), unsafe_allow_html=True)
-
 
 # ─── 3. ENTERPRISE APP SHELL (AUTHENTICATED) ──────────────────────────────────
 if not st.session_state.user:
     login_screen()
 else:
-    # Protect Dashboard Dark Mode UI
-    st.markdown("<img src='dummy' style='display:none;' onerror=\"document.body.classList.remove('light-theme');\">", unsafe_allow_html=True)
+    # Inject Shell CSS
+    st.markdown(get_cached_shell_css(st.session_state.theme), unsafe_allow_html=True)
     apply_enterprise_theme()
 
-    # ── Top bar CSS + layout ──
-    st.markdown(get_cached_shell_css(), unsafe_allow_html=True)
+    user_role = st.session_state.user['role']
+    initials = "".join([n[0].upper() for n in st.session_state.user['full_name'].split()[:2]])
 
-    hdr_left, hdr_right = st.columns([8, 2])
-    with hdr_left:
-        st.markdown("""
-            <div style='display:flex;align-items:center;gap:0.75rem;'>
-                <span style='font-size:1.4rem;'>📦</span>
-                <span style='color:#10b981;font-weight:800;font-size:1.35rem;letter-spacing:-0.5px;'>LogiTrack PK</span>
-                <span style='color:#94a3b8;font-size:0.62rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:2px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:20px;'>Enterprise</span>
+    # ── Enterprise Command Bar (Fixed Header) ──
+    # Rendered using purely native Streamlit columns enclosed in a raw HTML wrapper
+    # The header utilizes st.columns to allow native interaction with Logout and Theme buttons
+    st.markdown("""
+        <div class="command-bar-wrapper">
+            <div class="cmd-left">
+                <span class="cmd-logo">📦 LogiTrack PK</span>
+                <span class="cmd-sub">Pakistan Freight Operations Platform</span>
             </div>
-        """, unsafe_allow_html=True)
-    with hdr_right:
-        if st.button("🚪 Logout", use_container_width=True, key="logout_btn"):
+        </div>
+    """, unsafe_allow_html=True)
+
+    # We position the native Streamlit buttons physically over the CSS command bar using negative margins
+    header_cols = st.columns([7, 1, 1, 1])
+    with header_cols[1]:
+        st.markdown("<div style='margin-top: -60px; z-index: 10000; position: relative;'>", unsafe_allow_html=True)
+        toggle_icon = "🌞" if st.session_state.theme == 'light' else "🌓"
+        st.button(toggle_icon, key="shell_theme", on_click=toggle_theme, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    with header_cols[2]:
+        st.markdown(f"<div style='margin-top: -60px; z-index: 10000; position: relative; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 6px; color: #10b981; font-weight: 700; font-size: 0.85rem;'>{initials}</div>", unsafe_allow_html=True)
+    with header_cols[3]:
+        st.markdown("<div style='margin-top: -60px; z-index: 10000; position: relative;'>", unsafe_allow_html=True)
+        if st.button("Logout", key="shell_logout", use_container_width=True):
             st.session_state.user = None
             st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.05);margin:0.75rem 0 1.5rem 0;'>", unsafe_allow_html=True)
 
+    # ── Workspace Layout ──
     nav_col, workspace_col = st.columns([2, 8], gap="large")
-    user_role = st.session_state.user['role']
 
-    # ─ LEFT: Navigation rail ─
+    # ─ Navigation Rail ─
     with nav_col:
+        # Determine specific colors for user roles to add contextual polish
         role_colors = {
             "System Administrator": ("#10b981", "rgba(16,185,129,0.1)", "rgba(16,185,129,0.2)"),
-            "Dispatcher":           ("#60a5fa", "rgba(59,130,246,0.1)", "rgba(59,130,246,0.2)"),
-            "Warehouse Manager":    ("#fb923c", "rgba(245,158,11,0.1)", "rgba(245,158,11,0.2)"),
+            "Dispatcher":           ("#3b82f6", "rgba(59,130,246,0.1)", "rgba(59,130,246,0.2)"),
+            "Warehouse Manager":    ("#f59e0b", "rgba(245,158,11,0.1)", "rgba(245,158,11,0.2)"),
         }
         accent, bg_c, border_c = role_colors.get(user_role, ("#64748b", "rgba(255,255,255,0.05)", "rgba(255,255,255,0.1)"))
-        initials = "".join([n[0].upper() for n in st.session_state.user['full_name'].split()[:2]])
 
+        # Compact User Profile Section
         st.markdown(f"""
-            <div style='background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:1.25rem;'>
-                <div style='display:flex;align-items:center;gap:0.75rem;'>
-                    <div style='width:36px;height:36px;border-radius:50%;background:{bg_c};border:1px solid {border_c};display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;color:{accent};flex-shrink:0;'>
-                        {initials}
-                    </div>
-                    <div>
-                        <div style='color:#e2e8f0;font-weight:700;font-size:0.9rem;line-height:1.2;'>{st.session_state.user['full_name']}</div>
-                        <div style='color:#64748b;font-size:0.7rem;font-weight:600;'>Logged in</div>
-                    </div>
+            <div class='nav-profile-card'>
+                <div class='profile-initials' style='background:{bg_c}; color:{accent}; border: 1px solid {border_c};'>
+                    {initials}
                 </div>
-                <div style='margin-top:0.75rem;'>
-                    <span style='background:{bg_c};color:{accent};border:1px solid {border_c};padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:800;letter-spacing:0.3px;'>{user_role}</span>
+                <div class='profile-meta'>
+                    <span class='profile-name'>{st.session_state.user['full_name']}</span>
+                    <span class='profile-status'><div class='status-dot'></div> Active Session</span>
                 </div>
             </div>
         """, unsafe_allow_html=True)
 
+        # Logic for menu items based on role
         nav_options = ["Dashboard", "Shipments"]
-        nav_icons   = ["grid",      "truck"]
+        nav_icons   = ["grid-1x2", "box-seam"]
+        
         if user_role in ["System Administrator", "Dispatcher"]:
-            nav_options.append("Fleet");   nav_icons.append("shield-check")
-        nav_options.append("Reports");     nav_icons.append("graph-up")
+            nav_options.append("Fleet")
+            nav_icons.append("truck")
+            
+        nav_options.append("Reports")
+        nav_icons.append("bar-chart")
+        
         if user_role == "System Administrator":
-            nav_options.append("Audit Logs"); nav_icons.append("clock-history")
+            nav_options.append("Audit Logs")
+            nav_icons.append("shield-lock")
 
+        # Refined Option Menu featuring Left Accent Indicator
         selected_module = option_menu(
-            menu_title="NAVIGATION", options=nav_options, icons=nav_icons, default_index=0,
+            menu_title="OPERATIONAL MODULES", 
+            options=nav_options, 
+            icons=nav_icons, 
+            default_index=0,
             styles={
-                "container":        {"padding": "0 !important", "background-color": "transparent"},
-                "icon":             {"color": "#10b981", "font-size": "1rem"},
-                "nav-link":         {"font-size": "0.875rem", "text-align": "left", "margin": "3px 0", "color": "#94a3b8", "font-weight": "600", "border-radius": "8px", "transition": "all 0.15s", "padding": "10px 14px"},
-                "nav-link-selected": {"background-color": "rgba(16,185,129,0.1)", "color": "#10b981", "font-weight": "700", "border": "1px solid rgba(16,185,129,0.2)"},
-                "menu-title":       {"color": "#64748b", "font-size": "0.62rem", "letter-spacing": "1.8px", "padding-left": "14px", "font-weight": "700", "padding-bottom": "8px", "text-transform": "uppercase"},
+                "container": {"padding": "0", "background-color": "transparent"},
+                "icon": {"color": "var(--text-muted)", "font-size": "1.05rem"},
+                "nav-link": {
+                    "font-size": "0.85rem", "text-align": "left", "margin": "0.25rem 0",
+                    "color": "var(--text-muted)", "font-weight": "600", "border-radius": "6px",
+                    "padding": "0.6rem 1rem", "transition": "all 0.2s ease"
+                },
+                "nav-link-selected": {
+                    "background-color": "var(--card-bg)", "color": "var(--text-main)",
+                    "font-weight": "700", "border-left": "4px solid #10b981",
+                    "border-radius": "4px" # Sharper radius when selected to emphasize the left border
+                },
+                "menu-title": {
+                    "color": "var(--text-muted)", "font-size": "0.65rem", "letter-spacing": "1.5px",
+                    "padding-left": "1rem", "font-weight": "700", "padding-bottom": "0.5rem"
+                },
             },
         )
 
-    # ─ RIGHT: Workspace ─
+    # ─ Right Workspace Injection ─
+    # The selected module string is dynamically passed to the dashboard files to act as context
     with workspace_col:
-        if selected_module == "Dashboard": dashboard.render_page()
-        elif selected_module == "Shipments": shipments.render_page()
-        elif selected_module == "Fleet": fleet.render_page()
-        elif selected_module == "Reports": reports.render_page()
-        elif selected_module == "Audit Logs": audit_logs.render_page()
+        # Pass the selected_module down to act as a breadcrumb
+        if selected_module == "Dashboard": 
+            dashboard.render_page(module_name=selected_module)
+        elif selected_module == "Shipments": 
+            shipments.render_page()
+        elif selected_module == "Fleet": 
+            fleet.render_page()
+        elif selected_module == "Reports": 
+            reports.render_page()
+        elif selected_module == "Audit Logs": 
+            audit_logs.render_page()
