@@ -11,20 +11,28 @@ def fetch_executive_overview():
         'total_carriers': 0,
     }
     try:
-        cur.execute("SELECT COUNT(*) AS n FROM orders")
-        metrics['total_orders'] = cur.fetchone()['n']
-        cur.execute("SELECT COUNT(*) AS n FROM shipments WHERE status = 'In Transit'")
-        metrics['active_shipments'] = cur.fetchone()['n']
-        cur.execute("SELECT COUNT(*) AS n FROM shipments WHERE status = 'Delayed'")
-        metrics['delayed_shipments'] = cur.fetchone()['n']
-        cur.execute("SELECT COUNT(*) AS n FROM carriers WHERE is_available = TRUE")
-        metrics['available_carriers'] = cur.fetchone()['n']
-        cur.execute("SELECT COUNT(*) AS n FROM carriers")
-        metrics['total_carriers'] = cur.fetchone()['n']
-        cur.execute("SELECT COUNT(*) AS n FROM orders WHERE expected_delivery_date = CURRENT_DATE")
-        metrics['orders_today'] = cur.fetchone()['n']
-        cur.execute("SELECT COUNT(*) AS n FROM shipments WHERE status = 'Delivered' AND actual_delivery_date = CURRENT_DATE")
-        metrics['delivered_today'] = cur.fetchone()['n']
+        cur.execute("""
+            SELECT
+                (SELECT COUNT(*) FROM orders)                                                              AS total_orders,
+                (SELECT COUNT(*) FROM shipments WHERE status = 'In Transit')                               AS active_shipments,
+                (SELECT COUNT(*) FROM shipments WHERE status = 'Delayed')                                  AS delayed_shipments,
+                (SELECT COUNT(*) FROM carriers WHERE is_available = TRUE)                                  AS available_carriers,
+                (SELECT COUNT(*) FROM carriers)                                                            AS total_carriers,
+                (SELECT COUNT(*) FROM orders WHERE expected_delivery_date = CURRENT_DATE)                  AS orders_today,
+                (SELECT COUNT(*) FROM shipments WHERE status = 'Delivered'
+                    AND actual_delivery_date = CURRENT_DATE)                                               AS delivered_today
+        """)
+        row = cur.fetchone()
+        if row:
+            metrics = {
+                'total_orders':       int(row['total_orders']       or 0),
+                'active_shipments':   int(row['active_shipments']   or 0),
+                'delayed_shipments':  int(row['delayed_shipments']  or 0),
+                'available_carriers': int(row['available_carriers'] or 0),
+                'total_carriers':     int(row['total_carriers']     or 0),
+                'orders_today':       int(row['orders_today']       or 0),
+                'delivered_today':    int(row['delivered_today']    or 0),
+            }
     except Exception as e:
         print(f"Reporting Service Error: {e}")
     finally:

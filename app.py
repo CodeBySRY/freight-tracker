@@ -18,20 +18,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-if 'user'       not in st.session_state: st.session_state.user       = None
-if 'theme'      not in st.session_state: st.session_state.theme      = 'dark'
-if 'egg_clicks' not in st.session_state: st.session_state.egg_clicks = 0
-if 'show_truck' not in st.session_state: st.session_state.show_truck = False
+if 'user'  not in st.session_state: st.session_state.user  = None
+if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 
-# ─── CALLBACKS ────────────────────────────────────────────────────────────────
+# ─── CALLBACK ─────────────────────────────────────────────────────────────────
 def toggle_theme():
     st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
-
-def handle_logo_click():
-    st.session_state.egg_clicks += 1
-    if st.session_state.egg_clicks >= 3:
-        st.session_state.show_truck = True
-        st.session_state.egg_clicks = 0
 
 # ─── CSS ──────────────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
@@ -40,7 +32,8 @@ def get_cached_login_css(theme: str) -> str:
         css_vars = """
         --bg-main:#f8fafc; --text-main:#0f172a; --text-sub:#475569; --text-muted:#64748b;
         --border-light:rgba(0,0,0,0.05); --border-mid:rgba(0,0,0,0.1); --border-heavy:rgba(0,0,0,0.2);
-        --nav-bg:rgba(248,250,252,0.92); --card-bg:#ffffff; --card-hover:#f1f5f9;
+        --nav-bg:rgba(248,250,252,0.92); --nav-bg-scrolled:rgba(248,250,252,0.6);
+        --card-bg:#ffffff; --card-hover:#f1f5f9;
         --btn-bg:#0f172a; --btn-text:#ffffff; --footer-bg:#f1f5f9;
         --title-grad:linear-gradient(135deg,#0f172a 0%,#475569 100%);
         """
@@ -48,7 +41,8 @@ def get_cached_login_css(theme: str) -> str:
         css_vars = """
         --bg-main:#030712; --text-main:#f8fafc; --text-sub:#94a3b8; --text-muted:#64748b;
         --border-light:rgba(255,255,255,0.03); --border-mid:rgba(255,255,255,0.05); --border-heavy:rgba(255,255,255,0.1);
-        --nav-bg:rgba(3,7,18,0.88); --card-bg:rgba(255,255,255,0.015); --card-hover:rgba(255,255,255,0.03);
+        --nav-bg:rgba(3,7,18,0.88); --nav-bg-scrolled:rgba(3,7,18,0.45);
+        --card-bg:rgba(255,255,255,0.015); --card-hover:rgba(255,255,255,0.03);
         --btn-bg:#f8fafc; --btn-text:#030712; --footer-bg:#010206;
         --title-grad:linear-gradient(135deg,#f8fafc 0%,#94a3b8 100%);
         """
@@ -74,11 +68,9 @@ def get_cached_login_css(theme: str) -> str:
         background-attachment: fixed !important;
     }}
 
-    /* Hide Streamlit chrome */
     [data-testid="stSidebar"], [data-testid="collapsedControl"],
     #MainMenu, footer, header {{ display: none !important; }}
 
-    /* Push page content below fixed navbar */
     .block-container {{
         padding-top: 96px !important;
         padding-bottom: 0 !important;
@@ -87,7 +79,7 @@ def get_cached_login_css(theme: str) -> str:
         padding-right: 4vw !important;
     }}
 
-    /* ── NAVBAR (pure HTML, fixed) ───────────────────────────────────────── */
+    /* ── NAVBAR ─────────────────────────────────────────────────────────── */
     .lt-nav {{
         position: fixed;
         top: 0; left: 0; right: 0;
@@ -102,6 +94,12 @@ def get_cached_login_css(theme: str) -> str:
         border-bottom: 1px solid var(--border-heavy);
         z-index: 999999;
         box-shadow: 0 4px 30px rgba(0,0,0,0.12);
+        transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }}
+    .lt-nav.scrolled {{
+        background: var(--nav-bg-scrolled);
+        border-bottom-color: rgba(255,255,255,0.04);
+        box-shadow: none;
     }}
 
     /* Brand */
@@ -316,9 +314,8 @@ def get_cached_login_css(theme: str) -> str:
         color: var(--btn-text) !important; font-weight: 800 !important; font-size: 0.95rem !important;
     }}
 
-    /* ── HIDE BRIDGE BUTTONS ────────────────────────────────────────────── */
-    div[data-testid="stButton"]:has(button[aria-label="__theme__"]),
-    div[data-testid="stButton"]:has(button[aria-label="__egg__"]) {{
+    /* ── HIDE THEME BRIDGE BUTTON ───────────────────────────────────────── */
+    div[data-testid="stButton"]:has(button[aria-label="__theme__"]) {{
         position: absolute !important;
         visibility: hidden !important;
         height: 0 !important; min-height: 0 !important;
@@ -524,7 +521,6 @@ def get_cached_shell_css() -> str:
     [data-testid="stSidebar"], [data-testid="collapsedControl"] { display:none !important; }
     .block-container { padding-left:1.75rem !important; padding-right:1.75rem !important; padding-top:1.5rem !important; max-width:100% !important; }
 
-    /* Flush the nav column to the left edge with no inner padding */
     [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
         padding-left: 0 !important;
         padding-right: 0.5rem !important;
@@ -543,13 +539,12 @@ def login_screen():
     theme = st.session_state.theme
     toggle_icon = "🌞" if theme == 'light' else "🌓"
 
-    # CSS
     st.markdown(get_cached_login_css(theme), unsafe_allow_html=True)
 
-    # ── NAVBAR (single unified HTML block, always fixed) ──────────────────
+    # ── NAVBAR ────────────────────────────────────────────────────────────
     st.markdown(f"""
-    <nav class="lt-nav">
-        <a class="lt-brand" id="lt-logo" href="#" onclick="window.scrollTo({{top:0,behavior:'smooth'}});return false;">
+    <nav class="lt-nav" id="lt-nav">
+        <a class="lt-brand" id="lt-logo" href="#">
             <div class="lt-logo">📦 LogiTrack PK</div>
             <div class="lt-divider"></div>
             <span class="lt-subtitle">Freight OS</span>
@@ -568,47 +563,50 @@ def login_screen():
     <div id="auth-portal" style="position:absolute;top:0;"></div>
     """, unsafe_allow_html=True)
 
-    # ── EASTER EGG ────────────────────────────────────────────────────────
-    if st.session_state.show_truck:
-        st.markdown("""
-        <div style="position:fixed;top:90px;left:-120px;font-size:58px;z-index:9999999;
-                    animation:truck-drive 2.5s cubic-bezier(0.25,1,0.5,1) forwards;">🚚💨</div>
-        <style>@keyframes truck-drive{0%{left:-120px}100%{left:120vw}}</style>
-        """, unsafe_allow_html=True)
-        st.session_state.show_truck = False
-
-    # ── HIDDEN BRIDGE BUTTONS ─────────────────────────────────────────────
-    # Collapsed to zero via CSS (aria-label selector). Clicked by the JS bridge below.
+    # ── HIDDEN THEME BRIDGE BUTTON ────────────────────────────────────────
     st.button(toggle_icon, key="__theme__", on_click=toggle_theme)
-    st.button("🥚",        key="__egg__",   on_click=handle_logo_click)
 
-    # ── JS BRIDGE ─────────────────────────────────────────────────────────
-    # components.v1.html is the ONLY Streamlit API that reliably executes JS.
-    # The iframe reaches the parent page via window.parent to click bridge buttons.
+    # ── JS: scroll-transparency + logo scroll-to-top + theme bridge ───────
     components.html("""
     <script>
     (function() {
-        var doc = window.parent.document;
+        var doc   = window.parent.document;
+        var nav   = doc.getElementById('lt-nav');
+        var logo  = doc.getElementById('lt-logo');
+        var thBtn = doc.getElementById('lt-theme-btn');
 
-        function clickBridge(ariaLabel) {
-            var btns = doc.querySelectorAll('button');
-            for (var i = 0; i < btns.length; i++) {
-                if (btns[i].getAttribute('aria-label') === ariaLabel) {
-                    btns[i].click();
-                    return;
-                }
+        // Scroll-based navbar transparency
+        function onScroll() {
+            if (!nav) return;
+            if (window.parent.scrollY > 60) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
             }
         }
+        window.parent.addEventListener('scroll', onScroll, { passive: true });
+        onScroll(); // run once on load
 
-        var themeBtn = doc.getElementById('lt-theme-btn');
-        var logoBtn  = doc.getElementById('lt-logo');
+        // Logo click → smooth scroll to top
+        if (logo) {
+            logo.onclick = function(e) {
+                e.preventDefault();
+                window.parent.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+        }
 
-        if (themeBtn) themeBtn.onclick = function(e) { e.preventDefault(); clickBridge('__theme__'); };
-        if (logoBtn)  logoBtn.onclick  = function(e) {
-            e.preventDefault();
-            window.parent.scrollTo({ top: 0, behavior: 'smooth' });
-            clickBridge('__egg__');
-        };
+        // Theme toggle → click hidden Streamlit bridge button
+        if (thBtn) {
+            thBtn.onclick = function() {
+                var btns = doc.querySelectorAll('button');
+                for (var i = 0; i < btns.length; i++) {
+                    if (btns[i].getAttribute('aria-label') === '__theme__') {
+                        btns[i].click();
+                        return;
+                    }
+                }
+            };
+        }
     })();
     </script>
     """, height=0)
@@ -620,7 +618,6 @@ def login_screen():
         st.markdown(get_cached_hero_html(), unsafe_allow_html=True)
 
     with col_auth:
-        st.markdown("<div id='auth-portal-content'></div>", unsafe_allow_html=True)
         st.markdown("<div class='auth-heading'>Authentication</div>", unsafe_allow_html=True)
         st.markdown("<div class='auth-sub'>Secure terminal for authorized personnel.</div>", unsafe_allow_html=True)
 
@@ -636,7 +633,7 @@ def login_screen():
             user = cur.fetchone()
             conn.close()
             if user and verify_password(password, user['password_hash']):
-                st.session_state.user  = {
+                st.session_state.user = {
                     'user_id':   user['user_id'],
                     'full_name': user['full_name'],
                     'role':      user['role'],
@@ -646,7 +643,6 @@ def login_screen():
             else:
                 st.error("Authentication failed. Invalid credentials or deactivated account.")
 
-    # ── MARKETING SECTIONS ────────────────────────────────────────────────
     st.markdown(get_cached_marketing_html(), unsafe_allow_html=True)
 
 
@@ -734,40 +730,23 @@ else:
             icons=nav_icons,
             default_index=0,
             styles={
-                "container":         {
-                    "padding": "0",
-                    "background-color": "transparent",
-                },
+                "container":         {"padding": "0", "background-color": "transparent"},
                 "menu-title":        {
-                    "color": "#475569",
-                    "font-size": "0.6rem",
-                    "letter-spacing": "3px",
-                    "font-weight": "800",
-                    "text-transform": "uppercase",
-                    "text-align": "center",
-                    "padding": "0.1rem 0 0.8rem 0",
+                    "color": "#475569", "font-size": "0.6rem", "letter-spacing": "3px",
+                    "font-weight": "800", "text-transform": "uppercase",
+                    "text-align": "center", "padding": "0.1rem 0 0.8rem 0",
                     "font-family": "'Plus Jakarta Sans', sans-serif",
                 },
-                "icon":              {
-                    "color": "#475569",
-                    "font-size": "1.05rem",
-                },
+                "icon":              {"color": "#475569", "font-size": "1.05rem"},
                 "nav-link":          {
-                    "font-size": "0.975rem",
-                    "text-align": "left",
-                    "margin": "2px 0",
-                    "color": "#94a3b8",
-                    "font-weight": "600",
-                    "border-radius": "10px",
-                    "padding": "11px 16px",
-                    "font-family": "'Plus Jakarta Sans', sans-serif",
+                    "font-size": "0.975rem", "text-align": "left", "margin": "2px 0",
+                    "color": "#94a3b8", "font-weight": "600", "border-radius": "10px",
+                    "padding": "11px 16px", "font-family": "'Plus Jakarta Sans', sans-serif",
                     "letter-spacing": "-0.1px",
                 },
                 "nav-link-selected": {
-                    "background-color": "rgba(16,185,129,0.1)",
-                    "color": "#10b981",
-                    "font-weight": "700",
-                    "border": "1px solid rgba(16,185,129,0.18)",
+                    "background-color": "rgba(16,185,129,0.1)", "color": "#10b981",
+                    "font-weight": "700", "border": "1px solid rgba(16,185,129,0.18)",
                     "border-left": "3px solid #10b981",
                 },
             },

@@ -2,53 +2,7 @@ import streamlit as st
 import pandas as pd
 from database import get_db
 from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode, JsCode
-
-_CSS = {
-    ".ag-root-wrapper": {
-        "border-radius": "12px !important",
-        "border": "1px solid #1a2744 !important",
-        "background-color": "#0d1526 !important",
-        "overflow": "hidden !important",
-        "font-family": "'Inter', system-ui, sans-serif !important",
-    },
-    ".ag-header": {
-        "background-color": "#070d1a !important",
-        "border-bottom": "1px solid #1a2744 !important",
-    },
-    ".ag-header-cell": {"padding": "0 16px !important"},
-    ".ag-header-cell-text": {
-        "color": "#364a65 !important",
-        "font-family": "'Inter', sans-serif !important",
-        "font-weight": "700 !important",
-        "font-size": "0.65rem !important",
-        "text-transform": "uppercase !important",
-        "letter-spacing": "1.2px !important",
-    },
-    ".ag-row": {
-        "background-color": "#0d1526 !important",
-        "border-bottom": "1px solid #0f1a2e !important",
-        "color": "#cbd5e1 !important",
-        "font-family": "'Inter', sans-serif !important",
-        "font-size": "0.84rem !important",
-        "transition": "background-color 0.12s ease !important",
-    },
-    ".ag-row:hover": {"background-color": "#111d33 !important", "color": "#f1f5f9 !important"},
-    ".ag-row-selected": {"background-color": "#172554 !important"},
-    ".ag-cell": {
-        "border-right": "none !important",
-        "display": "flex !important",
-        "align-items": "center !important",
-        "padding": "0 16px !important",
-    },
-    ".ag-paging-panel": {
-        "background-color": "#070d1a !important",
-        "border-top": "1px solid #1a2744 !important",
-        "color": "#364a65 !important",
-        "font-family": "'Inter', sans-serif !important",
-        "font-size": "0.78rem !important",
-    },
-    ".ag-icon": {"color": "#364a65 !important"},
-}
+from components.ui_elements import AGGRID_CSS, ID_JS
 
 _STATUS_JS = JsCode("""
 function(params) {
@@ -66,10 +20,6 @@ function(params) {
 }
 """)
 
-_ID_JS = JsCode("""
-function(p){ return {color:'#4a6080',fontFamily:'JetBrains Mono,monospace',fontSize:'0.78rem',fontWeight:'500'}; }
-""")
-
 _VTYPE_JS = JsCode("""
 function(p){ return {color:'#64748b',fontStyle:'italic',fontSize:'0.82rem'}; }
 """)
@@ -81,7 +31,6 @@ function(p){ return {color:'#4a6080',fontFamily:'JetBrains Mono,monospace',fontS
 
 def render_page():
     st.markdown("""
-        <style>@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');</style>
         <div style='margin-bottom:1.75rem;'>
             <div style='color:#364a65;font-size:0.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;'>FLEET</div>
             <h2 style='color:#f1f5f9;font-weight:800;font-size:1.65rem;margin:0;letter-spacing:-0.5px;font-family:Inter,sans-serif;'>Fleet Operations</h2>
@@ -137,7 +86,7 @@ def render_page():
     gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=15)
     gb.configure_selection('single')
     gb.configure_grid_options(rowHeight=46, headerHeight=44, animateRows=True, suppressCellFocus=True)
-    gb.configure_column("ID",           cellStyle=_ID_JS,     maxWidth=70, pinned='left')
+    gb.configure_column("ID",           cellStyle=ID_JS,     maxWidth=70, pinned='left')
     gb.configure_column("Status",       cellStyle=_STATUS_JS, maxWidth=130)
     gb.configure_column("Vehicle Type", cellStyle=_VTYPE_JS)
     gb.configure_column("Contact",      cellStyle=_PHONE_JS)
@@ -149,6 +98,6 @@ def render_page():
         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
         theme='streamlit',
         allow_unsafe_jscode=True,
-        custom_css=_CSS,
+        custom_css=AGGRID_CSS,
         height=460,
     )

@@ -1,6 +1,5 @@
 import streamlit as st
 import plotly.express as px
-import plotly.graph_objects as go
 from database import get_db
 from services.reporting_service import (
     fetch_executive_overview,
