@@ -55,9 +55,6 @@ def get_cached_login_css(theme: str) -> str:
     return f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    @import url('<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">');
     :root {{ {css_vars} }}
 
     html, body, .stApp {{
@@ -474,7 +471,7 @@ def get_cached_marketing_html() -> str:
                         display:flex;align-items:center;justify-content:center;font-size:1.1rem;
                         border:1px solid var(--border-heavy);font-weight:700;color:var(--text-main);'>SR</div>
             <div class='card-title' style='font-size:1.1rem;'>Shayan Rizwan</div>
-            <div class='card-desc' style='font-size:0.85rem;'>Backend Engineering</div>
+            <div class='card-desc' style='font-size:0.85rem;'>Backend Architecture</div>
         </div>
         <div class='lp-card' style='text-align:center;padding:3rem 2rem;'>
             <div style='width:56px;height:56px;border-radius:50%;background:var(--border-mid);margin:0 auto 1.2rem auto;
@@ -582,7 +579,7 @@ def login_screen():
 
     # ── HIDDEN BRIDGE BUTTONS ─────────────────────────────────────────────
     # Collapsed to zero via CSS (aria-label selector). Clicked by the JS bridge below.
-    st.button("Toggle Mode", key="__theme__", on_click=toggle_theme)
+    st.button(toggle_icon, key="__theme__", on_click=toggle_theme)
     st.button("🥚",        key="__egg__",   on_click=handle_logo_click)
 
     # ── JS BRIDGE ─────────────────────────────────────────────────────────
@@ -749,7 +746,7 @@ else:
                     "text-transform": "uppercase",
                     "text-align": "center",
                     "padding": "0.1rem 0 0.8rem 0",
-                    "font-family": "'Playfair Display', sans-serif",
+                    "font-family": "'Plus Jakarta Sans', sans-serif",
                 },
                 "icon":              {
                     "color": "#475569",
