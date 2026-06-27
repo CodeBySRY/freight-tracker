@@ -564,7 +564,7 @@ def login_screen():
     """, unsafe_allow_html=True)
 
     # ── HIDDEN THEME BRIDGE BUTTON ────────────────────────────────────────
-    st.button(toggle_icon, key="__theme__", on_click=toggle_theme)
+    st.button("Toggle Mode", key="__theme__", on_click=toggle_theme)
 
     # ── JS: scroll-transparency + logo scroll-to-top + theme bridge ───────
     components.html("""
