@@ -572,7 +572,7 @@ def login_screen():
 
     # ── HIDDEN BRIDGE BUTTONS ─────────────────────────────────────────────
     # Collapsed to zero via CSS (aria-label selector). Clicked by the JS bridge below.
-    st.button("Toggle Mode", key="__theme__", on_click=toggle_theme)
+    st.button(toggle_icon, key="__theme__", on_click=toggle_theme)
     st.button("🥚",        key="__egg__",   on_click=handle_logo_click)
 
     # ── JS BRIDGE ─────────────────────────────────────────────────────────
@@ -685,22 +685,28 @@ else:
         initials = "".join([n[0].upper() for n in st.session_state.user['full_name'].split()[:2]])
 
         st.markdown(f"""
-        <div style='background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);
-                    border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:1.25rem;'>
+        <div style='background:linear-gradient(145deg,rgba(255,255,255,0.025),rgba(255,255,255,0.01));
+                    border:1px solid rgba(255,255,255,0.07);border-radius:14px;
+                    padding:1rem 1.1rem;margin-bottom:0.75rem;'>
             <div style='display:flex;align-items:center;gap:0.75rem;'>
-                <div style='width:36px;height:36px;border-radius:50%;background:{bg_c};
-                            border:1px solid {border_c};display:flex;align-items:center;
-                            justify-content:center;font-size:0.8rem;font-weight:800;
-                            color:{accent};flex-shrink:0;'>{initials}</div>
-                <div>
-                    <div style='color:#e2e8f0;font-weight:700;font-size:0.9rem;line-height:1.2;'>
-                        {st.session_state.user['full_name']}</div>
-                    <div style='color:#64748b;font-size:0.7rem;font-weight:600;'>Logged in</div>
+                <div style='width:38px;height:38px;border-radius:50%;flex-shrink:0;
+                            background:linear-gradient(135deg,{accent}33,{accent}11);
+                            border:1.5px solid {border_c};display:flex;align-items:center;
+                            justify-content:center;font-size:0.82rem;font-weight:800;
+                            color:{accent};letter-spacing:-0.5px;'>{initials}</div>
+                <div style='min-width:0;'>
+                    <div style='color:#e2e8f0;font-weight:700;font-size:0.875rem;
+                                line-height:1.25;white-space:nowrap;overflow:hidden;
+                                text-overflow:ellipsis;'>{st.session_state.user['full_name']}</div>
+                    <div style='color:#334155;font-size:0.68rem;font-weight:600;margin-top:2px;'>
+                        ● <span style='color:#10b981;'>Online</span>
+                    </div>
                 </div>
             </div>
-            <div style='margin-top:0.75rem;'>
+            <div style='margin-top:0.65rem;padding-top:0.65rem;
+                        border-top:1px solid rgba(255,255,255,0.05);'>
                 <span style='background:{bg_c};color:{accent};border:1px solid {border_c};
-                             padding:3px 10px;border-radius:20px;font-size:0.7rem;
+                             padding:3px 10px;border-radius:20px;font-size:0.68rem;
                              font-weight:800;letter-spacing:0.3px;'>{user_role}</span>
             </div>
         </div>
@@ -715,21 +721,48 @@ else:
             nav_options.append("Audit Logs"); nav_icons.append("clock-history")
 
         selected_module = option_menu(
-            menu_title="NAVIGATION",
+            menu_title="— Navigation —",
+            menu_icon=None,
             options=nav_options,
             icons=nav_icons,
             default_index=0,
             styles={
-                "container":         {"padding": "0 !important", "background-color": "transparent"},
-                "icon":              {"color": "#10b981", "font-size": "1rem"},
-                "nav-link":          {"font-size": "0.875rem", "text-align": "left", "margin": "3px 0",
-                                      "color": "#94a3b8", "font-weight": "600", "border-radius": "8px",
-                                      "transition": "all 0.15s", "padding": "10px 14px"},
-                "nav-link-selected": {"background-color": "rgba(16,185,129,0.1)", "color": "#10b981",
-                                      "font-weight": "700", "border": "1px solid rgba(16,185,129,0.2)"},
-                "menu-title":        {"color": "#64748b", "font-size": "0.62rem", "letter-spacing": "1.8px",
-                                      "padding-left": "14px", "font-weight": "700",
-                                      "padding-bottom": "8px", "text-transform": "uppercase"},
+                "container":         {
+                    "padding": "0.25rem 0 0 0",
+                    "background-color": "transparent",
+                },
+                "menu-title":        {
+                    "color": "#334155",
+                    "font-size": "0.62rem",
+                    "letter-spacing": "2.5px",
+                    "font-weight": "700",
+                    "text-transform": "uppercase",
+                    "text-align": "center",
+                    "padding": "0.25rem 0 0.75rem 0",
+                    "margin-bottom": "0.25rem",
+                },
+                "icon":              {
+                    "color": "#475569",
+                    "font-size": "0.9rem",
+                },
+                "nav-link":          {
+                    "font-size": "0.855rem",
+                    "text-align": "left",
+                    "margin": "1px 0",
+                    "color": "#64748b",
+                    "font-weight": "600",
+                    "border-radius": "10px",
+                    "padding": "9px 14px",
+                    "transition": "all 0.15s",
+                    "background-color": "transparent",
+                },
+                "nav-link-selected": {
+                    "background-color": "rgba(16,185,129,0.1)",
+                    "color": "#10b981",
+                    "font-weight": "700",
+                    "border": "1px solid rgba(16,185,129,0.18)",
+                    "border-left": "3px solid #10b981",
+                },
             },
         )
 
