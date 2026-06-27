@@ -523,6 +523,13 @@ def get_cached_shell_css() -> str:
     <style>
     [data-testid="stSidebar"], [data-testid="collapsedControl"] { display:none !important; }
     .block-container { padding-left:1.75rem !important; padding-right:1.75rem !important; padding-top:1.5rem !important; max-width:100% !important; }
+
+    /* Flush the nav column to the left edge with no inner padding */
+    [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+        padding-left: 0 !important;
+        padding-right: 0.5rem !important;
+    }
+
     .stButton > button[kind="primary"] { border-radius:8px !important; background:linear-gradient(135deg,#059669,#10b981) !important; color:white !important; border:none !important; font-weight:700 !important; transition:all 0.15s !important; }
     .stButton > button[kind="primary"]:hover { transform:translateY(-1px) !important; box-shadow:0 6px 16px -4px rgba(16,185,129,0.4) !important; }
     .stButton > button:not([kind="primary"]) { border-radius:8px !important; border:1px solid rgba(255,255,255,0.1) !important; color:#94a3b8 !important; background:transparent !important; font-weight:600 !important; transition:all 0.15s !important; }
@@ -670,7 +677,7 @@ else:
     st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.05);margin:0.75rem 0 1.5rem 0;'>",
                 unsafe_allow_html=True)
 
-    nav_col, workspace_col = st.columns([2, 8], gap="large")
+    nav_col, workspace_col = st.columns([2.8, 7.2], gap="small")
     user_role = st.session_state.user['role']
 
     with nav_col:
@@ -721,40 +728,40 @@ else:
             nav_options.append("Audit Logs"); nav_icons.append("clock-history")
 
         selected_module = option_menu(
-            menu_title="— Navigation —",
+            menu_title="Navigation",
             menu_icon=None,
             options=nav_options,
             icons=nav_icons,
             default_index=0,
             styles={
                 "container":         {
-                    "padding": "0.25rem 0 0 0",
+                    "padding": "0",
                     "background-color": "transparent",
                 },
                 "menu-title":        {
-                    "color": "#334155",
-                    "font-size": "0.62rem",
-                    "letter-spacing": "2.5px",
-                    "font-weight": "700",
+                    "color": "#475569",
+                    "font-size": "0.6rem",
+                    "letter-spacing": "3px",
+                    "font-weight": "800",
                     "text-transform": "uppercase",
                     "text-align": "center",
-                    "padding": "0.25rem 0 0.75rem 0",
-                    "margin-bottom": "0.25rem",
+                    "padding": "0.1rem 0 0.8rem 0",
+                    "font-family": "'Plus Jakarta Sans', sans-serif",
                 },
                 "icon":              {
                     "color": "#475569",
-                    "font-size": "0.9rem",
+                    "font-size": "1.05rem",
                 },
                 "nav-link":          {
-                    "font-size": "0.855rem",
+                    "font-size": "0.975rem",
                     "text-align": "left",
-                    "margin": "1px 0",
-                    "color": "#64748b",
+                    "margin": "2px 0",
+                    "color": "#94a3b8",
                     "font-weight": "600",
                     "border-radius": "10px",
-                    "padding": "9px 14px",
-                    "transition": "all 0.15s",
-                    "background-color": "transparent",
+                    "padding": "11px 16px",
+                    "font-family": "'Plus Jakarta Sans', sans-serif",
+                    "letter-spacing": "-0.1px",
                 },
                 "nav-link-selected": {
                     "background-color": "rgba(16,185,129,0.1)",
